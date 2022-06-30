@@ -21,7 +21,7 @@ from bpy.types import Operator
 class ExportInstantNGPTransforms(bpy.types.Operator):
 
     """Export main camera as instant-ngp camera path"""
-    bl_idname = "instant_ngp.export_transforms"
+    bl_idname = "instant_ngp_tools.export_transforms"
     bl_label = "Export"
     bl_options = {'REGISTER'}
 

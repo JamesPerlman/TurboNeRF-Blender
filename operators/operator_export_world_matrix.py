@@ -21,7 +21,7 @@ from bpy.types import Operator
 class ExportObjectWorldMatrix(bpy.types.Operator):
 
     """Export selected object's world_matrix"""
-    bl_idname = "instant_ngp.export_object_world_matrix"
+    bl_idname = "instant_ngp_tools.export_object_world_matrix"
     bl_label = "Export"
     bl_options = {'REGISTER'}
 

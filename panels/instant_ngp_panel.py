@@ -1,83 +1,62 @@
 import numpy as np
 import bpy
+
 from bpy.props import (
     StringProperty,
     BoolProperty,
     IntProperty,
     PointerProperty,
+    FloatVectorProperty,
 )
+from instant_ngp_tools.blender_utility.ngp_scene import NGPScene
+
+from instant_ngp_tools.blender_utility.object_utility import (
+    get_selected_empty,
+    get_selected_object,
+)
+from instant_ngp_tools.panels.instant_ngp_panel_operators import InstantNGPSetupSceneOperator
 
 class InstantNGPPanelSettings(bpy.types.PropertyGroup):
     """Class that defines the properties of the InstantNGP panel in the 3D view."""
 
     # https://docs.blender.org/api/current/bpy.props.html#getter-setter-example
     def get_aabb_min(self):
-        point_cloud_anchor = get_selected_empty()
-        if point_cloud_anchor is not None:
-            if "point_size" in point_cloud_anchor:
-                return point_cloud_anchor["point_size"]
-        return 1
+        return NGPScene.get_aabb_min()
 
     def set_aabb_min(self, value):
-        point_cloud_anchor = get_selected_empty()
-        if point_cloud_anchor is not None:
-            point_cloud_anchor["point_size"] = value
+        NGPScene.set_aabb_min(value)
+    
+    def get_aabb_max(self):
+        return NGPScene.get_aabb_max()
 
-            draw_manager = DrawManager.get_singleton()
-            draw_back_handler = draw_manager.get_draw_callback_handler(
-                point_cloud_anchor
-            )
-            draw_back_handler.set_point_size(value)
+    def set_aabb_max(self, value):
+        NGPScene.set_aabb_max(value)
 
-    viz_point_size: IntProperty(
-        name="Point Size",
-        description="OpenGL visualization point size.",
-        get=get_viz_point_size,
-        set=set_viz_point_size,
-        min=1,
+    aabb_min: FloatVectorProperty(
+        name="AABB Min",
+        description="Crops scene for locations less than this value.",
+        get=get_aabb_min,
+        set=set_aabb_min,
+        size=3,
+        precision=5,
+        min=-100,
+        max=100,
     )
-    only_3d_view: BoolProperty(
-        name="Export Only 3D View",
-        description="Export only the 3D view or the full UI of Blender",
-        default=True,
-    )
-    use_camera_perspective: BoolProperty(
-        name="Use Perspective of Selected Camera",
-        description="",
-        default=True,
-    )
-    screenshot_file_format: StringProperty(
-        name="File format",
-        description="File format of the exported screenshot(s)",
-        default="png",
-    )
-    use_camera_keyframes_for_screenshots: BoolProperty(
-        name="Use Keyframes of Selected Camera",
-        description="Use the Camera Keyframes instead of Animation Frames",
-        default=True,
-    )
-    save_point_size: IntProperty(
-        name="Point Size", description="OpenGL point size.", default=10
-    )
-    render_file_format: StringProperty(
-        name="File format",
-        description="File format of the exported rendering(s)",
-        default="png",
-    )
-    save_alpha: BoolProperty(
-        name="Save Alpha Values",
-        description="Save alpha values (if possible) to disk.",
-        default=True,
-    )
-    use_camera_keyframes_for_rendering: BoolProperty(
-        name="Use Camera Keyframes",
-        description="Use the Camera Keyframes instead of Animation Frames.",
-        default=True,
+
+    aabb_max: FloatVectorProperty(
+        name="AABB Max",
+        description="Crops scene for locations greater than this value.",
+        get=get_aabb_max,
+        set=set_aabb_max,
+        size=3,
+        precision=5,
+        min=-100,
+        max=100,
     )
 
 
 class InstantNGPPanel(bpy.types.Panel):
-    """Class that defines the OpenGL panel in the 3D view."""
+    """Class that defines the Instant-NGP panel in the 3D view."""
 
     bl_label = "Instant-NGP Panel"
     bl_idname = "VIEW3D_PT_instant_ngp_tools"
@@ -98,29 +77,32 @@ class InstantNGPPanel(bpy.types.Panel):
         bpy.types.Scene.instant_ngp_panel_settings = PointerProperty(
             type=InstantNGPPanelSettings
         )
+        bpy.utils.register_class(InstantNGPSetupSceneOperator)
 
     @classmethod
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(InstantNGPPanelSettings)
-        del bpy.types.Scene.opengl_panel_settings
+        bpy.utils.unregister_class(InstantNGPSetupSceneOperator)
+        del bpy.types.Scene.instant_ngp_panel_settings
 
     def draw(self, context):
         """Draw the panel with corrresponding properties and operators."""
         settings = context.scene.instant_ngp_panel_settings
         layout = self.layout
-        selected_empty = get_selected_empty()
-        selected_cam = get_selected_camera()
 
-        viz_box = layout.box()
-        viz_box.label(
-            text="Select a point cloud anchor (i.e. the correspinding empty)"
-            " to adjust the point size."
+        aabb_box = NGPScene.aabb_box()
+        glob_trans = NGPScene.global_transform()
+
+        is_scene_setup = NGPScene.is_setup()
+
+        setup_box = layout.box()
+        setup_box.label(
+            text="Instant-NGP Scene is set up." if is_scene_setup else "Set up Instant-NGP Scene Objects."
         )
-        anchor_selected = (
-            selected_empty is not None and "point_size" in selected_empty
-        )
-        row = viz_box.row()
+        row = setup_box.row()
+        row.operator(InstantNGPSetupSceneOperator.bl_idname)
+        return
         row.prop(
             settings,
             "viz_point_size",
