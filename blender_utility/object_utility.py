@@ -56,7 +56,6 @@ def get_object(object_name):
     
     objects = bpy.context.scene.objects
     if str(object_name) in objects:
-        log_report('agag', object_name)
         return objects[object_name]
     
     return None
@@ -65,7 +64,7 @@ def get_object(object_name):
 def add_collection(collection_name, parent_collection=None):
     """Add a collection to the scene."""
     if parent_collection is None:
-        parent_collection = bpy.context.collection
+        parent_collection = bpy.context.scene.collection
 
     new_collection = bpy.data.collections.new(collection_name)
     parent_collection.children.link(new_collection)

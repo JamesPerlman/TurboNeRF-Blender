@@ -25,12 +25,6 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
 
     def set_aabb_min(self, value):
         NGPScene.set_aabb_min(value)
-    
-    def get_aabb_max(self):
-        return NGPScene.get_aabb_max()
-
-    def set_aabb_max(self, value):
-        NGPScene.set_aabb_max(value)
 
     aabb_min: FloatVectorProperty(
         name="AABB Min",
@@ -43,6 +37,12 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
         max=100,
     )
 
+    def get_aabb_max(self):
+        return NGPScene.get_aabb_max()
+
+    def set_aabb_max(self, value):
+        NGPScene.set_aabb_max(value)
+    
     aabb_max: FloatVectorProperty(
         name="AABB Max",
         description="Crops scene for locations greater than this value.",
@@ -52,6 +52,19 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
         precision=5,
         min=-100,
         max=100,
+    )
+
+    def get_use_ngp_coords(self):
+        return True
+    
+    def set_use_ngp_coords(self, value):
+        pass
+    
+    use_ngp_coords: BoolProperty(
+        name="Use NGP Coords",
+        description="Use default NGP to NeRF scale (0.33) and offset (0.5, 0.5, 0.5).",
+        get=get_use_ngp_coords,
+        set=set_use_ngp_coords,
     )
 
 
@@ -94,21 +107,42 @@ class InstantNGPPanel(bpy.types.Panel):
         aabb_box = NGPScene.aabb_box()
         glob_trans = NGPScene.global_transform()
 
-        is_scene_setup = NGPScene.is_setup()
+        is_scene_set_up = NGPScene.is_setup()
 
-        setup_box = layout.box()
-        setup_box.label(
-            text="Instant-NGP Scene is set up." if is_scene_setup else "Set up Instant-NGP Scene Objects."
+        setup_section = layout.box()
+        setup_section.label(
+            text="Instant-NGP Scene is set up." if is_scene_set_up else "Set up Instant-NGP Scene Objects."
         )
-        row = setup_box.row()
+        row = setup_section.row()
         row.operator(InstantNGPSetupSceneOperator.bl_idname)
-        return
+
+        aabb_section = layout.box()
+        aabb_section.label(
+            text="AABB Cropping"
+        )
+
+        row = aabb_section.row()
         row.prop(
             settings,
-            "viz_point_size",
-            text="OpenGL Visualization Point Size",
+            "aabb_max",
+            text="Max"
         )
-        row.enabled = anchor_selected
+        row.enabled = is_scene_set_up
+
+        row = aabb_section.row()
+        row.prop(
+            settings,
+            "aabb_min",
+            text="Min",
+        )
+        row.enabled = is_scene_set_up
+
+        row = aabb_section.row()
+        row.prop(
+            settings,
+            "use_ngp_coords",
+            text="Use NGP Coords"
+        )
 
         export_screenshot_box = layout.box()
         export_screenshot_box.label(
