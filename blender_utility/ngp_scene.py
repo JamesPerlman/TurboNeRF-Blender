@@ -128,7 +128,13 @@ class NGPScene:
     
     @classmethod
     def set_aabb_min(cls, value):
-        cls.aabb_box()[AABB_MIN_ID] = value
+        aabb_max = cls.get_aabb_max()
+        safe_max = [
+            min(value[0], aabb_max[0]),
+            min(value[1], aabb_max[1]),
+            min(value[2], aabb_max[2]),
+        ]
+        cls.aabb_box()[AABB_MIN_ID] = safe_max
         cls.update_aabb_box_drivers()
 
     @classmethod
@@ -137,7 +143,13 @@ class NGPScene:
     
     @classmethod
     def set_aabb_max(cls, value):
-        cls.aabb_box()[AABB_MAX_ID] = value
+        aabb_min = cls.get_aabb_min()
+        safe_max = [
+            max(value[0], aabb_min[0]),
+            max(value[1], aabb_min[1]),
+            max(value[2], aabb_min[2]),
+        ]
+        cls.aabb_box()[AABB_MAX_ID] = safe_max
         cls.update_aabb_box_drivers()
     
     @classmethod
