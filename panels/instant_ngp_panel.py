@@ -20,6 +20,7 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
     """Class that defines the properties of the InstantNGP panel in the 3D view."""
 
     # https://docs.blender.org/api/current/bpy.props.html#getter-setter-example
+    # AABB Min
     def get_aabb_min(self):
         return NGPScene.get_aabb_min()
 
@@ -37,6 +38,7 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
         max=100,
     )
 
+    # AABB Max
     def get_aabb_max(self):
         return NGPScene.get_aabb_max()
 
@@ -54,17 +56,46 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
         max=100,
     )
 
-    def get_use_ngp_coords(self):
-        return True
+    # AABB Size
+    def get_aabb_size(self):
+        return NGPScene().get_aabb_size()
     
-    def set_use_ngp_coords(self, value):
-        pass
+    def set_aabb_size(self, value):
+        NGPScene().set_aabb_size(value)
     
-    use_ngp_coords: BoolProperty(
+    aabb_size: FloatVectorProperty(
+        name="AABB Size",
+        description="Size of AABB box",
+        get=get_aabb_size,
+        set=set_aabb_size,
+    )
+
+    # AABB Center
+    def get_aabb_center(self):
+        return NGPScene.get_aabb_center()
+    
+    def set_aabb_center(self, value):
+        NGPScene.set_aabb_center(value)
+    
+    aabb_center: FloatVectorProperty(
+        name="AABB Center",
+        description="Center of AABB box",
+        get=get_aabb_center,
+        set=set_aabb_center,
+    )
+
+    # "Is AABB a Cube"
+    def get_is_aabb_cubical(self):
+        return NGPScene.get_is_aabb_cubical()
+    
+    def set_is_aabb_cubical(self, value):
+        NGPScene.set_is_aabb_cubical(value)
+
+    is_aabb_cubical: BoolProperty(
         name="Use NGP Coords",
         description="Use default NGP to NeRF scale (0.33) and offset (0.5, 0.5, 0.5).",
-        get=get_use_ngp_coords,
-        set=set_use_ngp_coords,
+        get=get_is_aabb_cubical,
+        set=set_is_aabb_cubical,
     )
 
 
@@ -104,9 +135,6 @@ class InstantNGPPanel(bpy.types.Panel):
         settings = context.scene.instant_ngp_panel_settings
         layout = self.layout
 
-        aabb_box = NGPScene.aabb_box()
-        glob_trans = NGPScene.global_transform()
-
         is_scene_set_up = NGPScene.is_setup()
 
         setup_section = layout.box()
@@ -140,10 +168,28 @@ class InstantNGPPanel(bpy.types.Panel):
         row = aabb_section.row()
         row.prop(
             settings,
-            "use_ngp_coords",
-            text="Use NGP Coords"
+            "aabb_size",
+            text="Size",
         )
+        row.enabled = is_scene_set_up
 
+        row = aabb_section.row()
+        row.prop(
+            settings,
+            "aabb_center",
+            text="Center"
+        )
+        row.enabled = is_scene_set_up
+
+        row = aabb_section.row()
+        row.prop(
+            settings,
+            "is_aabb_cubical",
+            text="Cube"
+        )
+        row.enabled = is_scene_set_up
+
+        return
         export_screenshot_box = layout.box()
         export_screenshot_box.label(
             text="Export a single or multiple"

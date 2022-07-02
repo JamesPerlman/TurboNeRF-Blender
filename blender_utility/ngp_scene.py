@@ -21,6 +21,7 @@ AABB_MIN_ID = "aabb_min"
 AABB_MIN_DEFAULT = (-AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2)
 AABB_MAX_ID = "aabb_max"
 AABB_MAX_DEFAULT = (AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2)
+AABB_IS_CUBE_ID = "is_aabb_cube"
 
 class NGPScene:
     @classmethod
@@ -66,6 +67,9 @@ class NGPScene:
             obj[AABB_MAX_ID] = AABB_MAX_DEFAULT
             prop = obj.id_properties_ui(AABB_MAX_ID)
             prop.update(precision=5)
+
+            # Set up custom AABB "is cubical" prop
+            obj[AABB_IS_CUBE_ID] = False
 
             # Helper method for adding min/max vars to a driver
             def add_min_max_vars(driver: bpy.types.Driver, axis: int):
@@ -129,12 +133,12 @@ class NGPScene:
     @classmethod
     def set_aabb_min(cls, value):
         aabb_max = cls.get_aabb_max()
-        safe_max = [
-            min(value[0], aabb_max[0]),
-            min(value[1], aabb_max[1]),
-            min(value[2], aabb_max[2]),
-        ]
-        cls.aabb_box()[AABB_MIN_ID] = safe_max
+        if cls.get_is_aabb_cubical():
+            aabb_size_half = 0.5 * (aabb_max[0] - value[0])
+            aabb_center = cls.get_aabb_center()
+            value = [aabb_center[i] - aabb_size_half for i in range(3)]
+        safe_min = [min(value[i], aabb_max[i]) for i in range(3)]
+        cls.aabb_box()[AABB_MIN_ID] = safe_min
         cls.update_aabb_box_drivers()
 
     @classmethod
@@ -144,13 +148,48 @@ class NGPScene:
     @classmethod
     def set_aabb_max(cls, value):
         aabb_min = cls.get_aabb_min()
-        safe_max = [
-            max(value[0], aabb_min[0]),
-            max(value[1], aabb_min[1]),
-            max(value[2], aabb_min[2]),
-        ]
+        if cls.get_is_aabb_cubical():
+            aabb_size_half = 0.5 * (value[0] - aabb_min[0])
+            aabb_center = cls.get_aabb_center()
+            value = [aabb_center[i] + aabb_size_half for i in range(3)]
+        safe_max = [max(value[i], aabb_min[i]) for i in range(3)]
         cls.aabb_box()[AABB_MAX_ID] = safe_max
         cls.update_aabb_box_drivers()
+
+    @classmethod
+    def get_aabb_size(cls):
+        max = cls.get_aabb_max()
+        min = cls.get_aabb_min()
+        return [max[i] - min[i] for i in range(3)]
+    
+    @classmethod
+    def set_aabb_size(cls, value):
+        center = cls.get_aabb_center()
+        cls.set_aabb_max([center[i] + 0.5 * value[i] for i in range(3)])
+        cls.set_aabb_min([center[i] - 0.5 * value[i] for i in range(3)])
+    
+    @classmethod
+    def get_aabb_center(cls):
+        max = cls.get_aabb_max()
+        min = cls.get_aabb_min()
+        return [0.5 * (max[i] + min[i]) for i in range(3)]
+    
+    @classmethod
+    def set_aabb_center(cls, value):
+        size = cls.get_aabb_size()
+        cls.set_aabb_max([value[i] + 0.5 * size[i] for i in range(3)])
+        cls.set_aabb_min([value[i] - 0.5 * size[i] for i in range(3)])
+    
+    @classmethod
+    def get_is_aabb_cubical(cls) -> bool:
+        return cls.aabb_box()[AABB_IS_CUBE_ID]
+    
+    @classmethod
+    def set_is_aabb_cubical(cls, value: bool):
+        if value is True:
+            new_size = cls.get_aabb_size()[0]
+            cls.set_aabb_size([new_size, new_size, new_size])
+        cls.aabb_box()[AABB_IS_CUBE_ID] = value
     
     @classmethod
     def update_aabb_box_drivers(cls):
