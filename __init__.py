@@ -22,6 +22,7 @@ import importlib
 # The root dir is Blenders addon folder.
 # Therefore, we need the "instant_ngp_tools" specifier for this addon
 from instant_ngp_tools.blender_utility.logging_utility import log_report
+from instant_ngp_tools.panels.instant_ngp_panel import InstantNGPPanel
 from instant_ngp_tools.registration.registration import Registration
 
 # from photogrammetry_importer.panels.view_3d_panel import OpenGLPanel
@@ -38,7 +39,7 @@ def register():
     Registration.register_importers()
     Registration.register_exporters()
 
-    # bpy.utils.register_class(InstantNGPPanel)
+    bpy.utils.register_class(InstantNGPPanel)
 
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
 
@@ -49,7 +50,7 @@ def unregister():
     Registration.unregister_importers()
     Registration.unregister_exporters()
 
-    # bpy.utils.unregister_class(InstantNGPPanel)
+    bpy.utils.unregister_class(InstantNGPPanel)
 
     log_report("INFO", "Unregistered {}".format(bl_info["name"]))
 

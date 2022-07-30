@@ -18,10 +18,12 @@ from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
+from instant_ngp_tools.blender_utility.ngp_scene import NGPScene
+
 class ExportInstantNGPTransforms(bpy.types.Operator):
 
     """Export main camera as instant-ngp camera path"""
-    bl_idname = "instant_ngp.export_transforms"
+    bl_idname = "instant_ngp_tools.export_transforms"
     bl_label = "Export"
     bl_options = {'REGISTER'}
 
@@ -42,25 +44,66 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
         scene = bpy.context.scene
         camera = scene.camera
         cam_data = camera.data
+        
+        render_scale = scene.render.resolution_percentage / 100.0
+        ngp_w = scene.render.resolution_x * render_scale
+        ngp_h = scene.render.resolution_y * render_scale
 
         # TODO: maybe add an eyedropper for this in the blender UI somehow
         # aka don't hardcode the name of this ref object
         offset_matrix = mathutils.Matrix.Identity(4)
-        global_transform = bpy.data.objects.get('GLOBAL_TRANSFORM')
+        global_transform = NGPScene.global_transform()
         if global_transform != None:
             offset_matrix = global_transform.matrix_world.inverted()
 
         # Walk through all frames, create an instant-ngp camera for each frame
-        ngp_path = []
+        ngp_frames = []
         i = 0
         for frame in range(scene.frame_start, scene.frame_end + 1, scene.frame_step):
             scene.frame_set(frame)
-            
+
             m = offset_matrix @ camera.matrix_world
+            aabb_max = NGPScene.get_aabb_max()
+            aabb_min = NGPScene.get_aabb_min()
+
+            # calculate focal len
+            bl_sw = cam_data.sensor_width
+            bl_sh = cam_data.sensor_height
+            bl_f  = cam_data.lens
+
+            # get blender sensor size in pixels
+            px_w: float
+            
+            if cam_data.sensor_fit == 'AUTO':
+                bl_asp = 1.0
+                ngp_asp = ngp_h / ngp_w
+
+                if ngp_asp > bl_asp:
+                    px_w = ngp_h / bl_asp
+                else:
+                    px_w = ngp_w
+
+            elif cam_data.sensor_fit == 'HORIZONTAL':
+                px_w = ngp_w
+
+            elif cam_data.sensor_fit == 'VERTICAL':
+                px_w = ngp_h * bl_sw / bl_sh
+            
+            
+            # focal length in pixels
+            px_f = bl_f / bl_sw * px_w
+
+            # ngp fov angles
+            ngp_ax = 2.0 * math.atan2(0.5 * ngp_w, px_f)
 
             # create camera dict for this frame
             cam_dict = {
                 "file_path": f"{i:05d}.png",
+                "aabb" : {
+                    "max" : [aabb_max[0], aabb_max[1], aabb_max[2]],
+                    "min" : [aabb_min[0], aabb_min[1], aabb_min[2]],
+                },
+                "camera_angle_x": ngp_ax,
                 "transform_matrix": [
                     [m[0][0], m[0][1], m[0][2], m[0][3]],
                     [m[1][0], m[1][1], m[1][2], m[1][3]],
@@ -69,7 +112,7 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
                 ]
             }
 
-            ngp_path.append(cam_dict)
+            ngp_frames.append(cam_dict)
             i = i + 1
         
         # Write camera path
@@ -117,7 +160,7 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
         ngp_ax = 2.0 * math.atan2(0.5 * ngp_w, px_f)
         ngp_ay = 2.0 * math.atan2(0.5 * ngp_h, px_f)
 
-        ngp_cam = {
+        ngp_transforms = {
             "camera_angle_x": ngp_ax,
             "camera_angle_y": ngp_ay,
             "f1_x": px_f,
@@ -130,11 +173,11 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
             "cy": 0.5 * ngp_h,
             "w": ngp_w,
             "h": ngp_h,
-            "frames": ngp_path,
+            "frames": ngp_frames,
         }
 
         with open(output_path, 'w') as json_file:
-            json_file.write(json.dumps(ngp_cam, indent=2))
+            json_file.write(json.dumps(ngp_transforms, indent=2))
         
         # Clean up
         scene.frame_set(scene.frame_start)
