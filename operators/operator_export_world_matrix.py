@@ -18,6 +18,14 @@ from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
+def serialize_matrix(m):
+    return [
+        [m[0][0], m[0][1], m[0][2], m[0][3]],
+        [m[1][0], m[1][1], m[1][2], m[1][3]],
+        [m[2][0], m[2][1], m[2][2], m[2][3]],
+        [m[3][0], m[3][1], m[3][2], m[3][3]],
+    ]
+
 class ExportObjectWorldMatrix(bpy.types.Operator):
 
     """Export selected object's world_matrix"""
@@ -28,6 +36,11 @@ class ExportObjectWorldMatrix(bpy.types.Operator):
     filepath: StringProperty(subtype='FILE_PATH')
     filename_ext = ".json"
     filter_glob: StringProperty(default='*.json', options={'HIDDEN'})
+
+    is_sequence: BoolProperty(
+        name="Export as sequence",
+        default=False
+    )
 
     def execute(self, context):
         output_path = Path(self.filepath)
@@ -51,19 +64,28 @@ class ExportObjectWorldMatrix(bpy.types.Operator):
 
         print(f"Exporting world_matrix of {obj.name} to: {output_path}")
 
-        m = obj.matrix_world
-
-        obj_dict = {
-            "transform_matrix": [
-                [m[0][0], m[0][1], m[0][2], m[0][3]],
-                [m[1][0], m[1][1], m[1][2], m[1][3]],
-                [m[2][0], m[2][1], m[2][2], m[2][3]],
-                [m[3][0], m[3][1], m[3][2], m[3][3]],
-            ]
-        }
+        scene = bpy.context.scene
+        json_data = []
+        
+        if self.is_sequence:
+            cur_frame = scene.frame_current
+            
+            for frame in range(scene.frame_start, scene.frame_end + 1):
+                scene.frame_set(frame)
+                obj_dict = {
+                    "transform_matrix": serialize_matrix(obj.matrix_world)
+                }
+                json_data.append(obj_dict)
+            
+            scene.frame_set(cur_frame)
+        else:
+            json_data = {
+                "transform_matrix": serialize_matrix(obj.matrix_world)
+            }
+        
 
         with open(output_path, 'w') as json_file:
-            json_file.write(json.dumps(obj_dict, indent=2))
+            json_file.write(json.dumps(json_data, indent=2))
 
         return {'FINISHED'}
 
