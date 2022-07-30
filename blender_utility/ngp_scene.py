@@ -17,9 +17,9 @@ AABB_BOX_ID = "AABB_BOX"
 # TODO: Come up with a way to present NGP coords instead of Blender/NeRF coords
 AABB_SIZE_ID = "aabb_size"
 AABB_SIZE_DEFAULT = 16 / 0.33
-AABB_MIN_ID = "aabb_min"
+AABB_MIN_ID = "aabb_min_2"
 AABB_MIN_DEFAULT = (-AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2)
-AABB_MAX_ID = "aabb_max"
+AABB_MAX_ID = "aabb_max_2"
 AABB_MAX_DEFAULT = (AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2)
 AABB_IS_CUBE_ID = "is_aabb_cube"
 
@@ -165,8 +165,15 @@ class NGPScene:
     @classmethod
     def set_aabb_size(cls, value):
         center = cls.get_aabb_center()
-        cls.set_aabb_max([center[i] + 0.5 * value[i] for i in range(3)])
-        cls.set_aabb_min([center[i] - 0.5 * value[i] for i in range(3)])
+        if cls.get_is_aabb_cubical():
+            value = [value[0], value[0], value[0]]
+        
+        safe_size = [max(0, value[i]) for i in range(3)]
+
+        aabb_box = cls.aabb_box()
+        aabb_box[AABB_MAX_ID] = [center[i] + 0.5 * safe_size[i] for i in range(3)]
+        aabb_box[AABB_MIN_ID] = [center[i] - 0.5 * safe_size[i] for i in range(3)]
+        cls.update_aabb_box_drivers()
     
     @classmethod
     def get_aabb_center(cls):
@@ -177,8 +184,11 @@ class NGPScene:
     @classmethod
     def set_aabb_center(cls, value):
         size = cls.get_aabb_size()
-        cls.set_aabb_max([value[i] + 0.5 * size[i] for i in range(3)])
-        cls.set_aabb_min([value[i] - 0.5 * size[i] for i in range(3)])
+        
+        aabb_box = cls.aabb_box()
+        aabb_box[AABB_MAX_ID] = [value[i] + 0.5 * size[i] for i in range(3)]
+        aabb_box[AABB_MIN_ID] = [value[i] - 0.5 * size[i] for i in range(3)]
+        cls.update_aabb_box_drivers()
     
     @classmethod
     def get_is_aabb_cubical(cls) -> bool:
