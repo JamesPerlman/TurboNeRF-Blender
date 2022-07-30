@@ -16,9 +16,7 @@ class InstantNGPSetupSceneOperator(bpy.types.Operator):
 
     def execute(self, context):
         """Create scene objects."""
-        NGPScene.create_main_collection()
-        aabb_box = NGPScene.create_aabb_box()
-        glob_trans = NGPScene.create_global_transform()
 
+        NGPScene.setup()
 
         return {"FINISHED"}

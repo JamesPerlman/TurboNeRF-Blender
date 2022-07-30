@@ -10,18 +10,26 @@ from instant_ngp_tools.blender_utility.object_utility import (
     get_object
 )
 
-MAIN_COLLECTION_ID = "Instant-NGP Tools"
+MAIN_COLLECTION_ID = "NeRF Tools"
 GLOBAL_TRANSFORM_ID = "GLOBAL_TRANSFORM"
 AABB_BOX_ID = "AABB_BOX"
+NERF_PROPS_ID = "NERF_PROPERTIES"
 
 # TODO: Come up with a way to present NGP coords instead of Blender/NeRF coords
 AABB_SIZE_ID = "aabb_size"
 AABB_SIZE_DEFAULT = 16 / 0.33
+
 AABB_MIN_ID = "aabb_min_2"
 AABB_MIN_DEFAULT = (-AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2)
+
 AABB_MAX_ID = "aabb_max_2"
 AABB_MAX_DEFAULT = (AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2)
+
 AABB_IS_CUBE_ID = "is_aabb_cube"
+AABB_IS_CUBE_DEFAULT = False
+
+TRAINING_LEVEL_ID = "training_level"
+TRAINING_LEVEL_DEFAULT = 10000
 
 class NGPScene:
     @classmethod
@@ -69,7 +77,7 @@ class NGPScene:
             prop.update(precision=5)
 
             # Set up custom AABB "is cubical" prop
-            obj[AABB_IS_CUBE_ID] = False
+            obj[AABB_IS_CUBE_ID] = AABB_IS_CUBE_DEFAULT
 
             # Helper method for adding min/max vars to a driver
             def add_min_max_vars(driver: bpy.types.Driver, axis: int):
@@ -117,6 +125,29 @@ class NGPScene:
     @classmethod
     def aabb_box(cls):
         return get_object(AABB_BOX_ID)
+    
+    @classmethod
+    def create_nerf_props(cls):
+        collection = cls.main_collection()
+        obj = cls.nerf_props()
+        
+        if obj == None:
+            obj = add_empty(NERF_PROPS_ID, collection)
+            obj[TRAINING_LEVEL_ID] = TRAINING_LEVEL_DEFAULT
+        
+        if not obj.name in collection.objects:
+            collection.objects.link(obj)
+    
+    @classmethod
+    def nerf_props(cls):
+        return get_object(NERF_PROPS_ID)
+
+    @classmethod
+    def setup(cls):
+        cls.create_main_collection()
+        cls.create_nerf_props()
+        cls.create_aabb_box()
+        cls.create_global_transform()
 
     @classmethod
     def is_setup(cls):
@@ -124,6 +155,7 @@ class NGPScene:
             cls.main_collection() is not None
             and cls.aabb_box() is not None
             and cls.global_transform() is not None
+            and cls.nerf_props() is not None
         )
     
     @classmethod
@@ -210,3 +242,12 @@ class NGPScene:
             # add a space to the expression, then remove it
             driver.driver.expression = f"{orig_expr} "
             driver.driver.expression = orig_expr
+    
+    @classmethod
+    def set_training_level(cls, value: int):
+        cls.nerf_props()[TRAINING_LEVEL_ID] = value
+    
+    @classmethod
+    def get_training_level(cls):
+        return cls.nerf_props()[TRAINING_LEVEL_ID]
+    
