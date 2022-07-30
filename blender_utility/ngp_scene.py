@@ -28,8 +28,8 @@ AABB_MAX_DEFAULT = (AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFA
 AABB_IS_CUBE_ID = "is_aabb_cube"
 AABB_IS_CUBE_DEFAULT = False
 
-TRAINING_LEVEL_ID = "training_level"
-TRAINING_LEVEL_DEFAULT = 10000
+TRAINING_STEPS_ID = "training_steps"
+TRAINING_STEPS_DEFAULT = 10000
 
 class NGPScene:
     @classmethod
@@ -133,7 +133,7 @@ class NGPScene:
         
         if obj == None:
             obj = add_empty(NERF_PROPS_ID, collection)
-            obj[TRAINING_LEVEL_ID] = TRAINING_LEVEL_DEFAULT
+            obj[TRAINING_STEPS_ID] = TRAINING_STEPS_DEFAULT
         
         if not obj.name in collection.objects:
             collection.objects.link(obj)
@@ -244,10 +244,10 @@ class NGPScene:
             driver.driver.expression = orig_expr
     
     @classmethod
-    def set_training_level(cls, value: int):
-        cls.nerf_props()[TRAINING_LEVEL_ID] = value
+    def set_training_steps(cls, value: int):
+        cls.nerf_props()[TRAINING_STEPS_ID] = value
     
     @classmethod
-    def get_training_level(cls):
-        return cls.nerf_props()[TRAINING_LEVEL_ID]
+    def get_training_steps(cls):
+        return cls.nerf_props()[TRAINING_STEPS_ID]
     
