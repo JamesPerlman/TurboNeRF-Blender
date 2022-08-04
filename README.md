@@ -12,8 +12,11 @@ Before we begin, you'll need to get yourself set up with the following:
   * Just drop this into your `scripts` folder, run `python render_nerf.py --help` for details on how to use this script.
   * The script supports Multi-GPU rendering (naively). More useful scripts coming soon in an easy-to-use package.
 
-
 ## Tutorial
+
+### 0. Installation
+When you download this addon, it will automatically be named something like `blender_nerf_tools-master` - you will need to rename this to `instant_ngp_tools` before moving it to your addons folder.  Will fix this soon!
+
 ### 1. Set up your NeRF scene
 
 If you're using instant-ngp to render your scenes, you'll want to use the `--keep_colmap_coords` flag when running the `colmap2nerf.py` script.
