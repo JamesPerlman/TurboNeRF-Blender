@@ -5,20 +5,19 @@ bl_info = {
 }
 
 import bpy
-import copy
 import json
-import os
 import math
 import mathutils
 from pathlib import Path
 
 # ExportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
-from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
 
 from instant_ngp_tools.blender_utility.ngp_scene import NGPScene
+
+def mat_to_list(m: mathutils.Matrix) -> list[float]:
+    return [list(r) for r in m]
 
 class ExportInstantNGPTransforms(bpy.types.Operator):
 
@@ -63,6 +62,9 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
             scene.frame_set(frame)
 
             m = offset_matrix @ camera.matrix_world
+            o = m.to_quaternion().to_matrix()
+            t = m.translation
+
             aabb_max = NGPScene.get_aabb_max()
             aabb_min = NGPScene.get_aabb_min()
 
@@ -110,7 +112,8 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
                     [m[2][0], m[2][1], m[2][2], m[2][3]],
                     [m[3][0], m[3][1], m[3][2], m[3][3]],
                 ],
-                "training_steps": NGPScene.get_training_steps(),
+                "n_steps": NGPScene.get_training_steps(),
+                "time": NGPScene.get_time(),
             }
 
             ngp_frames.append(cam_dict)
@@ -164,8 +167,8 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
         ngp_transforms = {
             "camera_angle_x": ngp_ax,
             "camera_angle_y": ngp_ay,
-            "f1_x": px_f,
-            "f1_y": px_f,
+            "fl_x": px_f,
+            "fl_y": px_f,
             "k1": 0.0,
             "k2": 0.0,
             "p1": 0.0,
