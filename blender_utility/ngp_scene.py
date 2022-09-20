@@ -31,6 +31,9 @@ AABB_IS_CUBE_DEFAULT = False
 TRAINING_STEPS_ID = "training_steps"
 TRAINING_STEPS_DEFAULT = 10000
 
+TIME_ID = "time"
+TIME_DEFAULT = 0.0
+
 class NGPScene:
     @classmethod
     def main_collection(cls):
@@ -133,7 +136,12 @@ class NGPScene:
         
         if obj == None:
             obj = add_empty(NERF_PROPS_ID, collection)
+            
             obj[TRAINING_STEPS_ID] = TRAINING_STEPS_DEFAULT
+
+            obj[TIME_ID] = TIME_DEFAULT
+            prop_mgr = obj.id_properties_ui(TIME_ID)
+            prop_mgr.update(min=0.0, max=1.0, soft_min=0.0, soft_max=1.0)
         
         if not obj.name in collection.objects:
             collection.objects.link(obj)
@@ -157,7 +165,7 @@ class NGPScene:
             and cls.global_transform() is not None
             and cls.nerf_props() is not None
         )
-    
+
     @classmethod
     def get_aabb_min(cls):
         return cls.aabb_box()[AABB_MIN_ID]
@@ -244,10 +252,21 @@ class NGPScene:
             driver.driver.expression = orig_expr
     
     @classmethod
+    def get_nerf_prop(cls, prop_id):
+        if prop_id in cls.nerf_props():
+            return cls.nerf_props()[prop_id]
+        else:
+            return None
+    
+    @classmethod
     def set_training_steps(cls, value: int):
         cls.nerf_props()[TRAINING_STEPS_ID] = value
     
     @classmethod
     def get_training_steps(cls):
         return cls.nerf_props()[TRAINING_STEPS_ID]
+    
+    @classmethod
+    def get_time(cls):
+        return cls.get_nerf_prop(TIME_ID)
     
