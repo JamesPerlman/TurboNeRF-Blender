@@ -6,8 +6,13 @@ import bpy
 from instant_ngp_tools.operators.operator_export_instant_ngp_transforms import (
     ExportInstantNGPTransforms,
 )
+from instant_ngp_tools.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
 from instant_ngp_tools.operators.operator_export_world_matrix import (
     ExportObjectWorldMatrix,
+)
+from instant_ngp_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
+from instant_ngp_tools.operators.operator_import_nerf_transforms import (
+    ImportNeRFTransforms,
 )
 
 # Definining the following import and export functions within the
@@ -16,18 +21,35 @@ from instant_ngp_tools.operators.operator_export_world_matrix import (
 # "rna_uiItemO: operator missing srna 'import_scene.colmap_model'""
 
 # Import Functions
-def _instant_ngp_transforms_export_operator_function(topbar_file_import, context):
-    topbar_file_import.layout.operator(
-        ExportInstantNGPTransforms.bl_idname, text="Instant-NGP Transforms for Rendering"
+def _instant_ngp_transforms_export_operator_function(topbar_file_export, context):
+    topbar_file_export.layout.operator(
+        ExportInstantNGPTransforms.bl_idname,
+        text="Instant-NGP Transforms for Rendering"
     )
 
-
-def _world_matrix_export_operator_function(topbar_file_import, context):
-    topbar_file_import.layout.operator(
+def _world_matrix_export_operator_function(topbar_file_export, context):
+    topbar_file_export.layout.operator(
         ExportObjectWorldMatrix.bl_idname,
         text="World Matrix of Selected Object",
     )
 
+def _nerfies_cameras_export_operator_function(topbar_file_export, context):
+    topbar_file_export.layout.operator(
+        ExportNerfiesCameras.bl_idname,
+        text="Nerfies Cameras"
+    )
+
+def _nerf_transforms_import_operator_function(topbar_file_import, context):
+    topbar_file_import.layout.operator(
+        ImportNeRFTransforms.bl_idname,
+        text="NeRF Transforms.json"
+    )
+
+def _hypernerf_cams_import_operator_function(topbar_file_import, context):
+    topbar_file_import.layout.operator(
+        ImportHyperNeRFCams.bl_idname,
+        text="HyperNeRF Cameras.json"
+    )
 class Registration:
     """Class to register import and export operators."""
 
@@ -60,14 +82,26 @@ class Registration:
     @classmethod
     def register_importers(cls):
         """Register importers."""
-        # Nothing here yet
-        pass
+        cls._register_importer(
+            ImportNeRFTransforms,
+            _nerf_transforms_import_operator_function,
+        )
+        cls._register_importer(
+            ImportHyperNeRFCams,
+            _hypernerf_cams_import_operator_function,
+        )
 
     @classmethod
     def unregister_importers(cls):
         """Unregister all registered importers."""
-        # Nothing here yet
-        pass
+        cls._unregister_importer(
+            ImportNeRFTransforms,
+            _nerf_transforms_import_operator_function,
+        )
+        cls._unregister_importer(
+            ImportHyperNeRFCams,
+            _hypernerf_cams_import_operator_function,
+        )
 
     @classmethod
     def register_exporters(cls):
@@ -80,6 +114,10 @@ class Registration:
             ExportObjectWorldMatrix,
             _world_matrix_export_operator_function,
         )
+        cls._register_exporter(
+            ExportNerfiesCameras,
+            _nerfies_cameras_export_operator_function,
+        )
 
     @classmethod
     def unregister_exporters(cls):
@@ -91,4 +129,8 @@ class Registration:
         cls._unregister_exporter(
             ExportObjectWorldMatrix,
             _world_matrix_export_operator_function
+        )
+        cls._unregister_exporter(
+            ExportNerfiesCameras,
+            _nerfies_cameras_export_operator_function,
         )
