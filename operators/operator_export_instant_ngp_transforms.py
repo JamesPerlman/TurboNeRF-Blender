@@ -98,6 +98,15 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
             # ngp fov angles
             ngp_ax = 2.0 * math.atan2(0.5 * ngp_w, px_f)
 
+            # aperture and focus distance
+            ngp_aperture = 0
+            ngp_focus_target = [0, 0, 0]
+
+            if cam_data.dof.use_dof and cam_data.dof.focus_object != None:
+                # No idea if this is correct
+                ngp_aperture = (cam_data.lens / cam_data.dof.aperture_fstop) / cam_data.sensor_width
+                ngp_focus_target = cam_data.dof.focus_object.matrix_world.translation
+
             # create camera dict for this frame
             cam_dict = {
                 "file_path": f"{i:05d}.png",
@@ -114,6 +123,8 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
                 ],
                 "n_steps": NGPScene.get_training_steps(),
                 "time": NGPScene.get_time(),
+                "aperture": ngp_aperture,
+                "focus_target": list(ngp_focus_target),
             }
 
             ngp_frames.append(cam_dict)
