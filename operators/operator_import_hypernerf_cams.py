@@ -25,7 +25,7 @@ FLIP_MAT = np.array([
 class ImportHyperNeRFCams(bpy.types.Operator):
 
     """Import NeRF Transforms"""
-    bl_idname = "instant_ngp_tools.import_hypernerf"
+    bl_idname = "blender_nerf_tools.import_hypernerf"
     bl_label = "Import"
     bl_options = {'REGISTER'}
 

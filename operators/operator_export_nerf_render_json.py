@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "Export Instant-NGP Transforms",
+    "name": "Export NeRF Render.json",
     "blender": (3, 0, 0),
     "category": "Export",
 }
@@ -14,15 +14,15 @@ from pathlib import Path
 # invoke() function which calls the file selector.
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 
-from instant_ngp_tools.blender_utility.ngp_scene import NGPScene
+from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 
 def mat_to_list(m: mathutils.Matrix) -> list[float]:
     return [list(r) for r in m]
 
-class ExportInstantNGPTransforms(bpy.types.Operator):
+class ExportNeRFRenderJSON(bpy.types.Operator):
 
-    """Export main camera as instant-ngp camera path"""
-    bl_idname = "instant_ngp_tools.export_transforms"
+    """Export main camera as NeRF render.json"""
+    bl_idname = "blender_nerf_tools.export_render_json"
     bl_label = "Export"
     bl_options = {'REGISTER'}
 
@@ -37,7 +37,7 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
             self.report({'ERROR'}, 'Export destination must be a JSON file')
             return {'CANCELLED'}
         
-        print(f"Exporting instant-ngp camera path to: {output_path}")
+        print(f"Exporting camera path to: {output_path}")
 
         # Get some scene references
         scene = bpy.context.scene
@@ -51,12 +51,12 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
         # TODO: maybe add an eyedropper for this in the blender UI somehow
         # aka don't hardcode the name of this ref object
         offset_matrix = mathutils.Matrix.Identity(4)
-        global_transform = NGPScene.global_transform()
+        global_transform = NeRFScene.global_transform()
         if global_transform != None:
             offset_matrix = global_transform.matrix_world.inverted()
 
-        # Walk through all frames, create an instant-ngp camera for each frame
-        ngp_frames = []
+        # Walk through all frames, create a camera dict for each frame
+        frames = []
         i = 0
         for frame in range(scene.frame_start, scene.frame_end + 1, scene.frame_step):
             scene.frame_set(frame)
@@ -65,8 +65,8 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
             o = m.to_quaternion().to_matrix()
             t = m.translation
 
-            aabb_max = NGPScene.get_aabb_max()
-            aabb_min = NGPScene.get_aabb_min()
+            aabb_max = NeRFScene.get_aabb_max()
+            aabb_min = NeRFScene.get_aabb_min()
 
             # calculate focal len
             bl_sw = cam_data.sensor_width
@@ -98,6 +98,15 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
             # ngp fov angles
             ngp_ax = 2.0 * math.atan2(0.5 * ngp_w, px_f)
 
+            # aperture and focus distance
+            ngp_aperture = 0
+            ngp_focus_target = [0, 0, 0]
+
+            if cam_data.dof.use_dof and cam_data.dof.focus_object != None:
+                # No idea if this is correct
+                ngp_aperture = (cam_data.lens / cam_data.dof.aperture_fstop) / cam_data.sensor_width
+                ngp_focus_target = cam_data.dof.focus_object.matrix_world.translation
+
             # create camera dict for this frame
             cam_dict = {
                 "file_path": f"{i:05d}.png",
@@ -112,11 +121,13 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
                     [m[2][0], m[2][1], m[2][2], m[2][3]],
                     [m[3][0], m[3][1], m[3][2], m[3][3]],
                 ],
-                "n_steps": NGPScene.get_training_steps(),
-                "time": NGPScene.get_time(),
+                "n_steps": NeRFScene.get_training_steps(),
+                "time": NeRFScene.get_time(),
+                "aperture": ngp_aperture,
+                "focus_target": list(ngp_focus_target),
             }
 
-            ngp_frames.append(cam_dict)
+            frames.append(cam_dict)
             i = i + 1
         
         # Write camera path
@@ -177,7 +188,7 @@ class ExportInstantNGPTransforms(bpy.types.Operator):
             "cy": 0.5 * ngp_h,
             "w": ngp_w,
             "h": ngp_h,
-            "frames": ngp_frames,
+            "frames": frames,
         }
 
         with open(output_path, 'w') as json_file:

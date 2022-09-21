@@ -3,15 +3,15 @@ import bpy
 
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
-from instant_ngp_tools.operators.operator_export_instant_ngp_transforms import (
-    ExportInstantNGPTransforms,
+from blender_nerf_tools.operators.operator_export_nerf_render_json import (
+    ExportNeRFRenderJSON,
 )
-from instant_ngp_tools.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
-from instant_ngp_tools.operators.operator_export_world_matrix import (
+from blender_nerf_tools.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
+from blender_nerf_tools.operators.operator_export_world_matrix import (
     ExportObjectWorldMatrix,
 )
-from instant_ngp_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
-from instant_ngp_tools.operators.operator_import_nerf_transforms import (
+from blender_nerf_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
+from blender_nerf_tools.operators.operator_import_nerf_transforms import (
     ImportNeRFTransforms,
 )
 
@@ -23,8 +23,8 @@ from instant_ngp_tools.operators.operator_import_nerf_transforms import (
 # Import Functions
 def _instant_ngp_transforms_export_operator_function(topbar_file_export, context):
     topbar_file_export.layout.operator(
-        ExportInstantNGPTransforms.bl_idname,
-        text="Instant-NGP Transforms for Rendering"
+        ExportNeRFRenderJSON.bl_idname,
+        text="NeRF render.json"
     )
 
 def _world_matrix_export_operator_function(topbar_file_export, context):
@@ -107,7 +107,7 @@ class Registration:
     def register_exporters(cls):
         """Register exporters."""
         cls._register_exporter(
-            ExportInstantNGPTransforms,
+            ExportNeRFRenderJSON,
             _instant_ngp_transforms_export_operator_function,
         )
         cls._register_exporter(
@@ -123,7 +123,7 @@ class Registration:
     def unregister_exporters(cls):
         """Unregister all registered exporters."""
         cls._unregister_exporter(
-            ExportInstantNGPTransforms,
+            ExportNeRFRenderJSON,
             _instant_ngp_transforms_export_operator_function
         )
         cls._unregister_exporter(

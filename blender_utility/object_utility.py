@@ -1,7 +1,7 @@
 import bpy
 import bmesh
 
-from instant_ngp_tools.blender_utility.logging_utility import log_report
+from blender_nerf_tools.blender_utility.logging_utility import log_report
 
 
 def add_empty(empty_name, collection=None):
