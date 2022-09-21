@@ -6,15 +6,12 @@ bl_info = {
 
 import bpy
 import json
-import os
 import mathutils
 import math
 from pathlib import Path
 
 # invoke() function which calls the file selector.
-from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
+from bpy.props import StringProperty
 
 NGP_CENTER = mathutils.Vector((0.5, 0.5, 0.5))
 NGP_SCALE = 0.33
@@ -37,10 +34,6 @@ class ImportInstantNGPCameras(bpy.types.Operator):
     def execute(self, context):
         input_path = Path(self.filepath)
         print(f"Importing instant-ngp properties from: {input_path}")
-
-        # Get some scene references
-        scene = bpy.context.scene
-        
 
         # Open JSON file and interpret
         with open(input_path, 'r') as f:

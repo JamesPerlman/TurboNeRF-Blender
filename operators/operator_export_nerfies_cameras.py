@@ -24,7 +24,7 @@ FLIP_MAT = mathutils.Matrix([
 class ExportNerfiesCameras(bpy.types.Operator):
 
     """Export main camera as nerfies camera set"""
-    bl_idname = "instant_ngp_tools.export_nerfies_cameras"
+    bl_idname = "blender_nerf_tools.export_nerfies_cameras"
     bl_label = "Export"
     bl_options = {'REGISTER'}
 

@@ -1,8 +1,8 @@
 from types import UnionType
 
 import bpy
-from instant_ngp_tools.blender_utility.logging_utility import log_report
-from instant_ngp_tools.blender_utility.object_utility import (
+from blender_nerf_tools.blender_utility.logging_utility import log_report
+from blender_nerf_tools.blender_utility.object_utility import (
     add_collection,
     add_cube,
     add_empty,
@@ -34,7 +34,7 @@ TRAINING_STEPS_DEFAULT = 10000
 TIME_ID = "time"
 TIME_DEFAULT = 0.0
 
-class NGPScene:
+class NeRFScene:
     @classmethod
     def main_collection(cls):
         collection = get_collection(MAIN_COLLECTION_ID)

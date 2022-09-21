@@ -1,1 +1,1 @@
-""" Contains operators to import/export instant-ngp data """
+""" Contains operators to import/export NeRF data """
