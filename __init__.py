@@ -1,11 +1,11 @@
 """
-A Blender addon that makes it easy to work with instant-ngp
+A Blender addon that makes it easy to work with NeRF Datasets
 """
 
 bl_info = {
-    "name": "Instant-NGP Addon",
+    "name": "Blender NeRF Tools",
     # Do not break this line, otherwise the addon can not be activated!
-    "description": "Allows you to work with instant-ngp scenes and export JSON for rendering.",
+    "description": "Allows you to work with NeRF datasets.",
     "author": "James Perlman",
     "version": (0, 0, 1),
     "blender": (3, 0, 0),
@@ -20,10 +20,10 @@ import bpy
 import importlib
 
 # The root dir is Blenders addon folder.
-# Therefore, we need the "instant_ngp_tools" specifier for this addon
-from instant_ngp_tools.blender_utility.logging_utility import log_report
-from instant_ngp_tools.panels.instant_ngp_panel import InstantNGPPanel
-from instant_ngp_tools.registration.registration import Registration
+# Therefore, we need the "blender_nerf_tools" specifier for this addon
+from blender_nerf_tools.blender_utility.logging_utility import log_report
+from blender_nerf_tools.panels.nerf_panel import NeRFPanel
+from blender_nerf_tools.registration.registration import Registration
 
 # from photogrammetry_importer.panels.view_3d_panel import OpenGLPanel
 from .utility import developer_utility
@@ -39,7 +39,7 @@ def register():
     Registration.register_importers()
     Registration.register_exporters()
 
-    bpy.utils.register_class(InstantNGPPanel)
+    bpy.utils.register_class(NeRFPanel)
 
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
 
@@ -50,7 +50,7 @@ def unregister():
     Registration.unregister_importers()
     Registration.unregister_exporters()
 
-    bpy.utils.unregister_class(InstantNGPPanel)
+    bpy.utils.unregister_class(NeRFPanel)
 
     log_report("INFO", "Unregistered {}".format(bl_info["name"]))
 

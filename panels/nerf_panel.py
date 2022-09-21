@@ -8,24 +8,24 @@ from bpy.props import (
     PointerProperty,
     FloatVectorProperty,
 )
-from instant_ngp_tools.blender_utility.ngp_scene import NGPScene
+from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 
-from instant_ngp_tools.blender_utility.object_utility import (
+from blender_nerf_tools.blender_utility.object_utility import (
     get_selected_empty,
     get_selected_object,
 )
-from instant_ngp_tools.panels.instant_ngp_panel_operators import InstantNGPSetupSceneOperator
+from blender_nerf_tools.panels.nerf_panel_operators import BlenderNeRFSetupSceneOperator
 
-class InstantNGPPanelSettings(bpy.types.PropertyGroup):
-    """Class that defines the properties of the InstantNGP panel in the 3D view."""
+class NeRFPanelSettings(bpy.types.PropertyGroup):
+    """Class that defines the properties of the NeRF panel in the 3D view."""
 
     # https://docs.blender.org/api/current/bpy.props.html#getter-setter-example
     # AABB Min
     def get_aabb_min(self):
-        return NGPScene.get_aabb_min()
+        return NeRFScene.get_aabb_min()
 
     def set_aabb_min(self, value):
-        NGPScene.set_aabb_min(value)
+        NeRFScene.set_aabb_min(value)
 
     aabb_min: FloatVectorProperty(
         name="AABB Min",
@@ -40,10 +40,10 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
 
     # AABB Max
     def get_aabb_max(self):
-        return NGPScene.get_aabb_max()
+        return NeRFScene.get_aabb_max()
 
     def set_aabb_max(self, value):
-        NGPScene.set_aabb_max(value)
+        NeRFScene.set_aabb_max(value)
     
     aabb_max: FloatVectorProperty(
         name="AABB Max",
@@ -58,10 +58,10 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
 
     # AABB Size
     def get_aabb_size(self):
-        return NGPScene().get_aabb_size()
+        return NeRFScene().get_aabb_size()
     
     def set_aabb_size(self, value):
-        NGPScene().set_aabb_size(value)
+        NeRFScene().set_aabb_size(value)
     
     aabb_size: FloatVectorProperty(
         name="AABB Size",
@@ -72,10 +72,10 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
 
     # AABB Center
     def get_aabb_center(self):
-        return NGPScene.get_aabb_center()
+        return NeRFScene.get_aabb_center()
     
     def set_aabb_center(self, value):
-        NGPScene.set_aabb_center(value)
+        NeRFScene.set_aabb_center(value)
     
     aabb_center: FloatVectorProperty(
         name="AABB Center",
@@ -86,10 +86,10 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
 
     # "Is AABB a Cube"
     def get_is_aabb_cubical(self):
-        return NGPScene.get_is_aabb_cubical()
+        return NeRFScene.get_is_aabb_cubical()
     
     def set_is_aabb_cubical(self, value):
-        NGPScene.set_is_aabb_cubical(value)
+        NeRFScene.set_is_aabb_cubical(value)
 
     is_aabb_cubical: BoolProperty(
         name="Use NGP Coords",
@@ -99,14 +99,14 @@ class InstantNGPPanelSettings(bpy.types.PropertyGroup):
     )
 
 
-class InstantNGPPanel(bpy.types.Panel):
+class NeRFPanel(bpy.types.Panel):
     """Class that defines the Instant-NGP panel in the 3D view."""
 
-    bl_label = "Instant-NGP Panel"
-    bl_idname = "VIEW3D_PT_instant_ngp_tools"
+    bl_label = "NeRF Panel"
+    bl_idname = "VIEW3D_PT_blender_nerf_tools"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "InstantNGP_NeRF"
+    bl_category = "Blender_NeRF"
 
     @classmethod
     def poll(cls, context):
@@ -117,32 +117,32 @@ class InstantNGPPanel(bpy.types.Panel):
     def register(cls):
         """Register properties and operators corresponding to this panel."""
 
-        bpy.utils.register_class(InstantNGPPanelSettings)
-        bpy.types.Scene.instant_ngp_panel_settings = PointerProperty(
-            type=InstantNGPPanelSettings
+        bpy.utils.register_class(NeRFPanelSettings)
+        bpy.types.Scene.nerf_panel_settings = PointerProperty(
+            type=NeRFPanelSettings
         )
-        bpy.utils.register_class(InstantNGPSetupSceneOperator)
+        bpy.utils.register_class(BlenderNeRFSetupSceneOperator)
 
     @classmethod
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
-        bpy.utils.unregister_class(InstantNGPPanelSettings)
-        bpy.utils.unregister_class(InstantNGPSetupSceneOperator)
-        del bpy.types.Scene.instant_ngp_panel_settings
+        bpy.utils.unregister_class(NeRFPanelSettings)
+        bpy.utils.unregister_class(BlenderNeRFSetupSceneOperator)
+        del bpy.types.Scene.nerf_panel_settings
 
     def draw(self, context):
         """Draw the panel with corrresponding properties and operators."""
-        settings = context.scene.instant_ngp_panel_settings
+        settings = context.scene.nerf_panel_settings
         layout = self.layout
 
-        is_scene_set_up = NGPScene.is_setup()
+        is_scene_set_up = NeRFScene.is_setup()
 
         setup_section = layout.box()
         setup_section.label(
-            text="Instant-NGP Scene is set up." if is_scene_set_up else "Set up Instant-NGP Scene Objects."
+            text="Scene is set up." if is_scene_set_up else "Set up Scene."
         )
         row = setup_section.row()
-        row.operator(InstantNGPSetupSceneOperator.bl_idname)
+        row.operator(BlenderNeRFSetupSceneOperator.bl_idname)
 
         aabb_section = layout.box()
         aabb_section.label(
