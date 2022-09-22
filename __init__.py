@@ -32,8 +32,6 @@ from blender_nerf_tools.blender_utility.logging_utility import log_report
 from blender_nerf_tools.panels.nerf_panel import NeRFPanel
 from blender_nerf_tools.registration.registration import Registration
 
-# from photogrammetry_importer.panels.view_3d_panel import OpenGLPanel
-
 def register():
     """Register importers, exporters and panels."""
 
