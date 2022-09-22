@@ -14,7 +14,8 @@ from blender_nerf_tools.blender_utility.object_utility import (
     get_selected_empty,
     get_selected_object,
 )
-from blender_nerf_tools.panels.nerf_panel_operators import BlenderNeRFSetupSceneOperator
+from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
+from blender_nerf_tools.photogrammetry_importer.operators.colmap_import_op import ImportColmapOperator
 
 class NeRFPanelSettings(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D view."""
@@ -122,28 +123,39 @@ class NeRFPanel(bpy.types.Panel):
             type=NeRFPanelSettings
         )
         bpy.utils.register_class(BlenderNeRFSetupSceneOperator)
+        bpy.utils.register_class(ImportColmapOperator)
 
     @classmethod
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(NeRFPanelSettings)
         bpy.utils.unregister_class(BlenderNeRFSetupSceneOperator)
+        bpy.utils.unregister_class(ImportColmapOperator)
         del bpy.types.Scene.nerf_panel_settings
 
     def draw(self, context):
-        """Draw the panel with corrresponding properties and operators."""
+        """Draw the panel with corresponding properties and operators."""
+
         settings = context.scene.nerf_panel_settings
         layout = self.layout
-
         is_scene_set_up = NeRFScene.is_setup()
 
         setup_section = layout.box()
         setup_section.label(
-            text="Scene is set up." if is_scene_set_up else "Set up Scene."
+            text="Scene"
         )
+        
         row = setup_section.row()
         row.operator(BlenderNeRFSetupSceneOperator.bl_idname)
 
+        row = setup_section.row()
+        row.operator(ImportColmapOperator.bl_idname)
+        # row.operator(BlenderNeRFResyncCOLMAPOperator.bl_idname)
+
+        if not is_scene_set_up:
+            return
+
+        """AABB"""
         aabb_section = layout.box()
         aabb_section.label(
             text="AABB Cropping"
