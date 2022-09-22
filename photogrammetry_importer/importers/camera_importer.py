@@ -233,7 +233,7 @@ class CameraImporter:
         "of cameras and points. Enable this option to suppress "
         "corresponding warnings. If possible, consider to re-compute the "
         "reconstruction using a camera model without radial distortion",
-        default=False,
+        default=True,
     )
 
     adjust_render_settings: BoolProperty(
