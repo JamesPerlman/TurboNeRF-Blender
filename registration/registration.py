@@ -3,17 +3,11 @@ import bpy
 
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
-from blender_nerf_tools.operators.operator_export_nerf_render_json import (
-    ExportNeRFRenderJSON,
-)
+from blender_nerf_tools.operators.operator_export_nerf_render_json import ExportNeRFRenderJSON
 from blender_nerf_tools.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
-from blender_nerf_tools.operators.operator_export_world_matrix import (
-    ExportObjectWorldMatrix,
-)
+from blender_nerf_tools.operators.operator_export_world_matrix import ExportObjectWorldMatrix
 from blender_nerf_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
-from blender_nerf_tools.operators.operator_import_nerf_transforms import (
-    ImportNeRFTransforms,
-)
+from blender_nerf_tools.operators.operator_import_nerf_transforms import ImportNeRFTransforms
 
 # Definining the following import and export functions within the
 # "Registration" class causes different errors when hovering over entries in
@@ -50,6 +44,7 @@ def _hypernerf_cams_import_operator_function(topbar_file_import, context):
         ImportHyperNeRFCams.bl_idname,
         text="HyperNeRF Cameras.json"
     )
+
 class Registration:
     """Class to register import and export operators."""
 

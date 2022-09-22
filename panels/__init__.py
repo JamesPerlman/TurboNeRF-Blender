@@ -1,1 +1,1 @@
-"""Contains panels for operating on instant-ngp renders"""
+""" Contains panels for operating on NeRF scenes """

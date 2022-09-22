@@ -150,6 +150,7 @@ class NeRFPanel(bpy.types.Panel):
 
         row = setup_section.row()
         row.operator(ImportColmapOperator.bl_idname)
+        row.enabled = is_scene_set_up
         # row.operator(BlenderNeRFResyncCOLMAPOperator.bl_idname)
 
         if not is_scene_set_up:

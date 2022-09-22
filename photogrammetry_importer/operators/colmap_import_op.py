@@ -1,3 +1,5 @@
+__reload_order_index__ = -2
+
 import os
 import bpy
 from bpy.props import StringProperty
@@ -33,7 +35,7 @@ class ImportColmapOperator(
     # filter_folder : BoolProperty(default=True, options={'HIDDEN'})
 
     def execute(self, context):
-        """Import a :code:`Colmap` model/workspace."""
+        """Import a :code:`COLMAP` model/workspace."""
         path = self.directory
         # Remove trailing slash
         path = os.path.dirname(path)
