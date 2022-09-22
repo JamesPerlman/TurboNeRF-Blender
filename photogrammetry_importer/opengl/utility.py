@@ -28,7 +28,7 @@ def _draw_coords_with_color(
         object_anchor_handle["particle_coords"] = coords
         object_anchor_handle["particle_colors"] = colors
         object_anchor_handle["point_size"] = point_size
-        bpy.context.scene["contains_opengl_point_clouds"] = True
+        bpy.context.scene["contains_opengl_point_clouds_nerf"] = True
 
     draw_manager = DrawManager.get_singleton()
     draw_manager.register_points_draw_callback(
@@ -93,7 +93,7 @@ def redraw_points(dummy):
 
     # This test is very cheap, so it will not cause
     # huge overheads for scenes without point clouds
-    if "contains_opengl_point_clouds" in bpy.context.scene:
+    if "contains_opengl_point_clouds_nerf" in bpy.context.scene:
 
         log_report(
             "INFO",

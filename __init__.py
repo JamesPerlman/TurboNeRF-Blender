@@ -19,6 +19,7 @@ bl_info = {
 import bpy
 import importlib
 
+
 from .utility import developer_utility
 importlib.reload(developer_utility)
 modules = developer_utility.setup_addon_modules(
@@ -31,6 +32,7 @@ modules = developer_utility.setup_addon_modules(
 from blender_nerf_tools.blender_utility.logging_utility import log_report
 from blender_nerf_tools.panels.nerf_panel import NeRFPanel
 from blender_nerf_tools.registration.registration import Registration
+from blender_nerf_tools.photogrammetry_importer.opengl.utility import redraw_points
 
 def register():
     """Register importers, exporters and panels."""
@@ -39,6 +41,8 @@ def register():
     Registration.register_exporters()
 
     bpy.utils.register_class(NeRFPanel)
+    
+    bpy.app.handlers.load_post.append(redraw_points)
 
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
 
@@ -50,6 +54,8 @@ def unregister():
     Registration.unregister_exporters()
 
     bpy.utils.unregister_class(NeRFPanel)
+
+    bpy.app.handlers.load_post.remove(redraw_points)
 
     log_report("INFO", "Unregistered {}".format(bl_info["name"]))
 

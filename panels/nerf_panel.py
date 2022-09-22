@@ -14,6 +14,7 @@ from blender_nerf_tools.blender_utility.object_utility import (
     get_selected_empty,
     get_selected_object,
 )
+from blender_nerf_tools.panels.nerf_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
 from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
 from blender_nerf_tools.photogrammetry_importer.operators.colmap_import_op import ImportColmapOperator
 
@@ -124,6 +125,7 @@ class NeRFPanel(bpy.types.Panel):
         )
         bpy.utils.register_class(BlenderNeRFSetupSceneOperator)
         bpy.utils.register_class(ImportColmapOperator)
+        bpy.utils.register_class(BlenderNeRFRedrawPointCloudOperator)
 
     @classmethod
     def unregister(cls):
@@ -131,6 +133,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(NeRFPanelSettings)
         bpy.utils.unregister_class(BlenderNeRFSetupSceneOperator)
         bpy.utils.unregister_class(ImportColmapOperator)
+        bpy.utils.unregister_class(BlenderNeRFRedrawPointCloudOperator)
         del bpy.types.Scene.nerf_panel_settings
 
     def draw(self, context):
@@ -145,18 +148,29 @@ class NeRFPanel(bpy.types.Panel):
             text="Scene"
         )
         
+        # Setup Scene action
+        
         row = setup_section.row()
         row.operator(BlenderNeRFSetupSceneOperator.bl_idname)
 
+        # Import COLMAP action
+        
         row = setup_section.row()
         row.operator(ImportColmapOperator.bl_idname)
         row.enabled = is_scene_set_up
+
+        # Redraw Point Cloud action
+
+        row = setup_section.row()
+        row.operator(BlenderNeRFRedrawPointCloudOperator.bl_idname)
+ 
         # row.operator(BlenderNeRFResyncCOLMAPOperator.bl_idname)
 
         if not is_scene_set_up:
             return
 
-        """AABB"""
+        # AABB section
+
         aabb_section = layout.box()
         aabb_section.label(
             text="AABB Cropping"
@@ -202,74 +216,4 @@ class NeRFPanel(bpy.types.Panel):
         )
         row.enabled = is_scene_set_up
 
-        return
-        export_screenshot_box = layout.box()
-        export_screenshot_box.label(
-            text="Export a single or multiple"
-            " screenshots (of the 3D view) to disk."
-        )
-        row = export_screenshot_box.row()
-        row.prop(settings, "screenshot_file_format", text="File Format")
-        row = export_screenshot_box.row()
-        row.prop(settings, "only_3d_view", text="Export Only 3D view")
-        row = export_screenshot_box.row()
-        row.prop(
-            settings,
-            "use_camera_perspective",
-            text="Use Perspective of selected Camera",
-        )
-        row.enabled = selected_cam is not None
-        row = export_screenshot_box.row()
-        row.operator(ExportScreenshotImageOperator.bl_idname)
-        row = export_screenshot_box.row()
-        row.prop(
-            settings,
-            "use_camera_keyframes_for_screenshots",
-            text="Use Camera Keyframes",
-        )
-        row.enabled = (
-            selected_cam is not None
-            and selected_cam.animation_data is not None
-        )
-        row = export_screenshot_box.row()
-        row.operator(ExportScreenshotAnimationOperator.bl_idname)
 
-        write_point_cloud_box = layout.box()
-        write_point_cloud_box.label(
-            text="Select a camera to save or export an OpenGL point cloud"
-            " rendering"
-        )
-        row = write_point_cloud_box.row()
-        row.prop(
-            settings,
-            "save_point_size",
-            text="Point Size of OpenGL Point Cloud",
-        )
-        row.enabled = selected_cam is not None
-        save_point_cloud_box = write_point_cloud_box.box()
-        save_point_cloud_box.label(text="Save point cloud rendering:")
-        row = save_point_cloud_box.row()
-        row.operator(SaveOpenGLRenderImageOperator.bl_idname)
-
-        export_point_cloud_box = write_point_cloud_box.box()
-        export_point_cloud_box.label(text="Export point cloud rendering:")
-        row = export_point_cloud_box.row()
-        row.prop(settings, "render_file_format", text="File Format")
-        row.enabled = selected_cam is not None
-        row = export_point_cloud_box.row()
-        row.prop(settings, "save_alpha", text="Save Alpha Values")
-        row.enabled = selected_cam is not None
-        row = export_point_cloud_box.row()
-        row.operator(ExportOpenGLRenderImageOperator.bl_idname)
-        row = export_point_cloud_box.row()
-        row.prop(
-            settings,
-            "use_camera_keyframes_for_rendering",
-            text="Use Camera Keyframes",
-        )
-        row.enabled = (
-            selected_cam is not None
-            and selected_cam.animation_data is not None
-        )
-        row = export_point_cloud_box.row()
-        row.operator(ExportOpenGLRenderAnimationOperator.bl_idname)
