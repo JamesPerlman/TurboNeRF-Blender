@@ -19,6 +19,7 @@ bl_info = {
 import bpy
 import importlib
 
+from blender_nerf_tools.utility import developer_utility
 importlib.reload(developer_utility)
 modules = developer_utility.setup_addon_modules(
     __path__, __name__, "bpy" in locals()
@@ -32,7 +33,6 @@ from blender_nerf_tools.panels.nerf_panel import NeRFPanel
 from blender_nerf_tools.registration.registration import Registration
 
 # from photogrammetry_importer.panels.view_3d_panel import OpenGLPanel
-from blender_nerf_tools.utility import developer_utility
 
 def register():
     """Register importers, exporters and panels."""
