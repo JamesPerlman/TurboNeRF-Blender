@@ -1,3 +1,5 @@
+__reload_order_index = -2
+
 import os
 import numpy as np
 
@@ -218,9 +220,9 @@ class ColmapFileHandler:
     def _is_valid_workspace_folder(idp):
         elements = os.listdir(idp)
         valid = True
-        if "sparse" in elements:
+        if "colmap_sparse" in elements:
             valid = ColmapFileHandler._is_valid_model_folder(
-                os.path.join(idp, "sparse")
+                os.path.join(idp, "colmap_sparse", "0")
             )
         else:
             valid = False
@@ -266,7 +268,7 @@ class ColmapFileHandler:
         """Parse a :code:`Colmap` workspace."""
         assert ColmapFileHandler._is_valid_workspace_folder(workspace_idp)
 
-        model_idp = os.path.join(workspace_idp, "sparse")
+        model_idp = os.path.join(workspace_idp, "colmap_sparse", "0")
         image_idp = os.path.join(workspace_idp, "images")
         depth_map_idp = os.path.join(workspace_idp, "stereo", "depth_maps")
         poisson_mesh_ifp = os.path.join(workspace_idp, "meshed-poisson.ply")
