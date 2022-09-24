@@ -1,6 +1,9 @@
+__reload_order_index__ = -3
+
 import os
 import bpy
 import colorsys
+import numpy as np
 from mathutils import Matrix
 from mathutils import Vector
 
@@ -172,12 +175,12 @@ def compute_camera_matrix_world(camera, convert_coordinate_system=True):
 def add_cameras(
     cameras,
     parent_collection,
+    parent_object,
     add_background_images=False,
     add_image_planes=False,
     add_depth_maps_as_point_cloud=True,
     convert_camera_coordinate_system=True,
     camera_collection_name="Cameras",
-    image_plane_collection_name="Image Planes",
     depth_map_collection_name="Depth Maps",
     camera_scale=1.0,
     image_plane_transparency=0.5,
@@ -195,17 +198,6 @@ def add_cameras(
     camera_collection = add_collection(
         camera_collection_name, parent_collection
     )
-
-    if add_image_planes:
-        log_report("INFO", "Adding image planes: True", op)
-        image_planes_collection = add_collection(
-            image_plane_collection_name, parent_collection
-        )
-        camera_image_plane_pair_collection = add_collection(
-            "Camera Image Plane Pair Collection", parent_collection
-        )
-    else:
-        log_report("INFO", "Adding image planes: False", op)
 
     if add_depth_maps_as_point_cloud:
         log_report("INFO", "Adding depth maps as point cloud: True", op)
@@ -255,7 +247,8 @@ def add_cameras(
             camera, camera_name, camera_collection
         )
         camera_object.scale *= camera_scale
-
+        camera_object.parent = parent_object
+        
         if not add_image_planes and not add_background_images:
             continue
 
@@ -281,32 +274,20 @@ def add_cameras(
             background_image.image = blender_image
 
         if add_image_planes and not camera.is_panoramic():
-            # Group image plane and camera:
-            camera_image_plane_pair_collection_current = add_collection(
-                "Camera Image Plane Pair Collection %s"
-                % blender_image_name_stem,
-                camera_image_plane_pair_collection,
-            )
-
-            image_plane_name = blender_image_name_stem + "_image_plane"
+            image_plane_name = blender_image_name_stem + "_img"
 
             image_plane_obj = add_camera_image_plane(
-                camera_object.matrix_world,
+                np.eye(4),
                 blender_image,
                 camera=camera,
                 name=image_plane_name,
                 transparency=image_plane_transparency,
                 add_image_plane_emission=add_image_plane_emission,
-                image_planes_collection=image_planes_collection,
+                image_planes_collection=camera_collection,
                 op=op,
             )
 
-            camera_image_plane_pair_collection_current.objects.link(
-                camera_object
-            )
-            camera_image_plane_pair_collection_current.objects.link(
-                image_plane_obj
-            )
+            image_plane_obj.parent = camera_object
 
         if not add_depth_maps_as_point_cloud:
             continue
