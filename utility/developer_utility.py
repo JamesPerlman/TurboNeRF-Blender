@@ -30,22 +30,15 @@ def setup_addon_modules(path, package_name, reload):
         return modules
 
     def reload_modules(modules):
-        # sort array in descending order
         modules.sort(
-            key=lambda module: count_periods(getattr(module, "__name__", 0)),
-            reverse=True,
+            key=lambda module: getattr(module, "__reload_order_index__", 0)
         )
-        print([getattr(module, "__name__", 0) for module in modules])
         for module in modules:
             importlib.reload(module)
 
     names = get_submodule_names()
     modules = import_submodules(names)
+    
     if reload:
         reload_modules(modules)
     return modules
-
-
-# count periods in string
-def count_periods(string):
-    return len(string) - len(string.replace(".", ""))
