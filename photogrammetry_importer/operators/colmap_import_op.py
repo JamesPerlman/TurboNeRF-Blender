@@ -3,6 +3,7 @@ __reload_order_index__ = -2
 import os
 import bpy
 from bpy.props import StringProperty
+from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 
 from blender_nerf_tools.photogrammetry_importer.operators.import_op import ImportOperator
 from blender_nerf_tools.photogrammetry_importer.operators.general_options import GeneralOptions
@@ -27,8 +28,8 @@ class ImportColmapOperator(
 ):
     """:code:`Blender` operator to import a :code:`Colmap` model/workspace."""
 
-    bl_idname = "import_scene.colmap_model"
-    bl_label = "Import COLMAP Model Folder"
+    bl_idname = "blender_nerf_tools.import_colmap"
+    bl_label = "Import COLMAP"
     bl_options = {"PRESET"}
 
     directory: StringProperty()
@@ -56,8 +57,8 @@ class ImportColmapOperator(
         log_report("INFO", "Mesh file path: " + str(mesh_ifp), self)
 
         reconstruction_collection = add_collection("Reconstruction Collection")
-        self.import_photogrammetry_cameras(cameras, reconstruction_collection)
-        self.import_photogrammetry_points(points, reconstruction_collection)
+        self.import_photogrammetry_cameras(cameras, reconstruction_collection, parent_object=NeRFScene.global_transform())
+        self.import_photogrammetry_points(points, reconstruction_collection, parent_object=NeRFScene.global_transform())
         self.apply_general_options()
 
         return {"FINISHED"}
