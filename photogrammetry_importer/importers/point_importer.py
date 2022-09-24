@@ -50,7 +50,7 @@ class PointImporter:
     point_size: IntProperty(
         name="Initial Point Size",
         description="Initial Point Size",
-        default=5,
+        default=1,
     )
 
     # Option 2: Add Points as Mesh Object
@@ -103,7 +103,7 @@ class PointImporter:
                 mesh_box.prop(self, "point_subdivisions")
                 mesh_box.prop(self, "add_color_as_custom_property")
 
-    def import_photogrammetry_points(self, points, reconstruction_collection):
+    def import_photogrammetry_points(self, points, reconstruction_collection, parent_object):
         """Import a point cloud using the properties of this class."""
         if self.import_points:
             if self.point_cloud_display_sparsity > 1:
@@ -112,8 +112,10 @@ class PointImporter:
             if self.center_points:
                 points = Point.get_centered_points(points)
 
+            point_cloud_obj = None
+
             if self.draw_points_with_gpu:
-                draw_points(
+                point_cloud_obj = draw_points(
                     points,
                     self.point_size,
                     self.add_points_to_point_cloud_handle,
@@ -122,7 +124,7 @@ class PointImporter:
                 )
 
             if self.add_points_as_mesh_oject:
-                add_points_as_mesh_vertices(
+                point_cloud_obj = add_points_as_mesh_vertices(
                     points,
                     reconstruction_collection,
                     self.add_mesh_to_point_geometry_nodes,
@@ -131,3 +133,6 @@ class PointImporter:
                     self.add_color_as_custom_property,
                     op=self,
                 )
+            
+            if point_cloud_obj is not None:
+                point_cloud_obj.parent = parent_object

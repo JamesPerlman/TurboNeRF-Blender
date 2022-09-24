@@ -106,7 +106,7 @@ class _DrawCallBackHandler:
         # Handle to the object
         self._object_anchor_pose_previous = np.array([])
         self._batch_cached = None
-        self._point_size = 5
+        self._point_size = 1
 
         # If Blender is closed and self._batch_cached is not properly deleted,
         # this causes something like the following:
