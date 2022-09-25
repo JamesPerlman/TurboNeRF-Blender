@@ -90,13 +90,13 @@ class CameraImporter:
         name="Add a Background Image for each Camera",
         description="The background image is only visible by viewing the "
         "scene from a specific camera",
-        default=True,
+        default=False,
     )
     add_image_planes: BoolProperty(
         name="Add an Image Plane for each Camera",
         description="Add an Image Plane for each Camera - only for "
         "non-panoramic cameras",
-        default=False,
+        default=True,
     )
     add_image_plane_emission: BoolProperty(
         name="Add Image Plane Color Emission",
