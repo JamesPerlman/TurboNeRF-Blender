@@ -164,10 +164,15 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.register_class(BlenderNeRFSelectNextCameraOperator)
         bpy.utils.register_class(BlenderNeRFSelectPreviousCameraOperator)
 
+        cls.subscribe_to_events()
+
+
 
     @classmethod
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
+
+        cls.unsubscribe_from_events()
 
         bpy.utils.unregister_class(NeRFPanelSettings)
         bpy.utils.unregister_class(BlenderNeRFSetupSceneOperator)
@@ -181,6 +186,30 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(BlenderNeRFSelectPreviousCameraOperator)
 
         del bpy.types.Scene.nerf_panel_settings
+        
+    @classmethod
+    def subscribe_to_events(cls):
+        """Subscribe to events."""
+
+        def obj_selected_callback():
+            cls.handle_object_selected()
+        
+        bpy.msgbus.subscribe_rna(
+            key = (bpy.types.LayerObjects, "active"),
+            owner = cls,
+            args = (),
+            notify = obj_selected_callback,
+        )
+    
+    @classmethod
+    def unsubscribe_from_events(cls):
+        """Unsubscribe from events."""
+
+        bpy.msgbus.clear_by_owner(cls)
+
+    @classmethod
+    def handle_object_selected(cls):
+        NeRFScene.update_visibility_for_selected_cameras()
 
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""

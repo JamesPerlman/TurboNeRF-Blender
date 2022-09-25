@@ -370,3 +370,15 @@ class NeRFScene:
     @classmethod
     def get_camera_near(cls, camera):
         return camera[CAMERA_NEAR_ID]
+
+    # CAMERA IMAGE PLANE VISIBILITY
+
+    @classmethod
+    def update_visibility_for_selected_cameras(cls):
+        """ Updates the image plane visibility for all selected cameras. """
+
+        for camera in cls.get_all_cameras():
+            for child in camera.children:
+                is_visible = camera.select_get()
+                child.hide_set(not is_visible)
+
