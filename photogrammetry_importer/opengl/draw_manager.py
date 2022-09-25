@@ -4,6 +4,7 @@ import bpy
 import gpu
 from gpu_extras.batch import batch_for_shader
 from blender_nerf_tools.blender_utility.logging_utility import log_report
+from blender_nerf_tools.constants import POINT_CLOUD_POINT_SIZE_DEFAULT
 
 
 def _compute_transformed_coords(object_anchor_matrix_world, positions):
@@ -106,7 +107,7 @@ class _DrawCallBackHandler:
         # Handle to the object
         self._object_anchor_pose_previous = np.array([])
         self._batch_cached = None
-        self._point_size = 1
+        self._point_size = POINT_CLOUD_POINT_SIZE_DEFAULT
 
         # If Blender is closed and self._batch_cached is not properly deleted,
         # this causes something like the following:

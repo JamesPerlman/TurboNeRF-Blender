@@ -21,11 +21,14 @@ from blender_nerf_tools.constants import (
     GLOBAL_TRANSFORM_ID,
     MAIN_COLLECTION_ID,
     NERF_PROPS_ID,
+    POINT_CLOUD_NAME_DEFAULT,
+    POINT_CLOUD_POINT_SIZE_ID,
     TIME_DEFAULT,
     TIME_ID,
     TRAINING_STEPS_DEFAULT,
     TRAINING_STEPS_ID,
 )
+from blender_nerf_tools.photogrammetry_importer.opengl.draw_manager import DrawManager
 
 class NeRFScene:
     @classmethod
@@ -382,3 +385,26 @@ class NeRFScene:
                 is_visible = camera.select_get()
                 child.hide_set(not is_visible)
 
+    # POINT CLOUD
+    @classmethod
+    def point_cloud(cls):
+        return get_object(POINT_CLOUD_NAME_DEFAULT)
+
+    @classmethod
+    def get_viz_point_size(cls):
+        point_cloud = cls.point_cloud()
+
+        if point_cloud is None:
+            return 0
+        
+        return cls.point_cloud()[POINT_CLOUD_POINT_SIZE_ID]
+
+    @classmethod
+    def set_viz_point_size(cls, value):
+        point_cloud = cls.point_cloud()
+        point_cloud[POINT_CLOUD_POINT_SIZE_ID] = value
+        draw_manager = DrawManager.get_singleton()
+        draw_back_handler = draw_manager.get_draw_callback_handler(
+            point_cloud
+        )
+        draw_back_handler.set_point_size(value)

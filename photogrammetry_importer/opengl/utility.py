@@ -4,6 +4,10 @@ from bpy.app.handlers import persistent
 from mathutils import Matrix
 from gpu.types import GPUOffScreen
 from gpu_extras.batch import batch_for_shader
+from blender_nerf_tools.constants import (
+    POINT_CLOUD_NAME_DEFAULT,
+    POINT_CLOUD_POINT_SIZE_ID,
+)
 
 from blender_nerf_tools.photogrammetry_importer.types.point import Point
 from blender_nerf_tools.photogrammetry_importer.opengl.draw_manager import DrawManager
@@ -17,7 +21,7 @@ def _draw_coords_with_color(
     point_size,
     add_points_to_point_cloud_handle,
     reconstruction_collection=None,
-    object_anchor_handle_name="OpenGL Point Cloud",
+    object_anchor_handle_name=POINT_CLOUD_NAME_DEFAULT,
     op=None,
 ):
 
@@ -27,7 +31,7 @@ def _draw_coords_with_color(
     if add_points_to_point_cloud_handle:
         object_anchor_handle["particle_coords"] = coords
         object_anchor_handle["particle_colors"] = colors
-        object_anchor_handle["point_size"] = point_size
+        object_anchor_handle[POINT_CLOUD_POINT_SIZE_ID] = point_size
         bpy.context.scene["contains_opengl_point_clouds_nerf"] = True
 
     draw_manager = DrawManager.get_singleton()
@@ -42,7 +46,7 @@ def draw_points(
     point_size,
     add_points_to_point_cloud_handle,
     reconstruction_collection=None,
-    object_anchor_handle_name="OpenGL Point Cloud",
+    object_anchor_handle_name=POINT_CLOUD_NAME_DEFAULT,
     op=None,
 ):
     """Draw points using OpenGL."""
@@ -104,11 +108,11 @@ def redraw_points(dummy):
             if (
                 "particle_coords" in obj
                 and "particle_colors" in obj
-                and "point_size" in obj
+                and POINT_CLOUD_POINT_SIZE_ID in obj
             ):
                 coords = obj["particle_coords"]
                 colors = obj["particle_colors"]
-                point_size = obj["point_size"]
+                point_size = obj[POINT_CLOUD_POINT_SIZE_ID]
 
                 draw_manager = DrawManager.get_singleton()
                 draw_manager.register_points_draw_callback(

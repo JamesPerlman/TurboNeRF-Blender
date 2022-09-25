@@ -33,8 +33,22 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
 
     # https://docs.blender.org/api/current/bpy.props.html#getter-setter-example
 
-    # Cameras
+    # Point cloud
+    def get_viz_point_size(self):
+        return NeRFScene.get_viz_point_size()
 
+    def set_viz_point_size(self, value):
+        NeRFScene.set_viz_point_size(value)
+
+    viz_point_size: IntProperty(
+        name="Point Size",
+        description="Point cloud visualization point size.",
+        get=get_viz_point_size,
+        set=set_viz_point_size,
+        min=1,
+    )
+
+    # Cameras
     def set_selected_camera(self, id):
         NeRFScene.set_selected_camera(id)
     
@@ -228,6 +242,9 @@ class NeRFPanel(bpy.types.Panel):
         row = setup_section.row()
         row.operator(BlenderNeRFSetupSceneOperator.bl_idname)
 
+        if not is_scene_set_up:
+            return
+        
         # Import COLMAP action
         
         row = setup_section.row()
@@ -236,13 +253,20 @@ class NeRFPanel(bpy.types.Panel):
 
         # Redraw Point Cloud action
 
-        row = setup_section.row()
-        row.operator(BlenderNeRFRedrawPointCloudOperator.bl_idname)
- 
-        # row.operator(BlenderNeRFResyncCOLMAPOperator.bl_idname)
+        point_cloud_exists = NeRFScene.point_cloud() is not None
 
-        if not is_scene_set_up:
-            return
+        point_cloud_section = layout.box()
+        point_cloud_section.label(
+            text="Point Cloud"
+        )
+
+        row = point_cloud_section.row()
+        row.prop(settings, "viz_point_size")
+        row.enabled = point_cloud_exists
+
+        row = point_cloud_section.row()
+        row.operator(BlenderNeRFRedrawPointCloudOperator.bl_idname)
+        row.enabled = point_cloud_exists
         
         # Camera Settings section
 

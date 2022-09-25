@@ -7,6 +7,7 @@ from bpy.props import (
     FloatProperty,
     FloatVectorProperty,
 )
+from blender_nerf_tools.constants import POINT_CLOUD_POINT_SIZE_ID
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import draw_points
 from blender_nerf_tools.photogrammetry_importer.importers.point_utility import (
     add_points_as_mesh_vertices,
@@ -94,7 +95,7 @@ class PointImporter:
             opengl_box.prop(self, "draw_points_with_gpu")
             if self.draw_points_with_gpu or draw_everything:
                 opengl_box.prop(self, "add_points_to_point_cloud_handle")
-                opengl_box.prop(self, "point_size")
+                opengl_box.prop(self, POINT_CLOUD_POINT_SIZE_ID)
             mesh_box = point_box.box()
             mesh_box.prop(self, "add_points_as_mesh_oject")
             if self.add_points_as_mesh_oject:

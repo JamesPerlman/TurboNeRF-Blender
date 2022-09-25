@@ -30,3 +30,10 @@ CAMERA_NEAR_DEFAULT = 1.0
 
 CAMERA_FAR_ID = "camera_far"
 CAMERA_FAR_DEFAULT = 8.0
+
+
+# Point cloud
+POINT_CLOUD_NAME_DEFAULT = "Point Cloud Scene Representation"
+
+POINT_CLOUD_POINT_SIZE_ID = "point_size"
+POINT_CLOUD_POINT_SIZE_DEFAULT = 1.0
