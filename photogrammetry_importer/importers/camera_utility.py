@@ -12,6 +12,8 @@ from blender_nerf_tools.blender_utility.object_utility import (
     add_obj,
 )
 
+from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID
+
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import draw_coords
 from blender_nerf_tools.photogrammetry_importer.utility.timing_utility import StopWatch
 from blender_nerf_tools.photogrammetry_importer.utility.type_utility import is_int
@@ -177,7 +179,7 @@ def add_cameras(
     parent_collection,
     parent_object,
     add_background_images=False,
-    add_image_planes=False,
+    add_image_planes=True,
     add_depth_maps_as_point_cloud=True,
     convert_camera_coordinate_system=True,
     camera_collection_name="Cameras",
@@ -248,7 +250,12 @@ def add_cameras(
         )
         camera_object.scale *= camera_scale
         camera_object.parent = parent_object
-        
+
+        # add camera custom properties
+        camera_object[CAMERA_NEAR_ID] = CAMERA_NEAR_DEFAULT
+        camera_object[CAMERA_FAR_ID] = CAMERA_FAR_DEFAULT
+
+        # add image plane
         if not add_image_planes and not add_background_images:
             continue
 
@@ -288,6 +295,8 @@ def add_cameras(
             )
 
             image_plane_obj.parent = camera_object
+
+            add_camera_image_plane_drivers(camera_object, image_plane_obj)
 
         if not add_depth_maps_as_point_cloud:
             continue
@@ -363,7 +372,7 @@ def add_camera_image_plane(
     mesh.update()
     mesh.validate()
 
-    plane_distance = 1.0  # Distance from camera position
+    plane_distance = CAMERA_NEAR_DEFAULT  # Distance from camera position
     # Right vector in view frustum at plane_distance:
     right = Vector((1, 0, 0)) * (width / focal_length) * plane_distance
     # Up vector in view frustum at plane_distance:
@@ -424,3 +433,16 @@ def add_camera_image_plane(
     mesh.validate()
     # log_report('INFO', 'add_camera_image_plane: Done', op)
     return mesh_obj
+
+def add_camera_image_plane_drivers(camera_obj, img_plane_obj):
+
+    [sx, sy, sz] = [fc.driver for fc in img_plane_obj.driver_add("scale")]
+
+    for driver in [sx, sy, sz]:
+        near = driver.variables.new()
+        near.name = "near"
+        near.targets[0].id = camera_obj
+        near.targets[0].data_path = f"[\"{CAMERA_NEAR_ID}\"]"
+
+        driver.expression = "near"
+    

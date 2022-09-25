@@ -25,7 +25,7 @@ from blender_nerf_tools.constants import (
     TIME_ID,
     TRAINING_STEPS_DEFAULT,
     TRAINING_STEPS_ID,
-) 
+)
 
 class NeRFScene:
     @classmethod
@@ -361,3 +361,12 @@ class NeRFScene:
                 area.spaces[0].region_3d.view_perspective = 'CAMERA'
                 break
     
+    # CAMERA PROPERTIES
+
+    @classmethod
+    def set_camera_near(cls, camera, value):
+        camera[CAMERA_NEAR_ID] = value
+    
+    @classmethod
+    def get_camera_near(cls, camera):
+        return camera[CAMERA_NEAR_ID]

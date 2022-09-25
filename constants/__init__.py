@@ -27,3 +27,6 @@ TIME_DEFAULT = 0.0
 # Camera property identifiers
 CAMERA_NEAR_ID = "camera_near"
 CAMERA_NEAR_DEFAULT = 1.0
+
+CAMERA_FAR_ID = "camera_far"
+CAMERA_FAR_DEFAULT = 8.0
