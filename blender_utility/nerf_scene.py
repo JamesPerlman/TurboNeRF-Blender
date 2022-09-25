@@ -9,30 +9,23 @@ from blender_nerf_tools.blender_utility.object_utility import (
     get_collection,
     get_object
 )
-
-MAIN_COLLECTION_ID = "NeRF Tools"
-GLOBAL_TRANSFORM_ID = "GLOBAL_TRANSFORM"
-AABB_BOX_ID = "AABB_BOX"
-NERF_PROPS_ID = "NERF_PROPERTIES"
-
-# TODO: Come up with a way to present NGP coords instead of Blender/NeRF coords
-AABB_SIZE_ID = "aabb_size"
-AABB_SIZE_DEFAULT = 16 / 0.33
-
-AABB_MIN_ID = "aabb_min_2"
-AABB_MIN_DEFAULT = (-AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2, -AABB_SIZE_DEFAULT / 2)
-
-AABB_MAX_ID = "aabb_max_2"
-AABB_MAX_DEFAULT = (AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2, AABB_SIZE_DEFAULT / 2)
-
-AABB_IS_CUBE_ID = "is_aabb_cube"
-AABB_IS_CUBE_DEFAULT = False
-
-TRAINING_STEPS_ID = "training_steps"
-TRAINING_STEPS_DEFAULT = 10000
-
-TIME_ID = "time"
-TIME_DEFAULT = 0.0
+from blender_nerf_tools.constants import (
+    AABB_BOX_ID,
+    AABB_IS_CUBE_DEFAULT,
+    AABB_IS_CUBE_ID,
+    AABB_MAX_DEFAULT,
+    AABB_MAX_ID,
+    AABB_MIN_DEFAULT,
+    AABB_MIN_ID,
+    CAMERA_NEAR_ID,
+    GLOBAL_TRANSFORM_ID,
+    MAIN_COLLECTION_ID,
+    NERF_PROPS_ID,
+    TIME_DEFAULT,
+    TIME_ID,
+    TRAINING_STEPS_DEFAULT,
+    TRAINING_STEPS_ID,
+) 
 
 class NeRFScene:
     @classmethod
