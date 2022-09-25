@@ -1,6 +1,7 @@
 from types import UnionType
 
 import bpy
+from blender_nerf_tools.blender_utility.driver_utility import force_update_drivers
 from blender_nerf_tools.blender_utility.logging_utility import log_report
 from blender_nerf_tools.blender_utility.object_utility import (
     add_collection,
@@ -226,12 +227,7 @@ class NeRFScene:
     @classmethod
     def update_aabb_box_drivers(cls):
         obj = cls.aabb_box()
-        # dirty hack - re-evaluates drivers (thank you https://blenderartists.org/t/driver-update-dependencies-via-script/1126347)
-        for driver in obj.animation_data.drivers:
-            orig_expr = driver.driver.expression
-            # add a space to the expression, then remove it
-            driver.driver.expression = f"{orig_expr} "
-            driver.driver.expression = orig_expr
+        force_update_drivers(obj)
     
     # NERF PROPERTIES
 
@@ -372,13 +368,28 @@ class NeRFScene:
     # CAMERA PROPERTIES
 
     @classmethod
-    def set_camera_near(cls, camera, value):
+    def set_camera_near(cls, camera, value, update_drivers = True):
         camera[CAMERA_NEAR_ID] = value
+
+        # update image plane drivers
+        if update_drivers:
+            force_update_drivers(camera)
+
     
     @classmethod
     def get_camera_near(cls, camera):
         return camera[CAMERA_NEAR_ID]
-
+    
+    @classmethod
+    def set_near_for_selected_cameras(cls, value):
+        for camera in cls.get_selected_cameras():
+            cls.set_camera_near(camera, value)
+    
+    @classmethod
+    def get_near_for_selected_cameras(cls):
+        if len(cls.get_selected_cameras()) > 0:
+            return cls.get_camera_near(cls.get_selected_cameras()[0])
+        return 0.0
     # CAMERA IMAGE PLANE VISIBILITY
 
     @classmethod

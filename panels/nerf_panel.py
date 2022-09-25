@@ -67,6 +67,23 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
     def get_distance_to_cursor(self, camera):
         return (bpy.context.scene.cursor.location - camera.location).length
 
+    # Camera properties
+
+    def set_camera_near(self, value):
+        NeRFScene.set_near_for_selected_cameras(value)
+    
+    def get_camera_near(self,):
+        return NeRFScene.get_near_for_selected_cameras()
+    
+    camera_near: FloatProperty(
+        name="Camera Near",
+        description="Camera near plane",
+        get=get_camera_near,
+        set=set_camera_near,
+        min=0.0,
+        max=100.0,
+    )
+
     # AABB Min
     def get_aabb_min(self):
         return NeRFScene.get_aabb_min()
@@ -307,7 +324,6 @@ class NeRFPanel(bpy.types.Panel):
         row.operator(BlenderNeRFSelectAllCamerasOperator.bl_idname)
 
         # Select cameras in radius
-
         if len(selected_cams) == 1:
             row = cam_section.row()
             row.label(text=f"Dist to cursor: {settings.get_distance_to_cursor(selected_cams[0]):.2f}")
@@ -323,9 +339,16 @@ class NeRFPanel(bpy.types.Panel):
         )
         row.operator(BlenderNeRFSelectCamerasInRadiusOperator.bl_idname, text="Select")
 
-        # Set near/far planes
+        # Properties for selected cameras
         row = cam_section.row()
+        row.label(text="Camera properties:")
 
+        row = cam_section.row()
+        row.prop(
+            settings,
+            "camera_near",
+            text="Near",
+        )
 
         # AABB section
 
