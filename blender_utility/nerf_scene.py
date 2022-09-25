@@ -47,6 +47,8 @@ class NeRFScene:
             collection = add_collection(MAIN_COLLECTION_ID)
         return collection
 
+    # GLOBAL TRANSFORM
+
     @classmethod
     def global_transform(cls):
         return get_object(GLOBAL_TRANSFORM_ID)
@@ -61,6 +63,26 @@ class NeRFScene:
             cls.main_collection().objects.link(obj)
         return obj
     
+    # SETUP
+
+    @classmethod
+    def setup(cls):
+        cls.create_main_collection()
+        cls.create_nerf_props()
+        cls.create_aabb_box()
+        cls.create_global_transform()
+
+    @classmethod
+    def is_setup(cls):
+        return (
+            cls.main_collection() is not None
+            and cls.aabb_box() is not None
+            and cls.global_transform() is not None
+            and cls.nerf_props() is not None
+        )
+
+    # AABB BOX
+
     @classmethod
     def create_aabb_box(cls):
         collection = cls.main_collection()
@@ -68,6 +90,7 @@ class NeRFScene:
         if obj is None:
             obj = add_cube(AABB_BOX_ID, collection)
             obj.display_type = 'BOUNDS'
+            bpy.ops.object.modifier_add(type='WIREFRAME')
             
             # Set up custom AABB min prop
             obj[AABB_MIN_ID] = AABB_MIN_DEFAULT
@@ -129,43 +152,6 @@ class NeRFScene:
     def aabb_box(cls):
         return get_object(AABB_BOX_ID)
     
-    @classmethod
-    def create_nerf_props(cls):
-        collection = cls.main_collection()
-        obj = cls.nerf_props()
-        
-        if obj == None:
-            obj = add_empty(NERF_PROPS_ID, collection)
-            
-            obj[TRAINING_STEPS_ID] = TRAINING_STEPS_DEFAULT
-
-            obj[TIME_ID] = TIME_DEFAULT
-            prop_mgr = obj.id_properties_ui(TIME_ID)
-            prop_mgr.update(min=0.0, max=1.0, soft_min=0.0, soft_max=1.0)
-        
-        if not obj.name in collection.objects:
-            collection.objects.link(obj)
-    
-    @classmethod
-    def nerf_props(cls):
-        return get_object(NERF_PROPS_ID)
-
-    @classmethod
-    def setup(cls):
-        cls.create_main_collection()
-        cls.create_nerf_props()
-        cls.create_aabb_box()
-        cls.create_global_transform()
-
-    @classmethod
-    def is_setup(cls):
-        return (
-            cls.main_collection() is not None
-            and cls.aabb_box() is not None
-            and cls.global_transform() is not None
-            and cls.nerf_props() is not None
-        )
-
     @classmethod
     def get_aabb_min(cls):
         return cls.aabb_box()[AABB_MIN_ID]
@@ -251,6 +237,29 @@ class NeRFScene:
             driver.driver.expression = f"{orig_expr} "
             driver.driver.expression = orig_expr
     
+    # NERF PROPERTIES
+
+    @classmethod
+    def create_nerf_props(cls):
+        collection = cls.main_collection()
+        obj = cls.nerf_props()
+        
+        if obj == None:
+            obj = add_empty(NERF_PROPS_ID, collection)
+            
+            obj[TRAINING_STEPS_ID] = TRAINING_STEPS_DEFAULT
+
+            obj[TIME_ID] = TIME_DEFAULT
+            prop_mgr = obj.id_properties_ui(TIME_ID)
+            prop_mgr.update(min=0.0, max=1.0, soft_min=0.0, soft_max=1.0)
+        
+        if not obj.name in collection.objects:
+            collection.objects.link(obj)
+    
+    @classmethod
+    def nerf_props(cls):
+        return get_object(NERF_PROPS_ID)
+
     @classmethod
     def get_nerf_prop(cls, prop_id):
         if prop_id in cls.nerf_props():
@@ -270,3 +279,77 @@ class NeRFScene:
     def get_time(cls):
         return cls.get_nerf_prop(TIME_ID)
     
+    # CAMERAS
+    @classmethod
+    def is_nerf_camera(cls, obj):
+        # TODO: stricter check
+        return obj.type == 'CAMERA'
+
+    @classmethod
+    def get_selected_cameras(cls):
+        return [obj for obj in bpy.context.selected_objects if cls.is_nerf_camera(obj)]
+    
+    @classmethod
+    def get_all_cameras(cls):
+        return [obj for obj in bpy.data.objects if cls.is_nerf_camera(obj)]
+    
+    @classmethod
+    def select_all_cameras(cls):
+        for obj in cls.get_all_cameras():
+            obj.select_set(True)
+    
+    @classmethod
+    def deselect_all_cameras(cls):
+        bpy.ops.object.select_all(action='DESELECT')
+
+    @classmethod
+    def set_selected_camera(cls, camera):
+        camera.select_set(True)
+
+    @classmethod
+    def select_camera_with_offset(cls, offset):
+        selected_cameras = cls.get_selected_cameras()
+        NeRFScene.deselect_all_cameras()
+        if len(selected_cameras) == 1:
+            current_camera = selected_cameras[0]
+            all_cameras = cls.get_all_cameras()
+            current_camera_index = all_cameras.index(current_camera)
+            target_camera = all_cameras[(current_camera_index + offset) % len(all_cameras)]
+            cls.set_selected_camera(target_camera)
+
+    @classmethod
+    def select_previous_camera(cls):
+        cls.select_camera_with_offset(-1)
+    
+    @classmethod
+    def select_next_camera(cls):
+        cls.select_camera_with_offset(1)
+    
+    @classmethod
+    def select_first_camera(cls):
+        selected_cameras = cls.get_selected_cameras()
+        NeRFScene.deselect_all_cameras()
+        if len(selected_cameras) > 1:
+            cls.set_selected_camera(selected_cameras[0])
+        else:
+            cls.set_selected_camera(cls.get_all_cameras()[0])
+
+    @classmethod
+    def select_last_camera(cls):
+        selected_cameras = cls.get_selected_cameras()
+        NeRFScene.deselect_all_cameras()
+        if len(selected_cameras) > 1:
+            cls.set_selected_camera(selected_cameras[-1])
+        else:
+            cls.set_selected_camera(cls.get_all_cameras()[-1])
+
+    @classmethod
+    def set_active_camera(cls, camera):
+        bpy.context.scene.camera = camera
+
+    @classmethod
+    def view_active_camera(cls):
+        # thank you https://b3d.interplanety.org/en/switching-to-the-view-from-camera-throug-the-python-api/
+        region = next(iter([area.spaces[0].region_3d for area in bpy.context.screen.areas if area.type == 'VIEW_3D']), None)
+        if region:
+            region.view_perspective = 'CAMERA'

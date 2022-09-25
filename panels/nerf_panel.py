@@ -16,12 +16,30 @@ from blender_nerf_tools.blender_utility.object_utility import (
 )
 from blender_nerf_tools.panels.nerf_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
 from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
+from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators import (
+    BlenderNeRFSelectAllCamerasOperator,
+    BlenderNeRFSelectCamerasInRadiusOperator,
+    BlenderNeRFSelectFirstCameraOperator,
+    BlenderNeRFSelectLastCameraOperator,
+    BlenderNeRFSelectNextCameraOperator,
+    BlenderNeRFSelectPreviousCameraOperator,
+)
 from blender_nerf_tools.photogrammetry_importer.operators.colmap_import_op import ImportColmapOperator
+
 
 class NeRFPanelSettings(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D view."""
 
     # https://docs.blender.org/api/current/bpy.props.html#getter-setter-example
+
+    # Cameras
+
+    def set_selected_camera(self, id):
+        NeRFScene.set_selected_camera(id)
+    
+    def get_selected_cameras(self):
+        return NeRFScene.get_selected_cameras()
+    
     # AABB Min
     def get_aabb_min(self):
         return NeRFScene.get_aabb_min()
@@ -123,17 +141,33 @@ class NeRFPanel(bpy.types.Panel):
         bpy.types.Scene.nerf_panel_settings = PointerProperty(
             type=NeRFPanelSettings
         )
+
         bpy.utils.register_class(BlenderNeRFSetupSceneOperator)
         bpy.utils.register_class(ImportColmapOperator)
         bpy.utils.register_class(BlenderNeRFRedrawPointCloudOperator)
+        bpy.utils.register_class(BlenderNeRFSelectAllCamerasOperator)
+        bpy.utils.register_class(BlenderNeRFSelectCamerasInRadiusOperator)
+        bpy.utils.register_class(BlenderNeRFSelectFirstCameraOperator)
+        bpy.utils.register_class(BlenderNeRFSelectLastCameraOperator)
+        bpy.utils.register_class(BlenderNeRFSelectNextCameraOperator)
+        bpy.utils.register_class(BlenderNeRFSelectPreviousCameraOperator)
+
 
     @classmethod
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
+
         bpy.utils.unregister_class(NeRFPanelSettings)
         bpy.utils.unregister_class(BlenderNeRFSetupSceneOperator)
         bpy.utils.unregister_class(ImportColmapOperator)
         bpy.utils.unregister_class(BlenderNeRFRedrawPointCloudOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectAllCamerasOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectCamerasInRadiusOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectFirstCameraOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectLastCameraOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectNextCameraOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectPreviousCameraOperator)
+
         del bpy.types.Scene.nerf_panel_settings
 
     def draw(self, context):
@@ -168,6 +202,57 @@ class NeRFPanel(bpy.types.Panel):
 
         if not is_scene_set_up:
             return
+        
+        # Camera Settings section
+
+        cam_section = layout.box()
+        cam_section.label(
+            text="Cameras"
+        )
+
+        # Set selected camera
+        row = cam_section.row()
+        row.prop(
+            settings,
+            "selected_camera",
+            text="Selected Camera",
+        )
+
+        # Select previous/next camera
+
+        selected_cams = settings.get_selected_cameras()
+
+        if len(selected_cams) == 0:
+            row.label(text="No cameras selected")
+        
+        if len(selected_cams) == 1:
+            row.label(text=selected_cams[0].name)
+        elif len(selected_cams) > 1:
+            row.label(text=f"{len(selected_cams)} cameras selected")
+        
+        row = cam_section.row()
+
+        row.operator(BlenderNeRFSelectFirstCameraOperator.bl_idname, text="|<")
+        row.operator(BlenderNeRFSelectPreviousCameraOperator.bl_idname, text="<")
+        row.operator(BlenderNeRFSelectNextCameraOperator.bl_idname, text=">")
+        row.operator(BlenderNeRFSelectLastCameraOperator.bl_idname, text=">|")
+
+        # Select all cameras
+        row = cam_section.row()
+        row.operator(BlenderNeRFSelectAllCamerasOperator.bl_idname)
+
+        # Select cameras in radius
+        row = cam_section.row()
+        # row.prop(
+        #     settings,
+        #     "cam_select_radius",
+        #     text="Cam Select Radius",
+        # )
+        # row.operator(BlenderNeRFSelectCamerasInRadiusOperator.bl_idname)
+
+        # Set near/far planes
+        row = cam_section.row()
+
 
         # AABB section
 
