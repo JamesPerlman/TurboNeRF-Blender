@@ -19,12 +19,14 @@ from blender_nerf_tools.panels.nerf_panel_operators.redraw_point_cloud import Bl
 from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
 from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators import (
     BlenderNeRFSelectAllCamerasOperator,
-    BlenderNeRFSelectCamerasInRadiusOperator,
+    BlenderNeRFSelectCamerasInsideRadiusOperator,
+    BlenderNeRFSelectCamerasOutsideRadiusOperator,
     BlenderNeRFSelectFirstCameraOperator,
     BlenderNeRFSelectLastCameraOperator,
     BlenderNeRFSelectNextCameraOperator,
     BlenderNeRFSelectPreviousCameraOperator,
     BlenderNeRFSetActiveFromSelectedCameraOperator,
+    BlenderNeRFUpdateCameraImagePlaneVisibilityOperator,
 )
 from blender_nerf_tools.photogrammetry_importer.operators.colmap_import_op import ImportColmapOperator
 
@@ -190,12 +192,14 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.register_class(ImportColmapOperator)
         bpy.utils.register_class(BlenderNeRFRedrawPointCloudOperator)
         bpy.utils.register_class(BlenderNeRFSelectAllCamerasOperator)
-        bpy.utils.register_class(BlenderNeRFSelectCamerasInRadiusOperator)
+        bpy.utils.register_class(BlenderNeRFSelectCamerasInsideRadiusOperator)
+        bpy.utils.register_class(BlenderNeRFSelectCamerasOutsideRadiusOperator)
         bpy.utils.register_class(BlenderNeRFSelectFirstCameraOperator)
         bpy.utils.register_class(BlenderNeRFSelectLastCameraOperator)
         bpy.utils.register_class(BlenderNeRFSelectNextCameraOperator)
         bpy.utils.register_class(BlenderNeRFSelectPreviousCameraOperator)
         bpy.utils.register_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
+        bpy.utils.register_class(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator)
 
         cls.subscribe_to_events()
 
@@ -212,12 +216,14 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(ImportColmapOperator)
         bpy.utils.unregister_class(BlenderNeRFRedrawPointCloudOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectAllCamerasOperator)
-        bpy.utils.unregister_class(BlenderNeRFSelectCamerasInRadiusOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectCamerasInsideRadiusOperator)
+        bpy.utils.unregister_class(BlenderNeRFSelectCamerasOutsideRadiusOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectFirstCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectLastCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectNextCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectPreviousCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
+        bpy.utils.unregister_class(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator)
 
         del bpy.types.Scene.nerf_panel_settings
         
@@ -226,7 +232,8 @@ class NeRFPanel(bpy.types.Panel):
         """Subscribe to events."""
 
         def obj_selected_callback():
-            cls.handle_object_selected()
+            print("Boop")
+            NeRFScene.update_image_plane_visibility_for_all_cameras()
         
         bpy.msgbus.subscribe_rna(
             key = (bpy.types.LayerObjects, "active"),
@@ -240,10 +247,6 @@ class NeRFPanel(bpy.types.Panel):
         """Unsubscribe from events."""
 
         bpy.msgbus.clear_by_owner(cls)
-
-    @classmethod
-    def handle_object_selected(cls):
-        NeRFScene.update_image_plane_visibility_for_all_cameras()
 
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""
@@ -292,7 +295,7 @@ class NeRFPanel(bpy.types.Panel):
 
         cam_section = layout.box()
         cam_section.label(
-            text="Cameras"
+            text="Camera selection"
         )
 
         # Select previous/next camera
@@ -311,6 +314,10 @@ class NeRFPanel(bpy.types.Panel):
         row = cam_section.row()
         row.operator(BlenderNeRFSetActiveFromSelectedCameraOperator.bl_idname, text="Set Active")
         row.enabled = len(selected_cams) == 1
+
+        row = cam_section.row()
+        row.operator(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator.bl_idname, text="Update Image Planes")
+        row.enabled = len(selected_cams) > 1
         
         row = cam_section.row()
 
@@ -329,15 +336,18 @@ class NeRFPanel(bpy.types.Panel):
             row.label(text=f"Dist to cursor: {settings.get_distance_to_cursor(selected_cams[0]):.2f}")
 
         row = cam_section.row()
-        row.label(text="Select in radius:")
+        row.label(text="Select by radius:")
 
         row = cam_section.row()
         row.prop(
             settings,
             "camera_selection_radius",
-            text="Cam Select Radius",
+            text="radius",
         )
-        row.operator(BlenderNeRFSelectCamerasInRadiusOperator.bl_idname, text="Select")
+
+        row = cam_section.row()
+        row.operator(BlenderNeRFSelectCamerasInsideRadiusOperator.bl_idname, text="In")
+        row.operator(BlenderNeRFSelectCamerasOutsideRadiusOperator.bl_idname, text="Out")
 
         # Properties for selected cameras
         row = cam_section.row()
@@ -347,7 +357,7 @@ class NeRFPanel(bpy.types.Panel):
         row.prop(
             settings,
             "camera_near",
-            text="Near",
+            text="near",
         )
 
         # AABB section

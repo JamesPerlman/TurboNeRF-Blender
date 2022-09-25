@@ -1,5 +1,7 @@
 """ Constants for blender_nerf_tools. """
 
+__reload_order_index__ = -10
+
 MAIN_COLLECTION_ID = "NeRF Tools"
 GLOBAL_TRANSFORM_ID = "GLOBAL_TRANSFORM"
 AABB_BOX_ID = "AABB_BOX"

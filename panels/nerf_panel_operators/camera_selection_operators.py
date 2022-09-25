@@ -1,3 +1,5 @@
+__reload_order_index__ = -1
+
 import bpy
 
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
@@ -61,14 +63,24 @@ class BlenderNeRFSelectNextCameraOperator(bpy.types.Operator):
         NeRFScene.select_next_camera()
         return {'FINISHED'}
 
-class BlenderNeRFSelectCamerasInRadiusOperator(bpy.types.Operator):
+class BlenderNeRFSelectCamerasInsideRadiusOperator(bpy.types.Operator):
     """Select cameras in radius"""
     bl_idname = "blender_nerf_tools.select_cameras_in_radius"
     bl_label = "Select Cameras in Radius"
     bl_description = "Select cameras in radius"
 
     def execute(self, context):
-        NeRFScene.select_cameras_in_radius(bpy.context.scene.nerf_panel_settings.camera_selection_radius)
+        NeRFScene.select_cameras_inside_radius(bpy.context.scene.nerf_panel_settings.camera_selection_radius)
+        return {'FINISHED'}
+
+class BlenderNeRFSelectCamerasOutsideRadiusOperator(bpy.types.Operator):
+    """Select cameras outside radius"""
+    bl_idname = "blender_nerf_tools.select_cameras_outside_radius"
+    bl_label = "Select Cameras Outside Radius"
+    bl_description = "Select cameras outside radius"
+
+    def execute(self, context):
+        NeRFScene.select_cameras_outside_radius(bpy.context.scene.nerf_panel_settings.camera_selection_radius)
         return {'FINISHED'}
 
 class BlenderNeRFSetActiveFromSelectedCameraOperator(bpy.types.Operator):
@@ -80,4 +92,13 @@ class BlenderNeRFSetActiveFromSelectedCameraOperator(bpy.types.Operator):
     def execute(self, context):
         NeRFScene.set_selected_camera(NeRFScene.get_selected_cameras()[0])
         return {'FINISHED'}
-    
+
+class BlenderNeRFUpdateCameraImagePlaneVisibilityOperator(bpy.types.Operator):
+    """Update camera image plane visibility"""
+    bl_idname = "blender_nerf_tools.update_camera_image_plane_visibility"
+    bl_label = "Update Camera Image Plane Visibility"
+    bl_description = "Update camera image plane visibility"
+
+    def execute(self, context):
+        NeRFScene.update_image_plane_visibility_for_all_cameras()
+        return {'FINISHED'}

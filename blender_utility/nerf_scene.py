@@ -1,4 +1,4 @@
-from types import UnionType
+__reload_order_index__ = -2
 
 import bpy
 from blender_nerf_tools.blender_utility.driver_utility import force_update_drivers
@@ -344,11 +344,20 @@ class NeRFScene:
             cls.set_selected_camera(cls.get_all_cameras()[-1])
 
     @classmethod
-    def select_cameras_in_radius(cls, radius):
+    def select_cameras_inside_radius(cls, radius):
         cls.deselect_all_cameras()
         for camera in cls.get_all_cameras():
             dist_to_cursor = (camera.location - bpy.context.scene.cursor.location).length
             if dist_to_cursor <= radius:
+                camera.select_set(True)
+                cls.update_image_plane_visibility_for_camera(camera)
+    
+    @classmethod
+    def select_cameras_outside_radius(cls, radius):
+        cls.deselect_all_cameras()
+        for camera in cls.get_all_cameras():
+            dist_to_cursor = (camera.location - bpy.context.scene.cursor.location).length
+            if dist_to_cursor > radius:
                 camera.select_set(True)
                 cls.update_image_plane_visibility_for_camera(camera)
 
@@ -401,7 +410,7 @@ class NeRFScene:
     @classmethod
     def update_image_plane_visibility_for_all_cameras(cls):
         """ Updates the image plane visibility for all selected cameras. """
-
+        print(f"uupdateting")
         for camera in cls.get_all_cameras():
             cls.update_image_plane_visibility_for_camera(camera)
 
