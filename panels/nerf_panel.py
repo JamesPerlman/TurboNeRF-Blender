@@ -7,6 +7,7 @@ from bpy.props import (
     IntProperty,
     PointerProperty,
     FloatVectorProperty,
+    FloatProperty,
 )
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 
@@ -40,6 +41,17 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
     def get_selected_cameras(self):
         return NeRFScene.get_selected_cameras()
     
+    camera_selection_radius: FloatProperty(
+        name="Camera Selection Radius",
+        description="Radius for camera selection",
+        default=1.0,
+        min=0.0,
+        max=100.0,
+    )
+
+    def get_distance_to_cursor(self, camera):
+        return (bpy.context.scene.cursor.location - camera.location).length
+
     # AABB Min
     def get_aabb_min(self):
         return NeRFScene.get_aabb_min()
@@ -210,23 +222,16 @@ class NeRFPanel(bpy.types.Panel):
             text="Cameras"
         )
 
-        # Set selected camera
-        row = cam_section.row()
-        row.prop(
-            settings,
-            "selected_camera",
-            text="Selected Camera",
-        )
-
         # Select previous/next camera
 
+        row = cam_section.row()
         selected_cams = settings.get_selected_cameras()
 
         if len(selected_cams) == 0:
             row.label(text="No cameras selected")
         
         if len(selected_cams) == 1:
-            row.label(text=selected_cams[0].name)
+            row.label(text=f"Current: {selected_cams[0].name}")
         elif len(selected_cams) > 1:
             row.label(text=f"{len(selected_cams)} cameras selected")
         
@@ -242,13 +247,21 @@ class NeRFPanel(bpy.types.Panel):
         row.operator(BlenderNeRFSelectAllCamerasOperator.bl_idname)
 
         # Select cameras in radius
+
+        if len(selected_cams) == 1:
+            row = cam_section.row()
+            row.label(text=f"Dist to cursor: {settings.get_distance_to_cursor(selected_cams[0]):.2f}")
+
         row = cam_section.row()
-        # row.prop(
-        #     settings,
-        #     "cam_select_radius",
-        #     text="Cam Select Radius",
-        # )
-        # row.operator(BlenderNeRFSelectCamerasInRadiusOperator.bl_idname)
+        row.label(text="Select in radius:")
+
+        row = cam_section.row()
+        row.prop(
+            settings,
+            "camera_selection_radius",
+            text="Cam Select Radius",
+        )
+        row.operator(BlenderNeRFSelectCamerasInRadiusOperator.bl_idname, text="Select")
 
         # Set near/far planes
         row = cam_section.row()

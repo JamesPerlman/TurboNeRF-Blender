@@ -344,6 +344,14 @@ class NeRFScene:
             cls.set_selected_camera(cls.get_all_cameras()[-1])
 
     @classmethod
+    def select_cameras_in_radius(cls, radius):
+        cls.deselect_all_cameras()
+        for camera in cls.get_all_cameras():
+            dist_to_cursor = (camera.location - bpy.context.scene.cursor.location).length
+            if dist_to_cursor <= radius:
+                camera.select_set(True)
+
+    @classmethod
     def set_active_camera(cls, camera):
         bpy.context.scene.camera = camera
 

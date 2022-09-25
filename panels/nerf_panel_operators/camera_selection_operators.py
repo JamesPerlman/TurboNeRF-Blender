@@ -68,12 +68,5 @@ class BlenderNeRFSelectCamerasInRadiusOperator(bpy.types.Operator):
     bl_description = "Select cameras in radius"
 
     def execute(self, context):
-        NeRFScene.deselect_all_cameras()
-        settings = context.scene.nerf_settings
-        radius = settings.cam_select_radius
-        bpy.ops.object.select_all(action='DESELECT')
-        for obj in bpy.data.objects:
-            if obj.type == 'CAMERA':
-                if obj.location.length <= radius:
-                    obj.select_set(True)
+        NeRFScene.select_cameras_in_radius(bpy.context.scene.nerf_panel_settings.camera_selection_radius)
         return {'FINISHED'}
