@@ -70,3 +70,14 @@ class BlenderNeRFSelectCamerasInRadiusOperator(bpy.types.Operator):
     def execute(self, context):
         NeRFScene.select_cameras_in_radius(bpy.context.scene.nerf_panel_settings.camera_selection_radius)
         return {'FINISHED'}
+
+class BlenderNeRFSetActiveFromSelectedCameraOperator(bpy.types.Operator):
+    """Set active camera from selected camera"""
+    bl_idname = "blender_nerf_tools.set_active_from_selected_camera"
+    bl_label = "Set Active Camera from Selected Camera"
+    bl_description = "Set active camera from selected camera"
+
+    def execute(self, context):
+        NeRFScene.set_selected_camera(NeRFScene.get_selected_cameras()[0])
+        return {'FINISHED'}
+    

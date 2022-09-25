@@ -24,6 +24,7 @@ from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators i
     BlenderNeRFSelectLastCameraOperator,
     BlenderNeRFSelectNextCameraOperator,
     BlenderNeRFSelectPreviousCameraOperator,
+    BlenderNeRFSetActiveFromSelectedCameraOperator,
 )
 from blender_nerf_tools.photogrammetry_importer.operators.colmap_import_op import ImportColmapOperator
 
@@ -177,6 +178,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.register_class(BlenderNeRFSelectLastCameraOperator)
         bpy.utils.register_class(BlenderNeRFSelectNextCameraOperator)
         bpy.utils.register_class(BlenderNeRFSelectPreviousCameraOperator)
+        bpy.utils.register_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
 
         cls.subscribe_to_events()
 
@@ -198,6 +200,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(BlenderNeRFSelectLastCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectNextCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectPreviousCameraOperator)
+        bpy.utils.unregister_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
 
         del bpy.types.Scene.nerf_panel_settings
         
@@ -223,7 +226,7 @@ class NeRFPanel(bpy.types.Panel):
 
     @classmethod
     def handle_object_selected(cls):
-        NeRFScene.update_visibility_for_selected_cameras()
+        NeRFScene.update_image_plane_visibility_for_all_cameras()
 
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""
@@ -287,6 +290,10 @@ class NeRFPanel(bpy.types.Panel):
             row.label(text=f"Current: {selected_cams[0].name}")
         elif len(selected_cams) > 1:
             row.label(text=f"{len(selected_cams)} cameras selected")
+
+        row = cam_section.row()
+        row.operator(BlenderNeRFSetActiveFromSelectedCameraOperator.bl_idname, text="Set Active")
+        row.enabled = len(selected_cams) == 1
         
         row = cam_section.row()
 

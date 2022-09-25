@@ -292,12 +292,16 @@ class NeRFScene:
     
     @classmethod
     def select_all_cameras(cls):
-        for obj in cls.get_all_cameras():
-            obj.select_set(True)
+        for camera in cls.get_all_cameras():
+            camera.select_set(True)
+            cls.update_image_plane_visibility_for_camera(camera)
     
     @classmethod
     def deselect_all_cameras(cls):
-        bpy.ops.object.select_all(action='DESELECT')
+        # bpy.ops.object.select_all(action='DESELECT')
+        for camera in cls.get_all_cameras():
+            camera.select_set(False)
+            cls.update_image_plane_visibility_for_camera(camera)
 
     @classmethod
     def set_selected_camera(cls, camera, change_view = True):
@@ -350,6 +354,7 @@ class NeRFScene:
             dist_to_cursor = (camera.location - bpy.context.scene.cursor.location).length
             if dist_to_cursor <= radius:
                 camera.select_set(True)
+                cls.update_image_plane_visibility_for_camera(camera)
 
     @classmethod
     def set_active_camera(cls, camera):
@@ -377,13 +382,17 @@ class NeRFScene:
     # CAMERA IMAGE PLANE VISIBILITY
 
     @classmethod
-    def update_visibility_for_selected_cameras(cls):
+    def update_image_plane_visibility_for_camera(cls, camera):
+        for child in camera.children:
+            is_visible = camera.select_get()
+            child.hide_set(not is_visible)
+    
+    @classmethod
+    def update_image_plane_visibility_for_all_cameras(cls):
         """ Updates the image plane visibility for all selected cameras. """
 
         for camera in cls.get_all_cameras():
-            for child in camera.children:
-                is_visible = camera.select_get()
-                child.hide_set(not is_visible)
+            cls.update_image_plane_visibility_for_camera(camera)
 
     # POINT CLOUD
     @classmethod
