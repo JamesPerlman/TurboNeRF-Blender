@@ -303,8 +303,11 @@ class NeRFScene:
         bpy.ops.object.select_all(action='DESELECT')
 
     @classmethod
-    def set_selected_camera(cls, camera):
+    def set_selected_camera(cls, camera, change_view = True):
         camera.select_set(True)
+        bpy.context.view_layer.objects.active = camera
+        if change_view:
+            cls.set_view_from_camera(camera)
 
     @classmethod
     def select_camera_with_offset(cls, offset):
@@ -356,8 +359,11 @@ class NeRFScene:
         bpy.context.scene.camera = camera
 
     @classmethod
-    def view_active_camera(cls):
-        # thank you https://b3d.interplanety.org/en/switching-to-the-view-from-camera-throug-the-python-api/
-        region = next(iter([area.spaces[0].region_3d for area in bpy.context.screen.areas if area.type == 'VIEW_3D']), None)
-        if region:
-            region.view_perspective = 'CAMERA'
+    def set_view_from_camera(cls, camera):
+        bpy.context.scene.camera = camera
+        # thank you https://blender.stackexchange.com/a/30645/141797
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                area.spaces[0].region_3d.view_perspective = 'CAMERA'
+                break
+    
