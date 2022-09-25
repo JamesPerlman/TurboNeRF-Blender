@@ -52,9 +52,7 @@ class CameraImporter:
         # (i.e. nvm)
         default="",
     )
-    import_cameras: BoolProperty(
-        name="Import Cameras", description="Import Cameras", default=True
-    )
+    import_cameras = True
     default_width: IntProperty(
         name="Default Width",
         description="Width, which will be used used if corresponding "
@@ -380,7 +378,7 @@ class CameraImporter:
             if not camera.has_principal_point():
                 camera.set_principal_point([default_pp_x, default_pp_y])
 
-    def import_photogrammetry_cameras(self, cameras, parent_collection):
+    def import_photogrammetry_cameras(self, cameras, parent_collection, parent_object):
         """Import the cameras using the properties of this class."""
         if not self.import_cameras and not self.add_camera_motion_as_animation:
             return {"FINISHED"}
@@ -406,6 +404,7 @@ class CameraImporter:
             add_cameras(
                 cameras,
                 parent_collection,
+                parent_object=parent_object,
                 add_background_images=self.add_background_images,
                 add_image_planes=self.add_image_planes,
                 add_depth_maps_as_point_cloud=self.add_depth_maps_as_point_cloud,
