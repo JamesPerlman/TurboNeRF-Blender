@@ -113,7 +113,7 @@ class NeRFScene:
                 vmax.targets[0].data_path = f"[\"{AABB_MAX_ID}\"][{axis}]"
 
             # Set up drivers for location
-            [px, py, pz] = [fc.driver for fc in obj.driver_add('location', -1)]
+            [px, py, pz] = [fc.driver for fc in obj.driver_add("location")]
 
             add_min_max_vars(px, 0)
             px.expression = "0.5 * (x_min + x_max)"
@@ -125,7 +125,7 @@ class NeRFScene:
             pz.expression = "0.5 * (z_min + z_max)"
             
             # Set up drivers for scale
-            [sx, sy, sz] = [fc.driver for fc in obj.driver_add('scale', -1)]
+            [sx, sy, sz] = [fc.driver for fc in obj.driver_add("scale")]
 
             add_min_max_vars(sx, 0)
             sx.expression = "x_max - x_min"
@@ -272,7 +272,8 @@ class NeRFScene:
     def get_time(cls):
         return cls.get_nerf_prop(TIME_ID)
     
-    # CAMERAS
+    # CAMERA SELECTION
+
     @classmethod
     def is_nerf_camera(cls, obj):
         # TODO: stricter check
