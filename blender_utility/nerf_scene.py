@@ -415,9 +415,6 @@ class NeRFScene:
     @classmethod
     def update_image_plane_visibility_for_all_cameras(cls, force_visible = None):
         """ Updates the image plane visibility for all selected cameras. """
-        
-        print(f"goobers {force_visible}")
-        print(f"uupdateting")
         for camera in cls.get_all_cameras():
             cls.update_image_plane_visibility_for_camera(camera, force_visible)
 
