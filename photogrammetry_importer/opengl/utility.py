@@ -5,6 +5,8 @@ from mathutils import Matrix
 from gpu.types import GPUOffScreen
 from gpu_extras.batch import batch_for_shader
 from blender_nerf_tools.constants import (
+    OBJ_TYPE_ID,
+    OBJ_TYPE_POINT_CLOUD,
     POINT_CLOUD_NAME_DEFAULT,
     POINT_CLOUD_POINT_SIZE_ID,
 )
@@ -32,6 +34,7 @@ def _draw_coords_with_color(
         object_anchor_handle["particle_coords"] = coords
         object_anchor_handle["particle_colors"] = colors
         object_anchor_handle[POINT_CLOUD_POINT_SIZE_ID] = point_size
+        object_anchor_handle[OBJ_TYPE_ID] = OBJ_TYPE_POINT_CLOUD
         bpy.context.scene["contains_opengl_point_clouds_nerf"] = True
 
     draw_manager = DrawManager.get_singleton()

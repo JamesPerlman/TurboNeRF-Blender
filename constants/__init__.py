@@ -39,3 +39,11 @@ POINT_CLOUD_NAME_DEFAULT = "Point Cloud Scene Representation"
 
 POINT_CLOUD_POINT_SIZE_ID = "point_size"
 POINT_CLOUD_POINT_SIZE_DEFAULT = 1.0
+
+# Object type identifiers
+OBJ_TYPE_ID = "object_type"
+
+OBJ_TYPE_TRAIN_CAMERA = "train_camera"
+OBJ_TYPE_RENDER_CAMERA = "render_camera"
+OBJ_TYPE_IMG_PLANE = "image_plane"
+OBJ_TYPE_POINT_CLOUD = "point_cloud"

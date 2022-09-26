@@ -12,7 +12,7 @@ from blender_nerf_tools.blender_utility.object_utility import (
     add_obj,
 )
 
-from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID
+from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID, OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE, OBJ_TYPE_TRAIN_CAMERA
 
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import draw_coords
 from blender_nerf_tools.photogrammetry_importer.utility.timing_utility import StopWatch
@@ -254,6 +254,7 @@ def add_cameras(
         # add camera custom properties
         camera_object[CAMERA_NEAR_ID] = CAMERA_NEAR_DEFAULT
         camera_object[CAMERA_FAR_ID] = CAMERA_FAR_DEFAULT
+        camera_object[OBJ_TYPE_ID] = OBJ_TYPE_TRAIN_CAMERA
 
         # add image plane
         if not add_image_planes and not add_background_images:
@@ -295,6 +296,7 @@ def add_cameras(
             )
 
             image_plane_obj.parent = camera_object
+            image_plane_obj[OBJ_TYPE_ID] = OBJ_TYPE_IMG_PLANE
 
             add_camera_image_plane_drivers(camera_object, image_plane_obj)
 

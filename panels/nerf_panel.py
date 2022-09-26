@@ -15,6 +15,7 @@ from blender_nerf_tools.blender_utility.object_utility import (
     get_selected_empty,
     get_selected_object,
 )
+from blender_nerf_tools.constants import OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE
 from blender_nerf_tools.panels.nerf_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
 from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
 from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators import (
@@ -259,7 +260,9 @@ class NeRFPanel(bpy.types.Panel):
         """Subscribe to events."""
 
         def obj_selected_callback():
-            print("Boop")
+            active_obj = bpy.context.view_layer.objects.active
+            if active_obj[OBJ_TYPE_ID] == OBJ_TYPE_IMG_PLANE:
+                NeRFScene.set_selected_camera(active_obj.parent, change_view=False)
             NeRFScene.update_image_plane_visibility_for_all_cameras(
                 force_visible=bpy.context.scene.nerf_panel_settings.get_should_force_image_plane_visibility()
             )
