@@ -275,8 +275,7 @@ class NeRFScene:
 
     @classmethod
     def is_nerf_camera(cls, obj):
-        # TODO: stricter check
-        return obj.type == 'CAMERA'
+        return obj.type == 'CAMERA' and get_object_type(obj) == OBJ_TYPE_TRAIN_CAMERA
 
     @classmethod
     def get_selected_cameras(cls):
