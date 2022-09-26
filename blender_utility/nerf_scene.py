@@ -396,8 +396,9 @@ class NeRFScene:
     
     @classmethod
     def get_near_for_selected_cameras(cls):
-        if len(cls.get_selected_cameras()) > 0:
-            return cls.get_camera_near(cls.get_selected_cameras()[0])
+        selected_cameras = cls.get_selected_cameras()
+        if len(selected_cameras) > 0:
+            return cls.get_camera_near([0])
         return 0.0
     
     # CAMERA IMAGE PLANE VISIBILITY
