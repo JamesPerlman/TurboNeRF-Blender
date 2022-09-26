@@ -403,7 +403,7 @@ class NeRFPanel(bpy.types.Panel):
         row.prop(
             settings,
             "show_image_planes_for_active_cameras_only",
-            text="Active cameras only",
+            text="Selected cameras only",
         )
         row.enabled = settings.show_image_planes
 
