@@ -399,20 +399,27 @@ class NeRFScene:
         if len(cls.get_selected_cameras()) > 0:
             return cls.get_camera_near(cls.get_selected_cameras()[0])
         return 0.0
+    
     # CAMERA IMAGE PLANE VISIBILITY
 
     @classmethod
-    def update_image_plane_visibility_for_camera(cls, camera):
+    def update_image_plane_visibility_for_camera(cls, camera, force_visible = None):
         for child in camera.children:
-            is_visible = camera.select_get()
+            is_visible: bool
+            if force_visible is not None:
+                is_visible = force_visible
+            else:
+                is_visible =  camera.select_get()
             child.hide_set(not is_visible)
     
     @classmethod
-    def update_image_plane_visibility_for_all_cameras(cls):
+    def update_image_plane_visibility_for_all_cameras(cls, force_visible = None):
         """ Updates the image plane visibility for all selected cameras. """
+        
+        print(f"goobers {force_visible}")
         print(f"uupdateting")
         for camera in cls.get_all_cameras():
-            cls.update_image_plane_visibility_for_camera(camera)
+            cls.update_image_plane_visibility_for_camera(camera, force_visible)
 
     # POINT CLOUD
     @classmethod
@@ -437,3 +444,4 @@ class NeRFScene:
             point_cloud
         )
         draw_back_handler.set_point_size(value)
+    

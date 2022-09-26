@@ -70,7 +70,6 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
         return (bpy.context.scene.cursor.location - camera.location).length
 
     # Camera properties
-
     def set_camera_near(self, value):
         NeRFScene.set_near_for_selected_cameras(value)
     
@@ -84,6 +83,33 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
         set=set_camera_near,
         min=0.0,
         max=100.0,
+    )
+
+    # Image planes
+
+    def update_show_image_planes(self, context):
+        force_visible: bool
+        if self.show_image_planes == False:
+            force_visible = False
+        elif self.show_image_planes_for_active_cameras_only:
+            force_visible = None
+        else:
+            force_visible = True
+
+        NeRFScene.update_image_plane_visibility_for_all_cameras(force_visible)
+
+    show_image_planes: BoolProperty(
+        name="Show Image Planes",
+        description="Show image planes for cameras",
+        default=True,
+        update=update_show_image_planes,
+    )
+    
+    show_image_planes_for_active_cameras_only: BoolProperty(
+        name="Show Image Planes for Active Cameras Only",
+        description="Show image planes for active cameras only",
+        default=True,
+        update=update_show_image_planes,
     )
 
     # AABB Min
@@ -314,13 +340,9 @@ class NeRFPanel(bpy.types.Panel):
         row = cam_section.row()
         row.operator(BlenderNeRFSetActiveFromSelectedCameraOperator.bl_idname, text="Set Active")
         row.enabled = len(selected_cams) == 1
-
-        row = cam_section.row()
-        row.operator(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator.bl_idname, text="Update Image Planes")
-        row.enabled = len(selected_cams) > 1
         
+        # camera stepper row
         row = cam_section.row()
-
         row.operator(BlenderNeRFSelectFirstCameraOperator.bl_idname, text="|<")
         row.operator(BlenderNeRFSelectPreviousCameraOperator.bl_idname, text="<")
         row.operator(BlenderNeRFSelectNextCameraOperator.bl_idname, text=">")
@@ -348,7 +370,7 @@ class NeRFPanel(bpy.types.Panel):
         row = cam_section.row()
         row.operator(BlenderNeRFSelectCamerasInsideRadiusOperator.bl_idname, text="In")
         row.operator(BlenderNeRFSelectCamerasOutsideRadiusOperator.bl_idname, text="Out")
-
+        
         # Properties for selected cameras
         row = cam_section.row()
         row.label(text="Camera properties:")
@@ -359,6 +381,28 @@ class NeRFPanel(bpy.types.Panel):
             "camera_near",
             text="near",
         )
+
+        # Camera image plane visibility
+        section = layout.box()
+        section.label(text="Image Planes")
+
+        row = section.row()
+        row.prop(
+            settings,
+            "show_image_planes",
+            text="Show image planes",
+        )
+
+        row = section.row()
+        row.prop(
+            settings,
+            "show_image_planes_for_active_cameras_only",
+            text="Active cameras only",
+        )
+        row.enabled = settings.show_image_planes
+
+        row = section.row()
+        row.operator(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator.bl_idname, text="Update Image Planes")
 
         # AABB section
 
@@ -406,5 +450,3 @@ class NeRFPanel(bpy.types.Panel):
             text="Cube"
         )
         row.enabled = is_scene_set_up
-
-
