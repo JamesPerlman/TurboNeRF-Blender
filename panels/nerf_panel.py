@@ -287,14 +287,14 @@ class NeRFPanel(bpy.types.Panel):
         layout = self.layout
         is_scene_set_up = NeRFScene.is_setup()
 
-        setup_section = layout.box()
-        setup_section.label(
+        section = layout.box()
+        section.label(
             text="Scene"
         )
         
         # Setup Scene action
         
-        row = setup_section.row()
+        row = section.row()
         row.operator(BlenderNeRFSetupSceneOperator.bl_idname)
 
         if not is_scene_set_up:
@@ -302,7 +302,7 @@ class NeRFPanel(bpy.types.Panel):
         
         # Import COLMAP action
         
-        row = setup_section.row()
+        row = section.row()
         row.operator(ImportColmapOperator.bl_idname)
         row.enabled = is_scene_set_up
 
@@ -310,29 +310,29 @@ class NeRFPanel(bpy.types.Panel):
 
         point_cloud_exists = NeRFScene.point_cloud() is not None
 
-        point_cloud_section = layout.box()
-        point_cloud_section.label(
+        point_section = layout.box()
+        point_section.label(
             text="Point Cloud"
         )
 
-        row = point_cloud_section.row()
+        row = point_section.row()
         row.prop(settings, "viz_point_size")
         row.enabled = point_cloud_exists
 
-        row = point_cloud_section.row()
+        row = point_section.row()
         row.operator(BlenderNeRFRedrawPointCloudOperator.bl_idname)
         row.enabled = point_cloud_exists
         
         # Camera Settings section
 
-        cam_section = layout.box()
-        cam_section.label(
+        section = layout.box()
+        section.label(
             text="Camera selection"
         )
 
         # Select previous/next camera
 
-        row = cam_section.row()
+        row = section.row()
         selected_cams = settings.get_selected_cameras()
 
         if len(selected_cams) == 0:
@@ -343,45 +343,45 @@ class NeRFPanel(bpy.types.Panel):
         elif len(selected_cams) > 1:
             row.label(text=f"{len(selected_cams)} cameras selected")
 
-        row = cam_section.row()
+        row = section.row()
         row.operator(BlenderNeRFSetActiveFromSelectedCameraOperator.bl_idname, text="Set Active")
         row.enabled = len(selected_cams) == 1
         
         # camera stepper row
-        row = cam_section.row()
+        row = section.row()
         row.operator(BlenderNeRFSelectFirstCameraOperator.bl_idname, text="|<")
         row.operator(BlenderNeRFSelectPreviousCameraOperator.bl_idname, text="<")
         row.operator(BlenderNeRFSelectNextCameraOperator.bl_idname, text=">")
         row.operator(BlenderNeRFSelectLastCameraOperator.bl_idname, text=">|")
 
         # Select all cameras
-        row = cam_section.row()
+        row = section.row()
         row.operator(BlenderNeRFSelectAllCamerasOperator.bl_idname)
 
         # Select cameras in radius
         if len(selected_cams) == 1:
-            row = cam_section.row()
+            row = section.row()
             row.label(text=f"Dist to cursor: {settings.get_distance_to_cursor(selected_cams[0]):.2f}")
 
-        row = cam_section.row()
+        row = section.row()
         row.label(text="Select by radius:")
 
-        row = cam_section.row()
+        row = section.row()
         row.prop(
             settings,
             "camera_selection_radius",
             text="radius",
         )
 
-        row = cam_section.row()
+        row = section.row()
         row.operator(BlenderNeRFSelectCamerasInsideRadiusOperator.bl_idname, text="In")
         row.operator(BlenderNeRFSelectCamerasOutsideRadiusOperator.bl_idname, text="Out")
         
         # Properties for selected cameras
-        row = cam_section.row()
+        row = section.row()
         row.label(text="Camera properties:")
 
-        row = cam_section.row()
+        row = section.row()
         row.prop(
             settings,
             "camera_near",
@@ -412,12 +412,12 @@ class NeRFPanel(bpy.types.Panel):
 
         # AABB section
 
-        aabb_section = layout.box()
-        aabb_section.label(
+        section = layout.box()
+        section.label(
             text="Axis-Aligned Bounding Box"
         )
 
-        row = aabb_section.row()
+        row = section.row()
         row.prop(
             settings,
             "aabb_max",
@@ -425,7 +425,7 @@ class NeRFPanel(bpy.types.Panel):
         )
         row.enabled = is_scene_set_up
 
-        row = aabb_section.row()
+        row = section.row()
         row.prop(
             settings,
             "aabb_min",
@@ -433,7 +433,7 @@ class NeRFPanel(bpy.types.Panel):
         )
         row.enabled = is_scene_set_up
 
-        row = aabb_section.row()
+        row = section.row()
         row.prop(
             settings,
             "aabb_size",
@@ -441,7 +441,7 @@ class NeRFPanel(bpy.types.Panel):
         )
         row.enabled = is_scene_set_up
 
-        row = aabb_section.row()
+        row = section.row()
         row.prop(
             settings,
             "aabb_center",
@@ -449,7 +449,7 @@ class NeRFPanel(bpy.types.Panel):
         )
         row.enabled = is_scene_set_up
 
-        row = aabb_section.row()
+        row = section.row()
         row.prop(
             settings,
             "is_aabb_cubical",
