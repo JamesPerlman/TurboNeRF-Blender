@@ -3,6 +3,7 @@ __reload_order_index__ = -2
 import bpy
 from blender_nerf_tools.blender_utility.driver_utility import force_update_drivers
 from blender_nerf_tools.blender_utility.logging_utility import log_report
+from blender_nerf_tools.blender_utility.obj_type_utility import get_object_type
 from blender_nerf_tools.blender_utility.object_utility import (
     add_collection,
     add_cube,
@@ -19,9 +20,11 @@ from blender_nerf_tools.constants import (
     AABB_MIN_DEFAULT,
     AABB_MIN_ID,
     CAMERA_NEAR_ID,
+    CAMERA_USE_FOR_TRAINING_ID,
     GLOBAL_TRANSFORM_ID,
     MAIN_COLLECTION_ID,
     NERF_PROPS_ID,
+    OBJ_TYPE_TRAIN_CAMERA,
     POINT_CLOUD_NAME_DEFAULT,
     POINT_CLOUD_POINT_SIZE_ID,
     TIME_DEFAULT,
@@ -399,6 +402,30 @@ class NeRFScene:
         if len(selected_cameras) > 0:
             return cls.get_camera_near(selected_cameras[0])
         return 0.0
+    
+    @classmethod
+    def get_use_selected_cameras_for_training(cls):
+        selected_cameras = cls.get_selected_cameras()
+        if len(selected_cameras) > 0:
+            return selected_cameras[0][CAMERA_USE_FOR_TRAINING_ID]
+        return False
+    
+    @classmethod
+    def set_use_selected_cameras_for_training(cls, value, show_non_training_cameras):
+        for camera in cls.get_selected_cameras():
+            camera[CAMERA_USE_FOR_TRAINING_ID] = value
+            hide_camera = value == False and show_non_training_cameras == False
+            camera.hide_set(hide_camera)
+            for child in camera.children:
+                child.hide_set(hide_camera)
+                
+
+    @classmethod
+    def update_cameras_visibility(cls, show_non_training_cameras):
+        for camera in cls.get_all_cameras():
+            is_training_camera = camera[CAMERA_USE_FOR_TRAINING_ID] == False
+            hide_non_training_cameras = show_non_training_cameras == False
+            camera.hide_set(is_training_camera and hide_non_training_cameras)
     
     # CAMERA IMAGE PLANE VISIBILITY
 

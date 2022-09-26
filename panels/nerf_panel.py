@@ -53,11 +53,11 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
     )
 
     # Cameras
-    def set_selected_camera(self, id):
-        NeRFScene.set_selected_camera(id)
-    
     def get_selected_cameras(self):
         return NeRFScene.get_selected_cameras()
+    
+    def set_selected_camera(self, id):
+        NeRFScene.set_selected_camera(id)
     
     camera_selection_radius: FloatProperty(
         name="Camera Selection Radius",
@@ -71,11 +71,11 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
         return (bpy.context.scene.cursor.location - camera.location).length
 
     # Camera properties
+    def get_camera_near(self):
+        return NeRFScene.get_near_for_selected_cameras()
+    
     def set_camera_near(self, value):
         NeRFScene.set_near_for_selected_cameras(value)
-    
-    def get_camera_near(self,):
-        return NeRFScene.get_near_for_selected_cameras()
     
     camera_near: FloatProperty(
         name="Camera Near",
@@ -84,6 +84,34 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
         set=set_camera_near,
         min=0.0,
         max=100.0,
+    )
+
+    def get_use_selected_cameras_for_training(self):
+        return NeRFScene.get_use_selected_cameras_for_training()
+    
+    def set_use_selected_cameras_for_training(self, value):
+        NeRFScene.set_use_selected_cameras_for_training(
+            value,
+            show_non_training_cameras=self.show_non_training_cameras
+        )
+
+    use_for_training: BoolProperty(
+        name="Use for Training",
+        description="Use selected camera(s) for training",
+        get=get_use_selected_cameras_for_training,
+        set=set_use_selected_cameras_for_training,
+    )
+
+    def update_show_non_training_cameras(self, context):
+        NeRFScene.update_cameras_visibility(
+            show_non_training_cameras=self.show_non_training_cameras
+        )
+    
+    show_non_training_cameras: BoolProperty(
+        name="Show Non-Training Cameras",
+        description="Show non-training cameras",
+        update=update_show_non_training_cameras,
+        default=True,
     )
 
     # Image planes
@@ -378,14 +406,28 @@ class NeRFPanel(bpy.types.Panel):
         row.operator(BlenderNeRFSelectCamerasOutsideRadiusOperator.bl_idname, text="Out")
         
         # Properties for selected cameras
-        row = section.row()
-        row.label(text="Camera properties:")
+        section = layout.box()
+        section.label(text="Camera Properties")
 
         row = section.row()
         row.prop(
             settings,
             "camera_near",
             text="near",
+        )
+
+        row = section.row()
+        row.prop(
+            settings,
+            "use_for_training",
+            text="Use For Training",
+        )
+
+        row = section.row()
+        row.prop(
+            settings,
+            "show_non_training_cameras",
+            text="Show Non-Training Cameras",
         )
 
         # Camera image plane visibility

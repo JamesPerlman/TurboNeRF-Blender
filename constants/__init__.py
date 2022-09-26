@@ -33,6 +33,8 @@ CAMERA_NEAR_DEFAULT = 1.0
 CAMERA_FAR_ID = "camera_far"
 CAMERA_FAR_DEFAULT = 8.0
 
+CAMERA_USE_FOR_TRAINING_ID = "use_for_training"
+CAMERA_USE_FOR_TRAINING_DEFAULT = True
 
 # Point cloud
 POINT_CLOUD_NAME_DEFAULT = "Point Cloud Scene Representation"

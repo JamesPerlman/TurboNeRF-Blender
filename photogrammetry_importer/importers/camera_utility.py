@@ -12,7 +12,7 @@ from blender_nerf_tools.blender_utility.object_utility import (
     add_obj,
 )
 
-from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID, OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE, OBJ_TYPE_TRAIN_CAMERA
+from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID, CAMERA_USE_FOR_TRAINING_DEFAULT, CAMERA_USE_FOR_TRAINING_ID, OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE, OBJ_TYPE_TRAIN_CAMERA
 
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import draw_coords
 from blender_nerf_tools.photogrammetry_importer.utility.timing_utility import StopWatch
@@ -252,6 +252,7 @@ def add_cameras(
         camera_object.parent = parent_object
 
         # add camera custom properties
+        camera_object[CAMERA_USE_FOR_TRAINING_ID] = CAMERA_USE_FOR_TRAINING_DEFAULT
         camera_object[CAMERA_NEAR_ID] = CAMERA_NEAR_DEFAULT
         camera_object[CAMERA_FAR_ID] = CAMERA_FAR_DEFAULT
         camera_object[OBJ_TYPE_ID] = OBJ_TYPE_TRAIN_CAMERA
