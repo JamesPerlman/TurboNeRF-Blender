@@ -100,5 +100,7 @@ class BlenderNeRFUpdateCameraImagePlaneVisibilityOperator(bpy.types.Operator):
     bl_description = "Update camera image plane visibility"
 
     def execute(self, context):
-        NeRFScene.update_image_plane_visibility_for_all_cameras()
+        NeRFScene.update_image_plane_visibility_for_all_cameras(
+            force_visible=context.scene.nerf_panel_settings.get_should_force_image_plane_visibility()
+        )
         return {'FINISHED'}

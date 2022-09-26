@@ -87,15 +87,16 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
 
     # Image planes
 
-    def update_show_image_planes(self, context):
-        force_visible: bool
+    def get_should_force_image_plane_visibility(self):
         if self.show_image_planes == False:
-            force_visible = False
-        elif self.show_image_planes_for_active_cameras_only:
-            force_visible = None
+            return False
+        elif self.show_image_planes_for_active_cameras_only == True:
+            return None
         else:
-            force_visible = True
+            return True
 
+    def update_show_image_planes(self, context):
+        force_visible = self.get_should_force_image_plane_visibility()
         NeRFScene.update_image_plane_visibility_for_all_cameras(force_visible)
 
     show_image_planes: BoolProperty(
@@ -259,7 +260,9 @@ class NeRFPanel(bpy.types.Panel):
 
         def obj_selected_callback():
             print("Boop")
-            NeRFScene.update_image_plane_visibility_for_all_cameras()
+            NeRFScene.update_image_plane_visibility_for_all_cameras(
+                force_visible=bpy.context.scene.nerf_panel_settings.get_should_force_image_plane_visibility()
+            )
         
         bpy.msgbus.subscribe_rna(
             key = (bpy.types.LayerObjects, "active"),
@@ -408,7 +411,7 @@ class NeRFPanel(bpy.types.Panel):
 
         aabb_section = layout.box()
         aabb_section.label(
-            text="AABB Cropping"
+            text="Axis-Aligned Bounding Box"
         )
 
         row = aabb_section.row()
