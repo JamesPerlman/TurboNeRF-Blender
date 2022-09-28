@@ -36,6 +36,11 @@ CAMERA_FAR_DEFAULT = 8.0
 CAMERA_USE_FOR_TRAINING_ID = "use_for_training"
 CAMERA_USE_FOR_TRAINING_DEFAULT = True
 
+CAMERA_K1_ID = "distortion_k1"
+CAMERA_K2_ID = "distortion_k2"
+CAMERA_P1_ID = "distortion_p1"
+CAMERA_P2_ID = "distortion_p2"
+
 # Point cloud
 POINT_CLOUD_NAME_DEFAULT = "Point Cloud Scene Representation"
 
