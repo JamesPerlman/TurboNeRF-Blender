@@ -186,14 +186,15 @@ class Camera:
 
     def get_focal_length(self):
         """Return the focal length value."""
-        return self._calibration_mat[0][0]
+        return self._calibration_mat[0][0], self._calibration_mat[1][1]
 
     def get_field_of_view(self):
         """Return the field of view corresponding to the focal length."""
         assert self.width is not None and self.height is not None
+        fx, _ = self.get_focal_length()
         angle = (
             math.atan(
-                max(self.width, self.height) / (self.get_focal_length() * 2.0)
+                max(self.width, self.height) / (fx * 2.0)
             )
             * 2.0
         )

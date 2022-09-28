@@ -36,6 +36,11 @@ CAMERA_FAR_DEFAULT = 8.0
 CAMERA_USE_FOR_TRAINING_ID = "use_for_training"
 CAMERA_USE_FOR_TRAINING_DEFAULT = True
 
+CAMERA_FX_ID = "camera_fx"
+CAMERA_FY_ID = "camera_fy"
+CAMERA_CX_ID = "camera_cx"
+CAMERA_CY_ID = "camera_cy"
+
 CAMERA_K1_ID = "distortion_k1"
 CAMERA_K2_ID = "distortion_k2"
 CAMERA_P1_ID = "distortion_p1"

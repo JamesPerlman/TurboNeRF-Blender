@@ -355,12 +355,13 @@ class ColmapFileHandler:
             colmap_camera_model_name = "SIMPLE_PINHOLE"
 
             pp = cam.get_principal_point()
+            fx, _ = cam.get_focal_length()
             colmap_cam = ColmapCamera(
                 id=cam.id,
                 model=colmap_camera_model_name,
                 width=cam.width,
                 height=cam.height,
-                params=np.array([cam.get_focal_length(), pp[0], pp[1]]),
+                params=np.array([fx, pp[0], pp[1]]),
             )
             colmap_cams[cam.id] = colmap_cam
 

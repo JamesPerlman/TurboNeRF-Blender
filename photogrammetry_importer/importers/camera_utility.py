@@ -12,7 +12,26 @@ from blender_nerf_tools.blender_utility.object_utility import (
     add_obj,
 )
 
-from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_IMAGE_PATH_ID, CAMERA_K1_ID, CAMERA_K2_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID, CAMERA_P1_ID, CAMERA_P2_ID, CAMERA_USE_FOR_TRAINING_DEFAULT, CAMERA_USE_FOR_TRAINING_ID, OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE, OBJ_TYPE_TRAIN_CAMERA
+from blender_nerf_tools.constants import (
+    CAMERA_CX_ID,
+    CAMERA_CY_ID,
+    CAMERA_FAR_DEFAULT,
+    CAMERA_FAR_ID,
+    CAMERA_FX_ID,
+    CAMERA_FY_ID,
+    CAMERA_IMAGE_PATH_ID,
+    CAMERA_K1_ID,
+    CAMERA_K2_ID,
+    CAMERA_NEAR_DEFAULT,
+    CAMERA_NEAR_ID,
+    CAMERA_P1_ID,
+    CAMERA_P2_ID,
+    CAMERA_USE_FOR_TRAINING_DEFAULT,
+    CAMERA_USE_FOR_TRAINING_ID,
+    OBJ_TYPE_ID,
+    OBJ_TYPE_IMG_PLANE,
+    OBJ_TYPE_TRAIN_CAMERA,
+)
 
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import draw_coords
 from blender_nerf_tools.photogrammetry_importer.utility.timing_utility import StopWatch
@@ -257,12 +276,26 @@ def add_cameras(
         camera_object[CAMERA_FAR_ID] = CAMERA_FAR_DEFAULT
         camera_object[OBJ_TYPE_ID] = OBJ_TYPE_TRAIN_CAMERA
 
-        # set distortion coefficients
+        for prop_id in [CAMERA_NEAR_ID, CAMERA_FAR_ID]:
+            prop_mgr = camera_object.id_properties_ui(prop_id)
+            prop_mgr.update(precision=8)
+
+        # principal point
+        cx, cy = camera.get_principal_point()
+        camera_object[CAMERA_CX_ID] = f"{cx}"
+        camera_object[CAMERA_CY_ID] = f"{cy}"
+
+        # focal length
+        fx, fy = camera.get_focal_length()
+        camera_object[CAMERA_FX_ID] = f"{fx}"
+        camera_object[CAMERA_FY_ID] = f"{fy}"
+
+        # distortion coefficients
         k1, k2, p1, p2 = camera.get_distortion_coefficients()
-        camera_object[CAMERA_K1_ID] = k1
-        camera_object[CAMERA_K2_ID] = k2
-        camera_object[CAMERA_P1_ID] = p1
-        camera_object[CAMERA_P2_ID] = p2
+        camera_object[CAMERA_K1_ID] = f"{k1}"
+        camera_object[CAMERA_K2_ID] = f"{k2}"
+        camera_object[CAMERA_P1_ID] = f"{p1}"
+        camera_object[CAMERA_P2_ID] = f"{p2}"
 
         # set image path
         camera_object[CAMERA_IMAGE_PATH_ID] = camera.get_absolute_fp()
@@ -376,7 +409,7 @@ def add_camera_image_plane(
 
     width = camera.width
     height = camera.height
-    focal_length = camera.get_focal_length()
+    focal_length, _ = camera.get_focal_length()
 
     assert width is not None and height is not None
 
