@@ -302,7 +302,7 @@ class NeRFScene:
             cls.update_image_plane_visibility_for_camera(camera)
 
     @classmethod
-    def set_selected_camera(cls, camera, change_view = True):
+    def set_selected_camera(cls, camera, change_view = False):
         camera.select_set(True)
         bpy.context.view_layer.objects.active = camera
         if change_view:
@@ -403,6 +403,10 @@ class NeRFScene:
             return cls.get_camera_near(selected_cameras[0])
         return 0.0
     
+    @classmethod
+    def get_training_cameras(cls):
+        return [cam for cam in cls.get_all_cameras() if cam[CAMERA_USE_FOR_TRAINING_ID] == True]
+
     @classmethod
     def get_use_selected_cameras_for_training(cls):
         selected_cameras = cls.get_selected_cameras()
