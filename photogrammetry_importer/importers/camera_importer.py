@@ -289,7 +289,6 @@ class CameraImporter:
                 image_box.prop(self, "default_pp_y")
 
         import_camera_box = camera_box.box()
-        import_camera_box.prop(self, "import_cameras")
         if self.import_cameras or draw_everything:
             import_camera_box.prop(self, "camera_extent")
             import_camera_box.prop(self, "add_background_images")
