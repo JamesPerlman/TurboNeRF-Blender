@@ -19,6 +19,7 @@ from blender_nerf_tools.constants import (
     AABB_MAX_ID,
     AABB_MIN_DEFAULT,
     AABB_MIN_ID,
+    CAMERA_FAR_ID,
     CAMERA_NEAR_ID,
     CAMERA_USE_FOR_TRAINING_ID,
     GLOBAL_TRANSFORM_ID,
@@ -378,6 +379,8 @@ class NeRFScene:
     
     # CAMERA PROPERTIES
 
+    # near
+
     @classmethod
     def set_camera_near(cls, camera, value, update_drivers = True):
         camera[CAMERA_NEAR_ID] = value
@@ -385,7 +388,6 @@ class NeRFScene:
         # update image plane drivers
         if update_drivers:
             force_update_drivers(camera)
-
     
     @classmethod
     def get_camera_near(cls, camera):
@@ -403,6 +405,34 @@ class NeRFScene:
             return cls.get_camera_near(selected_cameras[0])
         return 0.0
     
+    # far
+    
+    @classmethod
+    def set_camera_far(cls, camera, value, update_drivers = True):
+        camera[CAMERA_FAR_ID] = value
+
+        # update image plane drivers
+        if update_drivers:
+            force_update_drivers(camera)
+
+    @classmethod
+    def get_camera_far(cls, camera):
+        return camera[CAMERA_FAR_ID]
+    
+    @classmethod
+    def set_far_for_selected_cameras(cls, value):
+        for camera in cls.get_selected_cameras():
+            cls.set_camera_far(camera, value)
+    
+    @classmethod
+    def get_far_for_selected_cameras(cls):
+        selected_cameras = cls.get_selected_cameras()
+        if len(selected_cameras) > 0:
+            return cls.get_camera_far(selected_cameras[0])
+        return 0.0
+
+    # training enabled
+
     @classmethod
     def get_training_cameras(cls):
         return [cam for cam in cls.get_all_cameras() if cam[CAMERA_USE_FOR_TRAINING_ID] == True]
@@ -423,6 +453,7 @@ class NeRFScene:
             for child in camera.children:
                 child.hide_set(hide_camera)
                 
+    # visibility
 
     @classmethod
     def update_cameras_visibility(cls, show_non_training_cameras):

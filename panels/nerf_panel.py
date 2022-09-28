@@ -16,6 +16,7 @@ from blender_nerf_tools.blender_utility.object_utility import (
     get_selected_object,
 )
 from blender_nerf_tools.constants import OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE
+from blender_nerf_tools.operators.operator_export_nerf_dataset import BlenderNeRFExportDatasetOperator
 from blender_nerf_tools.panels.nerf_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
 from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
 from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators import (
@@ -71,6 +72,7 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
         return (bpy.context.scene.cursor.location - camera.location).length
 
     # Camera properties
+
     def get_camera_near(self):
         return NeRFScene.get_near_for_selected_cameras()
     
@@ -85,6 +87,22 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
         min=0.0,
         max=100.0,
     )
+
+    def get_camera_far(self):
+        return NeRFScene.get_far_for_selected_cameras()
+
+    def set_camera_far(self, value):
+        NeRFScene.set_far_for_selected_cameras(value)
+    
+    camera_far: FloatProperty(
+        name="Camera Far",
+        description="Camera far plane",
+        get=get_camera_far,
+        set=set_camera_far,
+        min=0.0,
+        max=1000000,
+    )
+
 
     def get_use_selected_cameras_for_training(self):
         return NeRFScene.get_use_selected_cameras_for_training()
@@ -143,6 +161,7 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
     )
 
     # AABB Min
+
     def get_aabb_min(self):
         return NeRFScene.get_aabb_min()
 
@@ -256,6 +275,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.register_class(BlenderNeRFSelectPreviousCameraOperator)
         bpy.utils.register_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
         bpy.utils.register_class(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator)
+        bpy.utils.register_class(BlenderNeRFExportDatasetOperator)
 
         cls.subscribe_to_events()
 
@@ -280,6 +300,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(BlenderNeRFSelectPreviousCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator)
+        bpy.utils.unregister_class(BlenderNeRFExportDatasetOperator)
 
         del bpy.types.Scene.nerf_panel_settings
         
@@ -419,6 +440,13 @@ class NeRFPanel(bpy.types.Panel):
         row = section.row()
         row.prop(
             settings,
+            "camera_far",
+            text="far",
+        )
+
+        row = section.row()
+        row.prop(
+            settings,
             "use_for_training",
             text="Use For Training",
         )
@@ -498,3 +526,11 @@ class NeRFPanel(bpy.types.Panel):
             text="Cube"
         )
         row.enabled = is_scene_set_up
+
+        # Export section
+
+        section = layout.box()
+        section.label(text="Export")
+
+        row = section.row()
+        row.operator(BlenderNeRFExportDatasetOperator.bl_idname, text="Export Dataset")
