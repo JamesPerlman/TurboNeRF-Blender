@@ -12,7 +12,7 @@ from pathlib import Path
 
 # ExportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
-from bpy.props import StringProperty, BoolProperty, EnumProperty
+from bpy.props import StringProperty
 
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 
