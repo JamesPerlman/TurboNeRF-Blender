@@ -47,6 +47,8 @@ CAMERA_P1_ID = "distortion_p1"
 CAMERA_P2_ID = "distortion_p2"
 
 CAMERA_IMAGE_PATH_ID = "image_path"
+CAMERA_IMAGE_WIDTH_ID = "image_width"
+CAMERA_IMAGE_HEIGHT_ID = "image_height"
 
 # Point cloud
 POINT_CLOUD_NAME_DEFAULT = "Point Cloud Scene Representation"

@@ -19,7 +19,9 @@ from blender_nerf_tools.constants import (
     CAMERA_FAR_ID,
     CAMERA_FX_ID,
     CAMERA_FY_ID,
+    CAMERA_IMAGE_HEIGHT_ID,
     CAMERA_IMAGE_PATH_ID,
+    CAMERA_IMAGE_WIDTH_ID,
     CAMERA_K1_ID,
     CAMERA_K2_ID,
     CAMERA_NEAR_DEFAULT,
@@ -296,6 +298,10 @@ def add_cameras(
         camera_object[CAMERA_K2_ID] = f"{k2}"
         camera_object[CAMERA_P1_ID] = f"{p1}"
         camera_object[CAMERA_P2_ID] = f"{p2}"
+
+        # width and height
+        camera_object[CAMERA_IMAGE_WIDTH_ID] = camera.width
+        camera_object[CAMERA_IMAGE_HEIGHT_ID] = camera.height
 
         # set image path
         camera_object[CAMERA_IMAGE_PATH_ID] = camera.get_absolute_fp()
