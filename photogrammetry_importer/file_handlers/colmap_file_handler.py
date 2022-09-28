@@ -55,7 +55,7 @@ class ColmapFileHandler:
     def _parse_camera_param_list(cam):
         name = cam.model
         params = cam.params
-        fx, fy, cx, cy, skew, r = None, None, None, None, None, None
+        fx, fy, cx, cy, k1, k2, p1, p2, skew, r = None, None, None, None, None, None, None, None, None, None
         if name == "SIMPLE_PINHOLE":
             fx, cx, cy = params
         elif name == "PINHOLE":
@@ -92,7 +92,15 @@ class ColmapFileHandler:
             fy = fx
         if skew is None:
             skew = 0.0
-        return fx, fy, cx, cy, skew, r
+        if k1 is None:
+            k1 = 0.0
+        if k2 is None:
+            k2 = 0.0
+        if p1 is None:
+            p1 = 0.0
+        if p2 is None:
+            p2 = 0.0
+        return fx, fy, cx, cy, k1, k2, p1, p2, skew, r
 
     @staticmethod
     def _convert_cameras(
@@ -138,12 +146,7 @@ class ColmapFileHandler:
             current_camera.height = camera_model.height
 
             (
-                fx,
-                fy,
-                cx,
-                cy,
-                skew,
-                r,
+                fx, fy, cx, cy, k1, k2, p1, p2, skew, r,
             ) = ColmapFileHandler._parse_camera_param_list(
                 camera_model,
             )
@@ -156,6 +159,8 @@ class ColmapFileHandler:
             current_camera.set_calibration(
                 camera_calibration_matrix, radial_distortion=0
             )
+
+            current_camera.set_distortion_coefficients(k1, k2, p1, p2)
 
             if depth_map_idp is not None:
                 geometric_ifp = os.path.join(

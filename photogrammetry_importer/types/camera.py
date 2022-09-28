@@ -163,6 +163,22 @@ class Camera:
         self._calibration_mat = np.asarray(calibration_mat, dtype=float)
         self._radial_distortion = radial_distortion
         assert self._radial_distortion is not None
+    
+    def set_distortion_coefficients(self, k1, k2, p1, p2):
+        """Set the distortion parameters."""
+        self.k1 = k1
+        self.k2 = k2
+        self.p1 = p1
+        self.p2 = p2
+    
+    def get_distortion_coefficients(self):
+        """Return the distortion parameters."""
+        k1 = self.k1 if self.k1 is not None else 0.0
+        k2 = self.k2 if self.k2 is not None else 0.0
+        p1 = self.p1 if self.p1 is not None else 0.0
+        p2 = self.p2 if self.p2 is not None else 0.0
+
+        return k1, k2, p1, p2
 
     def has_focal_length(self):
         """Return wether the focal length value has been defined or not."""
