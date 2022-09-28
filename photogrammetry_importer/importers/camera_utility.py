@@ -12,7 +12,7 @@ from blender_nerf_tools.blender_utility.object_utility import (
     add_obj,
 )
 
-from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_K1_ID, CAMERA_K2_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID, CAMERA_P1_ID, CAMERA_P2_ID, CAMERA_USE_FOR_TRAINING_DEFAULT, CAMERA_USE_FOR_TRAINING_ID, OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE, OBJ_TYPE_TRAIN_CAMERA
+from blender_nerf_tools.constants import CAMERA_FAR_DEFAULT, CAMERA_FAR_ID, CAMERA_IMAGE_PATH_ID, CAMERA_K1_ID, CAMERA_K2_ID, CAMERA_NEAR_DEFAULT, CAMERA_NEAR_ID, CAMERA_P1_ID, CAMERA_P2_ID, CAMERA_USE_FOR_TRAINING_DEFAULT, CAMERA_USE_FOR_TRAINING_ID, OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE, OBJ_TYPE_TRAIN_CAMERA
 
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import draw_coords
 from blender_nerf_tools.photogrammetry_importer.utility.timing_utility import StopWatch
@@ -263,6 +263,9 @@ def add_cameras(
         camera_object[CAMERA_K2_ID] = k2
         camera_object[CAMERA_P1_ID] = p1
         camera_object[CAMERA_P2_ID] = p2
+
+        # set image path
+        camera_object[CAMERA_IMAGE_PATH_ID] = camera.get_absolute_fp()
         
         # add image plane
         if not add_image_planes and not add_background_images:
