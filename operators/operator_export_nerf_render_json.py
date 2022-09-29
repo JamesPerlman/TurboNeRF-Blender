@@ -111,20 +111,17 @@ class ExportNeRFRenderJSON(bpy.types.Operator):
             cam_dict = {
                 "file_path": f"{i:05d}.png",
                 "aabb" : {
-                    "max" : [aabb_max[0], aabb_max[1], aabb_max[2]],
-                    "min" : [aabb_min[0], aabb_min[1], aabb_min[2]],
+                    "max" : list(aabb_max),
+                    "min" : list(aabb_min),
                 },
                 "camera_angle_x": ngp_ax,
-                "transform_matrix": [
-                    [m[0][0], m[0][1], m[0][2], m[0][3]],
-                    [m[1][0], m[1][1], m[1][2], m[1][3]],
-                    [m[2][0], m[2][1], m[2][2], m[2][3]],
-                    [m[3][0], m[3][1], m[3][2], m[3][3]],
-                ],
+                "transform_matrix": [list(r) for r in m],
                 "n_steps": NeRFScene.get_training_steps(),
                 "time": NeRFScene.get_time(),
                 "aperture": ngp_aperture,
                 "focus_target": list(ngp_focus_target),
+                "near": 1.0,
+                "far": 1e5,
             }
 
             frames.append(cam_dict)
