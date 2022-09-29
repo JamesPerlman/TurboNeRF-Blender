@@ -52,8 +52,8 @@ class ExportNeRFRenderJSON(bpy.types.Operator):
         # aka don't hardcode the name of this ref object
         offset_matrix = mathutils.Matrix.Identity(4)
         global_transform = NeRFScene.global_transform()
-        if global_transform != None:
-            offset_matrix = global_transform.matrix_world.inverted()
+        # if global_transform != None:
+        #     offset_matrix = global_transform.matrix_world.inverted()
 
         # Walk through all frames, create a camera dict for each frame
         frames = []
