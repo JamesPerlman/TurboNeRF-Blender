@@ -90,6 +90,7 @@ class NeRFScene:
         obj = cls.aabb_box()
         if obj is None:
             obj = add_cube(AABB_BOX_ID, collection)
+            bpy.context.view_layer.objects.active = obj
             obj.display_type = 'BOUNDS'
             bpy.ops.object.modifier_add(type='WIREFRAME')
             
