@@ -351,7 +351,7 @@ class NeRFScene:
     def select_cameras_inside_radius(cls, radius):
         cls.deselect_all_cameras()
         for camera in cls.get_all_cameras():
-            dist_to_cursor = (camera.location - bpy.context.scene.cursor.location).length
+            dist_to_cursor = (camera.matrix_world.translation - bpy.context.scene.cursor.location).length
             if dist_to_cursor <= radius:
                 camera.select_set(True)
                 cls.update_image_plane_visibility_for_camera(camera)
@@ -360,7 +360,7 @@ class NeRFScene:
     def select_cameras_outside_radius(cls, radius):
         cls.deselect_all_cameras()
         for camera in cls.get_all_cameras():
-            dist_to_cursor = (camera.location - bpy.context.scene.cursor.location).length
+            dist_to_cursor = (camera.matrix_world.translation - bpy.context.scene.cursor.location).length
             if dist_to_cursor > radius:
                 camera.select_set(True)
                 cls.update_image_plane_visibility_for_camera(camera)
