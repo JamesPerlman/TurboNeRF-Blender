@@ -63,7 +63,7 @@ def encode_props(obj, prop_map):
 
 # aabb scale (for NGP)
 def get_aabb_scale():
-    size = max(NeRFScene.get_aabb_size())
+    size = max(NeRFScene.get_aabb_size()) * 0.33
     # get the closest power of 2
     return 2 ** math.ceil(math.log2(size))
 
