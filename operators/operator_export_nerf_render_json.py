@@ -68,6 +68,7 @@ class ExportNeRFRenderJSON(bpy.types.Operator):
             aabb_max = NeRFScene.get_aabb_max()
             aabb_min = NeRFScene.get_aabb_min()
 
+            # TODO: abstract this out into a function
             # calculate focal len
             bl_sw = cam_data.sensor_width
             bl_sh = cam_data.sensor_height
@@ -104,8 +105,11 @@ class ExportNeRFRenderJSON(bpy.types.Operator):
 
             if cam_data.dof.use_dof and cam_data.dof.focus_object != None:
                 # No idea if this is correct
-                ngp_aperture = (cam_data.lens / cam_data.dof.aperture_fstop) / cam_data.sensor_width
+                ngp_aperture = cam_data.dof.aperture_fstop
                 ngp_focus_target = cam_data.dof.focus_object.matrix_world.translation
+            
+            # near plane
+            ngp_near = cam_data.clip_start
 
             # create camera dict for this frame
             cam_dict = {
@@ -120,7 +124,7 @@ class ExportNeRFRenderJSON(bpy.types.Operator):
                 "time": NeRFScene.get_time(),
                 "aperture": ngp_aperture,
                 "focus_target": list(ngp_focus_target),
-                "near": 1.0,
+                "near": ngp_near,
                 "far": 1e5,
             }
 
