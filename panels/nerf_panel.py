@@ -18,6 +18,7 @@ from blender_nerf_tools.blender_utility.object_utility import (
 from blender_nerf_tools.constants import OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE
 from blender_nerf_tools.operators.operator_export_nerf_dataset import BlenderNeRFExportDatasetOperator
 from blender_nerf_tools.panels.nerf_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
+from blender_nerf_tools.panels.nerf_panel_operators.scene_operators import BlenderNeRFAutoAlignSceneOperator, BlenderNeRFFitSceneInBoundingBoxOperator
 from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
 from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators import (
     BlenderNeRFSelectAllCamerasOperator,
@@ -276,6 +277,8 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.register_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
         bpy.utils.register_class(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator)
         bpy.utils.register_class(BlenderNeRFExportDatasetOperator)
+        bpy.utils.register_class(BlenderNeRFAutoAlignSceneOperator)
+        bpy.utils.register_class(BlenderNeRFFitSceneInBoundingBoxOperator)
 
         cls.subscribe_to_events()
 
@@ -301,6 +304,8 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(BlenderNeRFSetActiveFromSelectedCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFUpdateCameraImagePlaneVisibilityOperator)
         bpy.utils.unregister_class(BlenderNeRFExportDatasetOperator)
+        bpy.utils.unregister_class(BlenderNeRFAutoAlignSceneOperator)
+        bpy.utils.unregister_class(BlenderNeRFFitSceneInBoundingBoxOperator)
 
         del bpy.types.Scene.nerf_panel_settings
         
@@ -526,6 +531,15 @@ class NeRFPanel(bpy.types.Panel):
             text="Cube"
         )
         row.enabled = is_scene_set_up
+
+        # Scene section
+        section = layout.box()
+        section.label(text="Scene")
+
+        row = section.row()
+        row.operator(BlenderNeRFAutoAlignSceneOperator.bl_idname, text="Auto Align Scene")
+        row.operator(BlenderNeRFFitSceneInBoundingBoxOperator.bl_idname, text="Fit Scene in AABB")
+        
 
         # Export section
 
