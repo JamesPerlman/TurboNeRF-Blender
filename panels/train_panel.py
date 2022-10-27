@@ -17,10 +17,10 @@ from blender_nerf_tools.blender_utility.object_utility import (
 )
 from blender_nerf_tools.constants import OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE
 from blender_nerf_tools.operators.operator_export_nerf_dataset import BlenderNeRFExportDatasetOperator
-from blender_nerf_tools.panels.nerf_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
-from blender_nerf_tools.panels.nerf_panel_operators.scene_operators import BlenderNeRFAutoAlignSceneOperator, BlenderNeRFFitSceneInBoundingBoxOperator
-from blender_nerf_tools.panels.nerf_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
-from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators import (
+from blender_nerf_tools.panels.train_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
+from blender_nerf_tools.panels.train_panel_operators.scene_operators import BlenderNeRFAutoAlignSceneOperator, BlenderNeRFFitSceneInBoundingBoxOperator
+from blender_nerf_tools.panels.train_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
+from blender_nerf_tools.panels.train_panel_operators.camera_selection_operators import (
     BlenderNeRFSelectAllCamerasOperator,
     BlenderNeRFSelectCamerasInsideRadiusOperator,
     BlenderNeRFSelectCamerasOutsideRadiusOperator,
@@ -34,7 +34,7 @@ from blender_nerf_tools.panels.nerf_panel_operators.camera_selection_operators i
 from blender_nerf_tools.photogrammetry_importer.operators.colmap_import_op import ImportColmapOperator
 
 
-class NeRFPanelSettings(bpy.types.PropertyGroup):
+class NeRFTrainingPanelSettings(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D view."""
 
     # https://docs.blender.org/api/current/bpy.props.html#getter-setter-example
@@ -241,7 +241,7 @@ class NeRFPanelSettings(bpy.types.PropertyGroup):
     )
 
 
-class NeRFPanel(bpy.types.Panel):
+class NeRFTrainingPanel(bpy.types.Panel):
     """Class that defines the Instant-NGP panel in the 3D view."""
 
     bl_label = "NeRF Panel"
@@ -259,9 +259,9 @@ class NeRFPanel(bpy.types.Panel):
     def register(cls):
         """Register properties and operators corresponding to this panel."""
 
-        bpy.utils.register_class(NeRFPanelSettings)
-        bpy.types.Scene.nerf_panel_settings = PointerProperty(
-            type=NeRFPanelSettings
+        bpy.utils.register_class(NeRFTrainingPanelSettings)
+        bpy.types.Scene.train_panel_settings = PointerProperty(
+            type=NeRFTrainingPanelSettings
         )
 
         bpy.utils.register_class(BlenderNeRFSetupSceneOperator)
@@ -290,7 +290,7 @@ class NeRFPanel(bpy.types.Panel):
 
         cls.unsubscribe_from_events()
 
-        bpy.utils.unregister_class(NeRFPanelSettings)
+        bpy.utils.unregister_class(NeRFTrainingPanelSettings)
         bpy.utils.unregister_class(BlenderNeRFSetupSceneOperator)
         bpy.utils.unregister_class(ImportColmapOperator)
         bpy.utils.unregister_class(BlenderNeRFRedrawPointCloudOperator)
@@ -307,7 +307,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(BlenderNeRFAutoAlignSceneOperator)
         bpy.utils.unregister_class(BlenderNeRFFitSceneInBoundingBoxOperator)
 
-        del bpy.types.Scene.nerf_panel_settings
+        del bpy.types.Scene.train_panel_settings
         
     @classmethod
     def subscribe_to_events(cls):
@@ -318,7 +318,7 @@ class NeRFPanel(bpy.types.Panel):
             if active_obj[OBJ_TYPE_ID] == OBJ_TYPE_IMG_PLANE:
                 NeRFScene.set_selected_camera(active_obj.parent, change_view=False)
             NeRFScene.update_image_plane_visibility_for_all_cameras(
-                force_visible=bpy.context.scene.nerf_panel_settings.get_should_force_image_plane_visibility()
+                force_visible=bpy.context.scene.train_panel_settings.get_should_force_image_plane_visibility()
             )
         
         bpy.msgbus.subscribe_rna(
@@ -337,7 +337,7 @@ class NeRFPanel(bpy.types.Panel):
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""
 
-        settings = context.scene.nerf_panel_settings
+        settings = context.scene.train_panel_settings
         layout = self.layout
         is_scene_set_up = NeRFScene.is_setup()
 

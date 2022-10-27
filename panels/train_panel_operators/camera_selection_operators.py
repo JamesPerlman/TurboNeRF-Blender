@@ -70,7 +70,7 @@ class BlenderNeRFSelectCamerasInsideRadiusOperator(bpy.types.Operator):
     bl_description = "Select cameras in radius"
 
     def execute(self, context):
-        NeRFScene.select_cameras_inside_radius(bpy.context.scene.nerf_panel_settings.camera_selection_radius)
+        NeRFScene.select_cameras_inside_radius(bpy.context.scene.train_panel_settings.camera_selection_radius)
         return {'FINISHED'}
 
 class BlenderNeRFSelectCamerasOutsideRadiusOperator(bpy.types.Operator):
@@ -80,7 +80,7 @@ class BlenderNeRFSelectCamerasOutsideRadiusOperator(bpy.types.Operator):
     bl_description = "Select cameras outside radius"
 
     def execute(self, context):
-        NeRFScene.select_cameras_outside_radius(bpy.context.scene.nerf_panel_settings.camera_selection_radius)
+        NeRFScene.select_cameras_outside_radius(bpy.context.scene.train_panel_settings.camera_selection_radius)
         return {'FINISHED'}
 
 class BlenderNeRFSetActiveFromSelectedCameraOperator(bpy.types.Operator):
@@ -101,6 +101,6 @@ class BlenderNeRFUpdateCameraImagePlaneVisibilityOperator(bpy.types.Operator):
 
     def execute(self, context):
         NeRFScene.update_image_plane_visibility_for_all_cameras(
-            force_visible=context.scene.nerf_panel_settings.get_should_force_image_plane_visibility()
+            force_visible=context.scene.train_panel_settings.get_should_force_image_plane_visibility()
         )
         return {'FINISHED'}
