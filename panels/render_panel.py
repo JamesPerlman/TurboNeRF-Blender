@@ -54,7 +54,7 @@ class NeRFRenderPanelSettings(bpy.types.PropertyGroup):
         print(CAMERA_TYPES[self.camera_model]["name"])
 
     camera_model: bpy.props.EnumProperty(
-        name="Camera Model",
+        name="Add",
         items=camera_model_options,
         description="Camera model to use for rendering",
         default=RENDER_CAM_TYPE_PERSPECTIVE,
@@ -116,7 +116,11 @@ class NeRFRenderPanel(bpy.types.Panel):
         row = section.row()
         row.prop(settings, "camera_model")
 
-        row.operator(BlenderNeRFAddRenderCameraOperator.bl_idname, text=f"Create {settings.camera_model}")
+        row = section.row()
+        row.operator(
+            BlenderNeRFAddRenderCameraOperator.bl_idname,
+            text=f"Create {CAMERA_TYPES[settings.camera_model]['name']} Camera"
+        )
         
         # Export section
 

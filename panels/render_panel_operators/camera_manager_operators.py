@@ -1,5 +1,12 @@
 import bpy
 
+from blender_nerf_tools.constants import (
+    RENDER_CAM_TYPE_PERSPECTIVE,
+    RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
+    RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
+)
+from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import add_spherical_quadrilateral_camera
+
 class BlenderNeRFAddRenderCameraOperator(bpy.types.Operator):
     bl_idname = "blender_nerf_tools.add_render_camera"
     bl_label = "Add Render Camera"
@@ -9,9 +16,12 @@ class BlenderNeRFAddRenderCameraOperator(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         settings = context.scene.nerf_render_panel_settings
-        return {"FINISHED"}
-        camera = bpy.data.cameras.new("Render Camera")
-        camera_ob = bpy.data.objects.new("Render Camera", camera)
-        cameras.objects.link(camera_ob)
-        scene.camera = camera_ob
+        camera_model_id = settings.camera_model
+
+        if camera_model_id == RENDER_CAM_TYPE_PERSPECTIVE:
+            pass
+        elif camera_model_id == RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL:
+            add_spherical_quadrilateral_camera()
+        elif camera_model_id == RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON:
+            pass
         return {"FINISHED"}
