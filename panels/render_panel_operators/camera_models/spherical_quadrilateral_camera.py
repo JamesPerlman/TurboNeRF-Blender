@@ -3,10 +3,14 @@ import math
 import mathutils
 import numpy as np
 from blender_nerf_tools.constants import (
+    OBJ_TYPE_ID,
+    OBJ_TYPE_RENDER_CAMERA,
     RENDER_CAM_SENSOR_DIAGONAL_ID,
     RENDER_CAM_SENSOR_HEIGHT_ID,
     RENDER_CAM_SENSOR_WIDTH_ID,
     RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID,
+    RENDER_CAM_TYPE_ID,
+    RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
 )
 
 from blender_nerf_tools.blender_utility.object_utility import add_empty
@@ -33,7 +37,7 @@ def walk_along_circle(curvature: float, linear_len: float, arc_len: float):
     
     return x, y
 
-# z- is forward
+# z- is forward in blender
 def walk_along_sphere(curvature: float, maximum_linear_len: float, azimuth: float, arc_len: float):
     r, z = walk_along_circle(curvature, maximum_linear_len, arc_len)
     
@@ -57,10 +61,6 @@ def get_spherical_quadrilateral_camera_node_quaternion_rotation(curvature, maxim
         normal_vec = math.copysign(1.0, -curvature) * (sphere_center - location).normalized()
     
     return normal_vec.to_track_quat('Z', 'X')
-
-bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location'] = get_spherical_quadrilateral_camera_node_location
-bpy.app.driver_namespace['get_spherical_quadrilateral_node_quaternion_rotation'] = get_spherical_quadrilateral_camera_node_quaternion_rotation
-
 
 # helpers for adding driver vars
 def add_sensor_size_driver_vars(driver: bpy.types.Driver, cam_base):
@@ -105,7 +105,9 @@ def add_spherical_quadrilateral_camera(name='Spherical Quadrilateral Camera', co
     coords = 2.0 * (np.stack(np.mgrid[:rx, :ry], -1) / [rx - 1, ry - 1] - [0.5, 0.5])
     coords = coords.reshape(-1, coords.shape[-1])
 
-    cam_base = add_empty(name, collection=collection)
+    cam_base = add_empty(name, collection=collection, type='ARROWS')
+    cam_base[OBJ_TYPE_ID] = OBJ_TYPE_RENDER_CAMERA
+    cam_base[RENDER_CAM_TYPE_ID] = RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL
     cam_base[RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID] = 0.0
     prop = cam_base.id_properties_ui(RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID)
     prop.update(precision=3, min=-1, max=1)
@@ -119,7 +121,6 @@ def add_spherical_quadrilateral_camera(name='Spherical Quadrilateral Camera', co
     sd = cam_base.driver_add(f'["{RENDER_CAM_SENSOR_DIAGONAL_ID}"]').driver
     add_sensor_size_driver_vars(sd, cam_base)
     sd.expression = 'sqrt(sw**2 + sh**2)'
-
 
     for coord in coords:
         cam_node = add_empty('camera_node', type='PLAIN_AXES')
@@ -136,7 +137,6 @@ def add_spherical_quadrilateral_camera(name='Spherical Quadrilateral Camera', co
         # drivers
         location_drivers = [fc.driver for fc in cam_node.driver_add('location')]
         quaternion_drivers = [fc.driver for fc in cam_arrow.driver_add('rotation_quaternion')]
-        
         
         for (i, axis) in enumerate(['x', 'y', 'z']):
             add_location_driver_vars(location_drivers[i], cam_base)

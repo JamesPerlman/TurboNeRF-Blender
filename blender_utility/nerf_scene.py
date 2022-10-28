@@ -3,7 +3,7 @@ __reload_order_index__ = -2
 import bpy
 from blender_nerf_tools.blender_utility.driver_utility import force_update_drivers
 from blender_nerf_tools.blender_utility.logging_utility import log_report
-from blender_nerf_tools.blender_utility.obj_type_utility import get_object_type
+from blender_nerf_tools.blender_utility.obj_type_utility import get_nerf_obj_type
 from blender_nerf_tools.blender_utility.object_utility import (
     add_collection,
     add_cube,
@@ -280,7 +280,7 @@ class NeRFScene:
 
     @classmethod
     def is_nerf_camera(cls, obj):
-        return obj.type == 'CAMERA' and get_object_type(obj) == OBJ_TYPE_TRAIN_CAMERA
+        return obj.type == 'CAMERA' and get_nerf_obj_type(obj) == OBJ_TYPE_TRAIN_CAMERA
 
     @classmethod
     def get_selected_cameras(cls):

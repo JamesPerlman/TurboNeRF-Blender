@@ -40,6 +40,7 @@ def register():
 
     Registration.register_importers()
     Registration.register_exporters()
+    Registration.register_drivers()
 
     bpy.utils.register_class(NeRFTrainingPanel)
     bpy.utils.register_class(NeRFRenderPanel)
@@ -54,6 +55,7 @@ def unregister():
 
     Registration.unregister_importers()
     Registration.unregister_exporters()
+    Registration.unregister_drivers()
 
     bpy.utils.unregister_class(NeRFTrainingPanel)
     bpy.utils.unregister_class(NeRFRenderPanel)

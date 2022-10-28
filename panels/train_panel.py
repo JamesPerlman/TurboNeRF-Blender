@@ -315,7 +315,7 @@ class NeRFTrainingPanel(bpy.types.Panel):
 
         def obj_selected_callback():
             active_obj = bpy.context.view_layer.objects.active
-            if OBJ_TYPE_ID in active_obj and active_obj[OBJ_TYPE_ID] == OBJ_TYPE_IMG_PLANE:
+            if active_obj != None and OBJ_TYPE_ID in active_obj and active_obj[OBJ_TYPE_ID] == OBJ_TYPE_IMG_PLANE:
                 NeRFScene.set_selected_camera(active_obj.parent, change_view=False)
             NeRFScene.update_image_plane_visibility_for_all_cameras(
                 force_visible=bpy.context.scene.nerf_train_panel_settings.get_should_force_image_plane_visibility()
