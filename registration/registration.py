@@ -7,6 +7,7 @@ from blender_nerf_tools.operators.operator_export_nerfies_cameras import ExportN
 from blender_nerf_tools.operators.operator_export_world_matrix import ExportObjectWorldMatrix
 from blender_nerf_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
 from blender_nerf_tools.operators.operator_import_nerf_transforms import ImportNeRFTransforms
+from blender_nerf_tools.panels.render_panel_operators.camera_models.quadrilateral_hexahedron_camera import get_quadrilateral_hexahedron_camera_node_quaternion_rotation
 from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import (
     get_spherical_quadrilateral_camera_node_location,
     get_spherical_quadrilateral_camera_node_quaternion_rotation,
@@ -124,9 +125,9 @@ class Registration:
     def register_drivers(cls):
         bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location'] = get_spherical_quadrilateral_camera_node_location
         bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation'] = get_spherical_quadrilateral_camera_node_quaternion_rotation
-        print(f"Fuckin registered drivers {bpy.app.driver_namespace}")
-
+        bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation'] = get_quadrilateral_hexahedron_camera_node_quaternion_rotation
     @classmethod
     def unregister_drivers(cls):
         del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location']
         del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation']
+        del bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation']
