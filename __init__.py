@@ -31,6 +31,7 @@ modules = developer_utility.setup_addon_modules(
 # Therefore, we need the "blender_nerf_tools" specifier for this addon
 from blender_nerf_tools.blender_utility.logging_utility import log_report
 from blender_nerf_tools.panels.train_panel import NeRFTrainingPanel
+from blender_nerf_tools.panels.render_panel import NeRFRenderPanel
 from blender_nerf_tools.registration.registration import Registration
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import redraw_points
 
@@ -41,6 +42,7 @@ def register():
     Registration.register_exporters()
 
     bpy.utils.register_class(NeRFTrainingPanel)
+    bpy.utils.register_class(NeRFRenderPanel)
     
     bpy.app.handlers.load_post.append(redraw_points)
 
@@ -54,6 +56,7 @@ def unregister():
     Registration.unregister_exporters()
 
     bpy.utils.unregister_class(NeRFTrainingPanel)
+    bpy.utils.unregister_class(NeRFRenderPanel)
 
     bpy.app.handlers.load_post.remove(redraw_points)
 

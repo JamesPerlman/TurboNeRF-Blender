@@ -19,7 +19,7 @@ from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 def mat_to_list(m: mathutils.Matrix) -> list[float]:
     return [list(r) for r in m]
 
-class ExportNeRFRenderJSON(bpy.types.Operator):
+class BlenderNeRFExportRenderJSON(bpy.types.Operator):
 
     """Export main camera as NeRF render.json"""
     bl_idname = "blender_nerf_tools.export_render_json"

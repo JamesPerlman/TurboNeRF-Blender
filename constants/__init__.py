@@ -63,3 +63,17 @@ OBJ_TYPE_TRAIN_CAMERA = "train_camera"
 OBJ_TYPE_RENDER_CAMERA = "render_camera"
 OBJ_TYPE_IMG_PLANE = "image_plane"
 OBJ_TYPE_POINT_CLOUD = "point_cloud"
+
+# Render cameras
+
+RENDER_CAM_TYPE_ID = "render_camera_type"
+
+RENDER_CAM_TYPE_PERSPECTIVE = "perspective"
+RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL = "spherical_quadrilateral"
+RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON = "quadrilateral_hexahedron"
+
+RENDER_CAM_SENSOR_WIDTH_ID = 'sensor_width'
+RENDER_CAM_SENSOR_HEIGHT_ID = 'sensor_height'
+RENDER_CAM_SENSOR_DIAGONAL_ID = 'sensor_diagonal'
+RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID = "curvature"
+RENDER_CAM_IS_ACTIVE_ID = "is_active"

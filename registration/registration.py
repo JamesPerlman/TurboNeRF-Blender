@@ -3,7 +3,6 @@ import bpy
 
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
-from blender_nerf_tools.operators.operator_export_nerf_render_json import ExportNeRFRenderJSON
 from blender_nerf_tools.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
 from blender_nerf_tools.operators.operator_export_world_matrix import ExportObjectWorldMatrix
 from blender_nerf_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
@@ -14,12 +13,7 @@ from blender_nerf_tools.operators.operator_import_nerf_transforms import ImportN
 # "file/import" of the following form:
 # "rna_uiItemO: operator missing srna 'import_scene.colmap_model'""
 
-# Import Functions
-def _instant_ngp_transforms_export_operator_function(topbar_file_export, context):
-    topbar_file_export.layout.operator(
-        ExportNeRFRenderJSON.bl_idname,
-        text="NeRF render.json"
-    )
+# Import/Export Functions
 
 def _world_matrix_export_operator_function(topbar_file_export, context):
     topbar_file_export.layout.operator(
@@ -102,10 +96,6 @@ class Registration:
     def register_exporters(cls):
         """Register exporters."""
         cls._register_exporter(
-            ExportNeRFRenderJSON,
-            _instant_ngp_transforms_export_operator_function,
-        )
-        cls._register_exporter(
             ExportObjectWorldMatrix,
             _world_matrix_export_operator_function,
         )
@@ -117,10 +107,6 @@ class Registration:
     @classmethod
     def unregister_exporters(cls):
         """Unregister all registered exporters."""
-        cls._unregister_exporter(
-            ExportNeRFRenderJSON,
-            _instant_ngp_transforms_export_operator_function
-        )
         cls._unregister_exporter(
             ExportObjectWorldMatrix,
             _world_matrix_export_operator_function

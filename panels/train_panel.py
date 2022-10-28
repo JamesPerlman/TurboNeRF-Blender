@@ -244,11 +244,11 @@ class NeRFTrainingPanelSettings(bpy.types.PropertyGroup):
 class NeRFTrainingPanel(bpy.types.Panel):
     """Class that defines the Instant-NGP panel in the 3D view."""
 
-    bl_label = "NeRF Panel"
-    bl_idname = "VIEW3D_PT_blender_nerf_tools"
+    bl_label = "NeRF Training Panel"
+    bl_idname = "VIEW3D_PT_blender_NeRF_training_panel"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Blender_NeRF"
+    bl_category = "NeRF Train"
 
     @classmethod
     def poll(cls, context):
@@ -260,7 +260,7 @@ class NeRFTrainingPanel(bpy.types.Panel):
         """Register properties and operators corresponding to this panel."""
 
         bpy.utils.register_class(NeRFTrainingPanelSettings)
-        bpy.types.Scene.train_panel_settings = PointerProperty(
+        bpy.types.Scene.nerf_train_panel_settings = PointerProperty(
             type=NeRFTrainingPanelSettings
         )
 
@@ -307,7 +307,7 @@ class NeRFTrainingPanel(bpy.types.Panel):
         bpy.utils.unregister_class(BlenderNeRFAutoAlignSceneOperator)
         bpy.utils.unregister_class(BlenderNeRFFitSceneInBoundingBoxOperator)
 
-        del bpy.types.Scene.train_panel_settings
+        del bpy.types.Scene.nerf_train_panel_settings
         
     @classmethod
     def subscribe_to_events(cls):
@@ -315,10 +315,10 @@ class NeRFTrainingPanel(bpy.types.Panel):
 
         def obj_selected_callback():
             active_obj = bpy.context.view_layer.objects.active
-            if active_obj[OBJ_TYPE_ID] == OBJ_TYPE_IMG_PLANE:
+            if OBJ_TYPE_ID in active_obj and active_obj[OBJ_TYPE_ID] == OBJ_TYPE_IMG_PLANE:
                 NeRFScene.set_selected_camera(active_obj.parent, change_view=False)
             NeRFScene.update_image_plane_visibility_for_all_cameras(
-                force_visible=bpy.context.scene.train_panel_settings.get_should_force_image_plane_visibility()
+                force_visible=bpy.context.scene.nerf_train_panel_settings.get_should_force_image_plane_visibility()
             )
         
         bpy.msgbus.subscribe_rna(
@@ -337,7 +337,7 @@ class NeRFTrainingPanel(bpy.types.Panel):
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""
 
-        settings = context.scene.train_panel_settings
+        settings = context.scene.nerf_train_panel_settings
         layout = self.layout
         is_scene_set_up = NeRFScene.is_setup()
 
