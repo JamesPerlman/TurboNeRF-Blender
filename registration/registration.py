@@ -7,7 +7,10 @@ from blender_nerf_tools.operators.operator_export_nerfies_cameras import ExportN
 from blender_nerf_tools.operators.operator_export_world_matrix import ExportObjectWorldMatrix
 from blender_nerf_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
 from blender_nerf_tools.operators.operator_import_nerf_transforms import ImportNeRFTransforms
-from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import get_spherical_quadrilateral_camera_node_location, get_spherical_quadrilateral_camera_node_quaternion_rotation
+from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import (
+    get_spherical_quadrilateral_camera_node_location,
+    get_spherical_quadrilateral_camera_node_quaternion_rotation,
+)
 
 # Definining the following import and export functions within the
 # "Registration" class causes different errors when hovering over entries in
@@ -120,9 +123,10 @@ class Registration:
     @classmethod
     def register_drivers(cls):
         bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location'] = get_spherical_quadrilateral_camera_node_location
-        bpy.app.driver_namespace['get_spherical_quadrilateral_node_quaternion_rotation'] = get_spherical_quadrilateral_camera_node_quaternion_rotation
+        bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation'] = get_spherical_quadrilateral_camera_node_quaternion_rotation
+        print(f"Fuckin registered drivers {bpy.app.driver_namespace}")
 
     @classmethod
     def unregister_drivers(cls):
         del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location']
-        del bpy.app.driver_namespace['get_spherical_quadrilateral_node_quaternion_rotation']
+        del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation']

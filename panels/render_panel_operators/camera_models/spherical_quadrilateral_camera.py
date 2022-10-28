@@ -144,6 +144,6 @@ def add_spherical_quadrilateral_camera(name='Spherical Quadrilateral Camera', co
         
         for (i, axis) in enumerate(['w', 'x', 'y', 'z']):
             add_quaternion_driver_vars(quaternion_drivers[i], cam_base, cam_node)
-            quaternion_drivers[i].expression = f'get_spherical_quadrilateral_node_quaternion_rotation(c, sd, l).{axis}'
+            quaternion_drivers[i].expression = f'get_spherical_quadrilateral_camera_node_quaternion_rotation(c, sd, l).{axis}'
     
     return cam_base

@@ -35,32 +35,39 @@ from blender_nerf_tools.panels.render_panel import NeRFRenderPanel
 from blender_nerf_tools.registration.registration import Registration
 from blender_nerf_tools.photogrammetry_importer.opengl.utility import redraw_points
 
+@bpy.app.handlers.persistent
+def load_handler(dummy):
+    Registration.register_drivers()
+    redraw_points(dummy)
+
 def register():
     """Register importers, exporters and panels."""
 
     Registration.register_importers()
     Registration.register_exporters()
-    Registration.register_drivers()
 
     bpy.utils.register_class(NeRFTrainingPanel)
     bpy.utils.register_class(NeRFRenderPanel)
     
-    bpy.app.handlers.load_post.append(redraw_points)
+    bpy.app.handlers.load_post.append(load_handler)
+    Registration.register_drivers()
 
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
 
+def unregister_drivers():
+    Registration.unregister_drivers()
 
 def unregister():
     """Unregister importers, exporters and panels."""
 
     Registration.unregister_importers()
     Registration.unregister_exporters()
-    Registration.unregister_drivers()
 
     bpy.utils.unregister_class(NeRFTrainingPanel)
     bpy.utils.unregister_class(NeRFRenderPanel)
 
-    bpy.app.handlers.load_post.remove(redraw_points)
+    bpy.app.handlers.load_post.remove(load_handler)
+    Registration.unregister_drivers()
 
     log_report("INFO", "Unregistered {}".format(bl_info["name"]))
 
