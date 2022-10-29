@@ -5,6 +5,7 @@ import numpy as np
 from blender_nerf_tools.constants import (
     OBJ_TYPE_ID,
     OBJ_TYPE_RENDER_CAMERA,
+    RENDER_CAM_NEAR_ID,
     RENDER_CAM_SENSOR_DIAGONAL_ID,
     RENDER_CAM_SENSOR_HEIGHT_ID,
     RENDER_CAM_SENSOR_WIDTH_ID,
@@ -114,6 +115,10 @@ def add_spherical_quadrilateral_camera(name='Spherical Quadrilateral Camera', co
 
     cam_base[RENDER_CAM_SENSOR_WIDTH_ID] = 1.0
     cam_base[RENDER_CAM_SENSOR_HEIGHT_ID] = 1.0
+    
+    cam_base[RENDER_CAM_NEAR_ID] = 0.0
+    prop = cam_base.id_properties_ui(RENDER_CAM_NEAR_ID)
+    prop.update(min=0.0, max=100.0)
 
     # add driver to calculate diagonal
     cam_base[RENDER_CAM_SENSOR_DIAGONAL_ID] = math.sqrt(2)

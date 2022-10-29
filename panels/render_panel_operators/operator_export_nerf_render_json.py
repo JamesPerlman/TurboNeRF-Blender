@@ -17,11 +17,16 @@ from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderMan
 
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 from blender_nerf_tools.constants import (
+    RENDER_CAM_NEAR_ID,
+    RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID,
+    RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID,
+    RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID,
     RENDER_CAM_SENSOR_HEIGHT_ID,
     RENDER_CAM_SENSOR_WIDTH_ID,
     RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID,
     RENDER_CAM_TYPE_ID,
     RENDER_CAM_TYPE_PERSPECTIVE,
+    RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
 )
 
@@ -124,13 +129,12 @@ class BlenderNeRFExportRenderJSON(bpy.types.Operator):
 
             # serialize camera
             camera = NeRFRenderManager.get_active_camera()
+            m = offset_matrix @ camera.matrix_world
+
             cam_json = {}
             if camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_PERSPECTIVE:
                 cam_data = camera.data
 
-                m = offset_matrix @ camera.matrix_world
-                o = m.to_quaternion().to_matrix()
-                t = m.translation
                 
                 # aperture and focus distance
                 ngp_aperture = 0
@@ -152,15 +156,24 @@ class BlenderNeRFExportRenderJSON(bpy.types.Operator):
                     "fov": ngp_fov,
                 }
             elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL:
-                m = offset_matrix @ camera.matrix_world
                 cam_json = {
                     "type": camera[RENDER_CAM_TYPE_ID],
                     "sw": camera[RENDER_CAM_SENSOR_WIDTH_ID],
                     "sh": camera[RENDER_CAM_SENSOR_HEIGHT_ID],
                     "c": camera[RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID],
+                    "near": camera[RENDER_CAM_NEAR_ID],
                     "m": mat_to_list(m),
                 }
-
+            elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON:
+                cam_json = {
+                    "type": camera[RENDER_CAM_TYPE_ID],
+                    "fs": list(camera[RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID]),
+                    "bs": list(camera[RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID]),
+                    "sl": camera[RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID],
+                    "m": mat_to_list(m),
+                    "near": camera[RENDER_CAM_NEAR_ID],
+                }
+            
             # create dict for this frame
             frame_dict = {
                 "file_path": f"{i:05d}.png",

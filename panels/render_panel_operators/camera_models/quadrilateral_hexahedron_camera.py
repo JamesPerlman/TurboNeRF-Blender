@@ -5,9 +5,10 @@ from blender_nerf_tools.blender_utility.object_utility import add_empty
 from blender_nerf_tools.constants import (
     OBJ_TYPE_ID,
     OBJ_TYPE_RENDER_CAMERA,
-    RENDER_CAM_HEX_QUAD_BACK_SENSOR_SIZE_ID,
-    RENDER_CAM_HEX_QUAD_FRONT_SENSOR_SIZE_ID,
-    RENDER_CAM_HEX_QUAD_SENSOR_LENGTH_ID,
+    RENDER_CAM_NEAR_ID,
+    RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID,
+    RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID,
+    RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID,
     RENDER_CAM_TYPE_ID,
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
 )
@@ -18,19 +19,19 @@ def add_front_sensor_size_driver_var(driver, cam_base):
     var_fs = driver.variables.new()
     var_fs.name = "fs"
     var_fs.targets[0].id = cam_base
-    var_fs.targets[0].data_path = f'["{RENDER_CAM_HEX_QUAD_FRONT_SENSOR_SIZE_ID}"]'
+    var_fs.targets[0].data_path = f'["{RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID}"]'
 
 def add_back_sensor_size_driver_var(driver, cam_base):
     var_bs = driver.variables.new()
     var_bs.name = "bs"
     var_bs.targets[0].id = cam_base
-    var_bs.targets[0].data_path = f'["{RENDER_CAM_HEX_QUAD_BACK_SENSOR_SIZE_ID}"]'
+    var_bs.targets[0].data_path = f'["{RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID}"]'
 
 def add_sensor_length_driver_var(driver, cam_base):
     var_sl = driver.variables.new()
     var_sl.name = "sl"
     var_sl.targets[0].id = cam_base
-    var_sl.targets[0].data_path = f'["{RENDER_CAM_HEX_QUAD_SENSOR_LENGTH_ID}"]'
+    var_sl.targets[0].data_path = f'["{RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID}"]'
 
 def add_front_node_location_drivers(cam_base, cam_node):
     drivers = [fc.driver for fc in cam_node.driver_add('location')]
@@ -94,15 +95,19 @@ def add_quadrilateral_hexahedron_camera(name='Quadrilateral Hexahedron Camera', 
     cam_base[RENDER_CAM_TYPE_ID] = RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON
 
     # add custom properties
-    cam_base[RENDER_CAM_HEX_QUAD_FRONT_SENSOR_SIZE_ID] = [1.0, 1.0]
-    prop = cam_base.id_properties_ui(RENDER_CAM_HEX_QUAD_FRONT_SENSOR_SIZE_ID)
+    cam_base[RENDER_CAM_NEAR_ID] = 0.0
+    prop = cam_base.id_properties_ui(RENDER_CAM_NEAR_ID)
+    prop.update(min=0.0, max=100.0)
+
+    cam_base[RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID] = [1.0, 1.0]
+    prop = cam_base.id_properties_ui(RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID)
     prop.update(min=-100, max=100)
 
-    cam_base[RENDER_CAM_HEX_QUAD_BACK_SENSOR_SIZE_ID] = [1.0, 1.0]
-    prop = cam_base.id_properties_ui(RENDER_CAM_HEX_QUAD_BACK_SENSOR_SIZE_ID)
+    cam_base[RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID] = [1.0, 1.0]
+    prop = cam_base.id_properties_ui(RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID)
     prop.update(min=-100, max=100)
 
-    cam_base[RENDER_CAM_HEX_QUAD_SENSOR_LENGTH_ID] = 1.0
+    cam_base[RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID] = 1.0
 
     # add faces and vertices
     front_face = add_empty('Front Face', collection=collection, type='PLAIN_AXES')
@@ -188,8 +193,8 @@ def add_quadrilateral_hexahedron_camera(name='Quadrilateral Hexahedron Camera', 
         node.parent = sample_nodes
         
         [lx, ly, lz] = add_sample_node_location_drivers(cam_base, node)
-        lx.expression = f"bs[0] * {coord[0]}"
-        ly.expression = f"bs[1] * {coord[1]}"
+        lx.expression = f"0.5 * bs[0] * {coord[0]}"
+        ly.expression = f"0.5 * bs[1] * {coord[1]}"
         lz.expression = "sl * 0.5"
 
         quaternion_drivers = add_sample_node_quaternion_drivers(cam_base, node)
