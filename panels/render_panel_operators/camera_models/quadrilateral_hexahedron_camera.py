@@ -34,29 +34,35 @@ def add_sensor_length_driver_var(driver, cam_base):
     var_sl.targets[0].data_path = f'["{RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID}"]'
 
 def add_front_node_location_drivers(cam_base, cam_node):
-    drivers = [fc.driver for fc in cam_node.driver_add('location')]
-    for driver in drivers:
+    [lx, ly, lz] = [fc.driver for fc in cam_node.driver_add('location')]
+    for driver in [lx, ly]:
         add_front_sensor_size_driver_var(driver, cam_base)
         add_sensor_length_driver_var(driver, cam_base)
+    
+    add_sensor_length_driver_var(lz, cam_base)
 
-    return drivers
+    return [lx, ly, lz]
 
 def add_back_node_location_drivers(cam_base, cam_node):
-    drivers = [fc.driver for fc in cam_node.driver_add('location')]
-    for driver in drivers:
+    [lx, ly, lz] = [fc.driver for fc in cam_node.driver_add('location')]
+    for driver in [lx, ly]:
         add_back_sensor_size_driver_var(driver, cam_base)
         add_sensor_length_driver_var(driver, cam_base)
+    
+    add_sensor_length_driver_var(lz, cam_base)
 
-    return drivers
+    return [lx, ly, lz]
 
 def add_sample_node_location_drivers(cam_base, cam_node):
-    drivers = [fc.driver for fc in cam_node.driver_add('location')]
-    for driver in drivers:
+    [lx, ly, lz] = [fc.driver for fc in cam_node.driver_add('location')]
+    for driver in [lx, ly]:
         add_front_sensor_size_driver_var(driver, cam_base)
         add_back_sensor_size_driver_var(driver, cam_base)
         add_sensor_length_driver_var(driver, cam_base)
 
-    return drivers
+    add_sensor_length_driver_var(lz, cam_base)
+
+    return [lx, ly, lz]
 
 def add_sample_node_quaternion_drivers(cam_base, cam_node):
     drivers = [fc.driver for fc in cam_node.driver_add('rotation_quaternion')]
@@ -179,7 +185,7 @@ def add_quadrilateral_hexahedron_camera(name='Quadrilateral Hexahedron Camera', 
     
     rx, ry = 10, 10
 
-    coords = 2.0 * (np.stack(np.mgrid[:rx, :ry], -1) / [rx - 1, ry - 1] - [0.5, 0.5])
+    coords = (np.stack(np.mgrid[:rx, :ry], -1) / [rx - 1, ry - 1] - [0.5, 0.5])
     coords = coords.reshape(-1, coords.shape[-1])
     
     sample_nodes = add_empty('Sample Nodes', collection=collection, type='PLAIN_AXES')
@@ -193,8 +199,8 @@ def add_quadrilateral_hexahedron_camera(name='Quadrilateral Hexahedron Camera', 
         node.parent = sample_nodes
         
         [lx, ly, lz] = add_sample_node_location_drivers(cam_base, node)
-        lx.expression = f"0.5 * bs[0] * {coord[0]}"
-        ly.expression = f"0.5 * bs[1] * {coord[1]}"
+        lx.expression = f"bs[0] * {coord[0]}"
+        ly.expression = f"bs[1] * {coord[1]}"
         lz.expression = "sl * 0.5"
 
         quaternion_drivers = add_sample_node_quaternion_drivers(cam_base, node)
