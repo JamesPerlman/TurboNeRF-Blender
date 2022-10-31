@@ -1,10 +1,11 @@
 import mathutils
 import numpy as np
 
-from blender_nerf_tools.blender_utility.object_utility import add_empty
+from blender_nerf_tools.blender_utility.object_utility import add_empty, select_object
 from blender_nerf_tools.constants import (
     OBJ_TYPE_ID,
     OBJ_TYPE_RENDER_CAMERA,
+    RENDER_CAM_IS_ACTIVE_ID,
     RENDER_CAM_NEAR_ID,
     RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID,
     RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID,
@@ -99,6 +100,7 @@ def add_quadrilateral_hexahedron_camera(name='Quadrilateral Hexahedron Camera', 
     cam_base = add_empty(name, collection=collection, type='ARROWS')
     cam_base[OBJ_TYPE_ID] = OBJ_TYPE_RENDER_CAMERA
     cam_base[RENDER_CAM_TYPE_ID] = RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON
+    cam_base[RENDER_CAM_IS_ACTIVE_ID] = True
 
     # add custom properties
     cam_base[RENDER_CAM_NEAR_ID] = 0.0
@@ -207,5 +209,7 @@ def add_quadrilateral_hexahedron_camera(name='Quadrilateral Hexahedron Camera', 
         for (i, axis) in enumerate(['w', 'x', 'y', 'z']):
             driver = quaternion_drivers[i]
             driver.expression = f"get_quadrilateral_hexahedron_camera_node_quaternion_rotation(fs, bs, sl, {cx}, {cy}).{axis}"
-        
+    
+    select_object(cam_base)
+    
     return cam_base
