@@ -6,6 +6,7 @@ from blender_nerf_tools.constants import (
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
 )
+from blender_nerf_tools.panels.render_panel_operators.camera_models.perspective_camera import add_perspective_camera
 from blender_nerf_tools.panels.render_panel_operators.camera_models.quadrilateral_hexahedron_camera import add_quadrilateral_hexahedron_camera
 from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import add_spherical_quadrilateral_camera
 
@@ -23,7 +24,7 @@ class BlenderNeRFAddRenderCameraOperator(bpy.types.Operator):
         camera = {}
         
         if camera_model_id == RENDER_CAM_TYPE_PERSPECTIVE:
-            pass
+            camera = add_perspective_camera()
         elif camera_model_id == RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL:
             camera = add_spherical_quadrilateral_camera()
         elif camera_model_id == RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON:
