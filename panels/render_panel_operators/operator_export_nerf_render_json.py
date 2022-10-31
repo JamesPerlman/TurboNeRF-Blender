@@ -151,7 +151,7 @@ def serialize_masks():
     mask_json = []
     for mask in masks:
         mask_json.append({
-            "type": mask[MASK_TYPE_ID],
+            "shape": mask[MASK_TYPE_ID],
             "mode": mask[MASK_MODE_ID],
             "feather": mask[MASK_FEATHER_ID],
             "opacity": mask[MASK_OPACITY_ID],
