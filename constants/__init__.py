@@ -63,6 +63,7 @@ OBJ_TYPE_TRAIN_CAMERA = "train_camera"
 OBJ_TYPE_RENDER_CAMERA = "render_camera"
 OBJ_TYPE_IMG_PLANE = "image_plane"
 OBJ_TYPE_POINT_CLOUD = "point_cloud"
+OBJ_TYPE_MASK_SHAPE = "mask_shape"
 
 # Render cameras
 
@@ -83,3 +84,17 @@ RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID = "curvature"
 RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID = "front_sensor_size"
 RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID = "back_sensor_size"
 RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID = "sensor_length"
+
+# Mask Shapes
+
+MASK_TYPE_ID = "mask_type"
+MASK_TYPE_BOX = "box"
+MASK_TYPE_CYLINDER = "cylinder"
+MASK_TYPE_SPHERE = "sphere"
+
+MASK_MODE_ID = "mask_mode"
+MASK_MODE_ADD = "add"
+MASK_MODE_SUBTRACT = "subtract"
+
+MASK_OPACITY_ID = "mask_opacity"
+MASK_FEATHER_ID = "feather"

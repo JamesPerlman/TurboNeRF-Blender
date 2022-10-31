@@ -17,6 +17,10 @@ from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderMan
 
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 from blender_nerf_tools.constants import (
+    MASK_FEATHER_ID,
+    MASK_MODE_ID,
+    MASK_OPACITY_ID,
+    MASK_TYPE_ID,
     RENDER_CAM_NEAR_ID,
     RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID,
     RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID,
@@ -85,6 +89,77 @@ def get_camera_fovs(blender_camera: bpy.types.Camera):
     return (ngp_ax, ngp_ay)
 
 
+# Serializers
+
+# AABB
+def serialize_aabb():
+    return {
+        "max" : list(NeRFScene.get_aabb_max()),
+        "min" : list(NeRFScene.get_aabb_min()),
+    }
+
+# Serialize active camera for current frame
+def serialize_active_camera():
+    camera = NeRFRenderManager.get_active_camera()
+    m = camera.matrix_world
+    
+    if camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_PERSPECTIVE:
+        cam_data = camera.data
+        
+        # aperture and focus distance
+        ngp_aperture = 0
+        ngp_focus_target = [0, 0, 0]
+        if cam_data.dof.use_dof and cam_data.dof.focus_object != None:
+            # No idea if this is correct
+            ngp_aperture = cam_data.dof.aperture_fstop
+            ngp_focus_target = cam_data.dof.focus_object.matrix_world.translation
+            
+        (ngp_fov, _) = get_camera_fovs(camera)
+
+        cam_json = {
+            "type": camera[RENDER_CAM_TYPE_ID],
+            "m": mat_to_list(m),
+            "aperture": ngp_aperture,
+            "focus_target": list(ngp_focus_target),
+            "near": cam_data.clip_start,
+            "far": 1e5,
+            "fov": ngp_fov,
+        }
+    elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL:
+        cam_json = {
+            "type": camera[RENDER_CAM_TYPE_ID],
+            "sw": camera[RENDER_CAM_SENSOR_WIDTH_ID],
+            "sh": camera[RENDER_CAM_SENSOR_HEIGHT_ID],
+            "c": camera[RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID],
+            "near": camera[RENDER_CAM_NEAR_ID],
+            "m": mat_to_list(m),
+        }
+    elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON:
+        cam_json = {
+            "type": camera[RENDER_CAM_TYPE_ID],
+            "fs": list(camera[RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID]),
+            "bs": list(camera[RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID]),
+            "sl": camera[RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID],
+            "m": mat_to_list(m),
+            "near": camera[RENDER_CAM_NEAR_ID],
+        }
+    
+    return cam_json
+
+def serialize_masks():
+    masks = NeRFRenderManager.get_all_masks()
+    mask_json = []
+    for mask in masks:
+        mask_json.append({
+            "type": mask[MASK_TYPE_ID],
+            "mode": mask[MASK_MODE_ID],
+            "alpha": mask[MASK_OPACITY_ID],
+            "feather": mask[MASK_FEATHER_ID],
+            "transform": mat_to_list(mask.matrix_world),
+        })
+    
+    return mask_json
+
 class BlenderNeRFExportRenderJSON(bpy.types.Operator):
 
     """Export main camera as NeRF render.json"""
@@ -122,72 +197,24 @@ class BlenderNeRFExportRenderJSON(bpy.types.Operator):
         for frame in range(scene.frame_start, scene.frame_end + 1, scene.frame_step):
             scene.frame_set(frame)
             
-            # non-camera things
-
-            aabb_max = NeRFScene.get_aabb_max()
-            aabb_min = NeRFScene.get_aabb_min()
-
-            # serialize camera
-            camera = NeRFRenderManager.get_active_camera()
-            m = offset_matrix @ camera.matrix_world
-
-            cam_json = {}
-            if camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_PERSPECTIVE:
-                cam_data = camera.data
-
-                
-                # aperture and focus distance
-                ngp_aperture = 0
-                ngp_focus_target = [0, 0, 0]
-                if cam_data.dof.use_dof and cam_data.dof.focus_object != None:
-                    # No idea if this is correct
-                    ngp_aperture = cam_data.dof.aperture_fstop
-                    ngp_focus_target = cam_data.dof.focus_object.matrix_world.translation
-                    
-                (ngp_fov, _) = get_camera_fovs(camera)
-
-                cam_json = {
-                    "type": camera[RENDER_CAM_TYPE_ID],
-                    "m": mat_to_list(m),
-                    "aperture": ngp_aperture,
-                    "focus_target": list(ngp_focus_target),
-                    "near": cam_data.clip_start,
-                    "far": 1e5,
-                    "fov": ngp_fov,
-                }
-            elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL:
-                cam_json = {
-                    "type": camera[RENDER_CAM_TYPE_ID],
-                    "sw": camera[RENDER_CAM_SENSOR_WIDTH_ID],
-                    "sh": camera[RENDER_CAM_SENSOR_HEIGHT_ID],
-                    "c": camera[RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID],
-                    "near": camera[RENDER_CAM_NEAR_ID],
-                    "m": mat_to_list(m),
-                }
-            elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON:
-                cam_json = {
-                    "type": camera[RENDER_CAM_TYPE_ID],
-                    "fs": list(camera[RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID]),
-                    "bs": list(camera[RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID]),
-                    "sl": camera[RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID],
-                    "m": mat_to_list(m),
-                    "near": camera[RENDER_CAM_NEAR_ID],
-                }
+            aabb_data = serialize_aabb()
+            cam_data = serialize_active_camera()
+            mask_data = serialize_masks()
             
             # create dict for this frame
             frame_dict = {
                 "file_path": f"{i:05d}.png",
-                "aabb" : {
-                    "max" : list(aabb_max),
-                    "min" : list(aabb_min),
-                },
-                "camera": cam_json,
+                "aabb" : aabb_data,
+                "camera": cam_data,
+                "masks": mask_data,
                 "n_steps": NeRFScene.get_training_steps(),
                 "time": NeRFScene.get_time(),
             }
 
             frames.append(frame_dict)
             i = i + 1
+
+            # masks
         
         # Put it all together
 

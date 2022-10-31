@@ -16,6 +16,11 @@ from blender_nerf_tools.blender_utility.object_utility import (
     get_selected_object,
 )
 from blender_nerf_tools.constants import (
+    MASK_MODE_ADD,
+    MASK_MODE_SUBTRACT,
+    MASK_TYPE_BOX,
+    MASK_TYPE_CYLINDER,
+    MASK_TYPE_SPHERE,
     OBJ_TYPE_ID,
     OBJ_TYPE_RENDER_CAMERA,
     RENDER_CAM_TYPE_ID,
@@ -26,6 +31,7 @@ from blender_nerf_tools.constants import (
 
 from blender_nerf_tools.panels.render_panel_operators.camera_manager_operators import BlenderNeRFAddRenderCameraOperator
 from blender_nerf_tools.panels.render_panel_operators.operator_export_nerf_render_json import BlenderNeRFExportRenderJSON
+from blender_nerf_tools.panels.render_panel_operators.mask_shape_operators import BlenderNeRFAddMaskShapeOperator
 
 CAMERA_TYPES = {
     RENDER_CAM_TYPE_PERSPECTIVE: {
@@ -42,6 +48,32 @@ CAMERA_TYPES = {
     }
 }
 
+MASK_MODES = {
+    MASK_MODE_ADD: {
+        "name": "Add",
+        "description": "Points inside the shape are added to the mask",
+    },
+    MASK_MODE_SUBTRACT: {
+        "name": "Subtract",
+        "description": "Points inside the shape are subtracted from the mask",
+    },
+}
+
+MASK_TYPES = {
+    MASK_TYPE_BOX: {
+        "name": "Box",
+        "description": "Featherable box-shaped mask",
+    },
+    MASK_TYPE_CYLINDER: {
+        "name": "Cylinder",
+        "description": "Featherable cylinder-shaped mask",
+    },
+    MASK_TYPE_SPHERE: {
+        "name": "Sphere",
+        "description": "Featherable spherical mask",
+    },
+}
+
 class NeRFRenderPanelSettings(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D view."""
 
@@ -50,15 +82,32 @@ class NeRFRenderPanelSettings(bpy.types.PropertyGroup):
     # Cameras
     camera_model_options = [(tid, CAMERA_TYPES[tid]["name"], CAMERA_TYPES[tid]["description"]) for tid in CAMERA_TYPES]
 
-    def update_camera_model(self, context):
-        print(CAMERA_TYPES[self.camera_model]["name"])
-
     camera_model: bpy.props.EnumProperty(
         name="Add",
         items=camera_model_options,
         description="Camera model to use for rendering",
         default=RENDER_CAM_TYPE_PERSPECTIVE,
-        update=update_camera_model,
+    )
+
+    # Masks
+
+    mask_mode_options = [(mid, MASK_MODES[mid]["name"], MASK_MODES[mid]["description"]) for mid in MASK_MODES]
+
+    mask_mode: bpy.props.EnumProperty(
+        name="Mode",
+        items=mask_mode_options,
+        description="Mask mode",
+        default=MASK_MODE_ADD,
+    )
+
+    mask_shape_options = [(tid, MASK_TYPES[tid]["name"], MASK_TYPES[tid]["description"]) for tid in MASK_TYPES]
+
+
+    mask_shape: bpy.props.EnumProperty(
+        name="Add",
+        items=mask_shape_options,
+        description="Mask shape to use for rendering",
+        default=MASK_TYPE_BOX,
     )
 
 
@@ -87,6 +136,7 @@ class NeRFRenderPanel(bpy.types.Panel):
 
         bpy.utils.register_class(BlenderNeRFAddRenderCameraOperator)
         bpy.utils.register_class(BlenderNeRFExportRenderJSON)
+        bpy.utils.register_class(BlenderNeRFAddMaskShapeOperator)
 
     @classmethod
     def unregister(cls):
@@ -96,6 +146,7 @@ class NeRFRenderPanel(bpy.types.Panel):
 
         bpy.utils.unregister_class(BlenderNeRFAddRenderCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFExportRenderJSON)
+        bpy.utils.unregister_class(BlenderNeRFAddMaskShapeOperator)
 
         del bpy.types.Scene.nerf_render_panel_settings
 
@@ -120,6 +171,25 @@ class NeRFRenderPanel(bpy.types.Panel):
         row.operator(
             BlenderNeRFAddRenderCameraOperator.bl_idname,
             text=f"Create {CAMERA_TYPES[settings.camera_model]['name']} Camera"
+        )
+
+        # Masks section
+
+        section = layout.box()
+        section.label(
+            text="Masks"
+        )
+
+        row = section.row()
+        row.prop(settings, "mask_shape")
+
+        row = section.row()
+        row.prop(settings, "mask_mode")
+
+        row = section.row()
+        row.operator(
+            BlenderNeRFAddMaskShapeOperator.bl_idname,
+            text=f"Create {MASK_TYPES[settings.mask_shape]['name']} Mask"
         )
         
         # Export section
