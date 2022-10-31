@@ -153,8 +153,8 @@ def serialize_masks():
         mask_json.append({
             "type": mask[MASK_TYPE_ID],
             "mode": mask[MASK_MODE_ID],
-            "alpha": mask[MASK_OPACITY_ID],
             "feather": mask[MASK_FEATHER_ID],
+            "opacity": mask[MASK_OPACITY_ID],
             "transform": mat_to_list(mask.matrix_world),
         })
     
