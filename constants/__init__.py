@@ -98,3 +98,12 @@ MASK_MODE_SUBTRACT = "subtract"
 
 MASK_OPACITY_ID = "mask_opacity"
 MASK_FEATHER_ID = "feather"
+
+# Specific Mask Properties
+
+MASK_BOX_DIMS_ID = "dimensions"
+
+MASK_CYLINDER_RADIUS_ID = "radius"
+MASK_CYLINDER_HEIGHT_ID = "height"
+
+MASK_SPHERE_RADIUS_ID = "radius"

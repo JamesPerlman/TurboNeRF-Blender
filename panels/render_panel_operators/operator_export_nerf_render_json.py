@@ -17,10 +17,17 @@ from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderMan
 
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 from blender_nerf_tools.constants import (
+    MASK_BOX_DIMS_ID,
+    MASK_CYLINDER_HEIGHT_ID,
+    MASK_CYLINDER_RADIUS_ID,
     MASK_FEATHER_ID,
     MASK_MODE_ID,
     MASK_OPACITY_ID,
+    MASK_SPHERE_RADIUS_ID,
+    MASK_TYPE_BOX,
+    MASK_TYPE_CYLINDER,
     MASK_TYPE_ID,
+    MASK_TYPE_SPHERE,
     RENDER_CAM_NEAR_ID,
     RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID,
     RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID,
@@ -150,12 +157,28 @@ def serialize_masks():
     masks = NeRFRenderManager.get_all_masks()
     mask_json = []
     for mask in masks:
+        specific_props = {}
+        if mask[MASK_TYPE_ID] == MASK_TYPE_BOX:
+            specific_props = {
+                "dims": list(mask[MASK_BOX_DIMS_ID]),
+            }
+        elif mask[MASK_TYPE_ID] == MASK_TYPE_CYLINDER:
+            specific_props = {
+                "radius": mask[MASK_CYLINDER_RADIUS_ID],
+                "height": mask[MASK_CYLINDER_HEIGHT_ID],
+            }
+        elif mask[MASK_TYPE_ID] == MASK_TYPE_SPHERE:
+            specific_props = {
+                "radius": mask[MASK_SPHERE_RADIUS_ID],
+            }
+
         mask_json.append({
             "shape": mask[MASK_TYPE_ID],
             "mode": mask[MASK_MODE_ID],
             "feather": mask[MASK_FEATHER_ID],
             "opacity": mask[MASK_OPACITY_ID],
             "transform": mat_to_list(mask.matrix_world),
+            **specific_props
         })
     
     return mask_json
