@@ -4,7 +4,7 @@ import bmesh
 from blender_nerf_tools.blender_utility.logging_utility import log_report
 
 
-def add_empty(name, collection=None, type='PLAIN_AXES'):
+def add_empty(name, collection=None, type='PLAIN_AXES') -> bpy.types.Object:
     """Add an empty to the scene."""
     if collection is None:
         collection = bpy.context.collection
@@ -13,7 +13,7 @@ def add_empty(name, collection=None, type='PLAIN_AXES'):
     collection.objects.link(empty_obj)
     return empty_obj
 
-def add_obj(data, obj_name, collection=None):
+def add_obj(data, obj_name, collection=None) -> bpy.types.Object:
     """Add an object to the scene."""
     if collection is None:
         collection = bpy.context.collection
