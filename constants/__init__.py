@@ -64,6 +64,7 @@ OBJ_TYPE_RENDER_CAMERA = "render_camera"
 OBJ_TYPE_IMG_PLANE = "image_plane"
 OBJ_TYPE_POINT_CLOUD = "point_cloud"
 OBJ_TYPE_MASK_SHAPE = "mask_shape"
+OBJ_TYPE_NERF_SNAPSHOT = "nerf_snapshot"
 
 # Render cameras
 
@@ -107,3 +108,9 @@ MASK_CYLINDER_RADIUS_ID = "radius"
 MASK_CYLINDER_HEIGHT_ID = "height"
 
 MASK_SPHERE_RADIUS_ID = "radius"
+
+# Snapshot Properties
+SNAPSHOT_PATH_ID = "snapshot_path"
+SNAPSHOT_AABB_SIZE_ID = "aabb_size"
+SNAPSHOT_AABB_CENTER_ID = "aabb_center"
+
