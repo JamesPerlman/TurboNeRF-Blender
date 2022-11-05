@@ -52,6 +52,8 @@ def register():
     bpy.app.handlers.load_post.append(load_handler)
     Registration.register_drivers()
 
+    Registration.register_render_engine()
+
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
 
 def unregister_drivers():
@@ -68,6 +70,8 @@ def unregister():
 
     bpy.app.handlers.load_post.remove(load_handler)
     Registration.unregister_drivers()
+
+    Registration.unregister_render_engine()
 
     log_report("INFO", "Unregistered {}".format(bl_info["name"]))
 

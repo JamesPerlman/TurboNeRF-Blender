@@ -32,6 +32,7 @@ from blender_nerf_tools.constants import (
 from blender_nerf_tools.panels.render_panel_operators.camera_manager_operators import BlenderNeRFAddRenderCameraOperator
 from blender_nerf_tools.panels.render_panel_operators.operator_export_nerf_render_json import BlenderNeRFExportRenderJSON
 from blender_nerf_tools.panels.render_panel_operators.mask_shape_operators import BlenderNeRFAddMaskShapeOperator
+from blender_nerf_tools.panels.render_panel_operators.ngp_snapshot_operators import ImportNGPSnapshotOperator
 
 CAMERA_TYPES = {
     RENDER_CAM_TYPE_PERSPECTIVE: {
@@ -137,6 +138,7 @@ class NeRFRenderPanel(bpy.types.Panel):
         bpy.utils.register_class(BlenderNeRFAddRenderCameraOperator)
         bpy.utils.register_class(BlenderNeRFExportRenderJSON)
         bpy.utils.register_class(BlenderNeRFAddMaskShapeOperator)
+        bpy.utils.register_class(ImportNGPSnapshotOperator)
 
     @classmethod
     def unregister(cls):
@@ -147,6 +149,7 @@ class NeRFRenderPanel(bpy.types.Panel):
         bpy.utils.unregister_class(BlenderNeRFAddRenderCameraOperator)
         bpy.utils.unregister_class(BlenderNeRFExportRenderJSON)
         bpy.utils.unregister_class(BlenderNeRFAddMaskShapeOperator)
+        bpy.utils.unregister_class(ImportNGPSnapshotOperator)
 
         del bpy.types.Scene.nerf_render_panel_settings
 
@@ -156,6 +159,13 @@ class NeRFRenderPanel(bpy.types.Panel):
 
         settings = context.scene.nerf_render_panel_settings
         layout = self.layout
+
+        # Import Snapshot Section
+        section = layout.box()
+        section.label(text="Import Snapshot")
+        
+        row = section.row()
+        row.operator(ImportNGPSnapshotOperator.bl_idname, text="Import Snapshot")
 
         # Cameras Section
 

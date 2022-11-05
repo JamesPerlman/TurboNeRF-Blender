@@ -12,6 +12,7 @@ from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_qu
     get_spherical_quadrilateral_camera_node_location,
     get_spherical_quadrilateral_camera_node_quaternion_rotation,
 )
+from blender_nerf_tools.renderer.nerf_render_engine import (register_nerf_render_engine, unregister_nerf_render_engine)
 
 # Definining the following import and export functions within the
 # "Registration" class causes different errors when hovering over entries in
@@ -126,8 +127,18 @@ class Registration:
         bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location'] = get_spherical_quadrilateral_camera_node_location
         bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation'] = get_spherical_quadrilateral_camera_node_quaternion_rotation
         bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation'] = get_quadrilateral_hexahedron_camera_node_quaternion_rotation
+
     @classmethod
     def unregister_drivers(cls):
         del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location']
         del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation']
         del bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation']
+
+    @classmethod
+    def register_render_engine(cls):
+        register_nerf_render_engine()
+    
+    @classmethod
+    def unregister_render_engine(cls):
+        unregister_nerf_render_engine()
+
