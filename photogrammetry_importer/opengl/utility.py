@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import gpu
 from bpy.app.handlers import persistent
 from mathutils import Matrix
@@ -18,6 +19,32 @@ from blender_nerf_tools.blender_utility.logging_utility import log_report
 
 
 def _draw_coords_with_color(
+    coords,
+    colors,
+    point_size,
+    add_points_to_point_cloud_handle,
+    reconstruction_collection=None,
+    object_anchor_handle_name=POINT_CLOUD_NAME_DEFAULT,
+    op=None,
+):
+    mesh_data = bpy.data.meshes.new("mesh_data")
+
+    mesh_data.attributes.new("point_color", type='FLOAT_COLOR', domain='POINT')
+    mesh_data.vertices.add(len(coords))
+    mesh_data.vertices.foreach_set("co", [c for coord in coords for c in coord])
+
+    for i, color in enumerate(colors):
+        mesh_data.attributes['point_color'].data[i].color = color
+    
+    mesh_data.update()
+
+    object_anchor_handle = bpy.data.objects.new(object_anchor_handle_name, mesh_data)
+    
+    bpy.context.scene.collection.objects.link(object_anchor_handle)
+    
+    return object_anchor_handle
+
+def _draw_coords_with_color_orig(
     coords,
     colors,
     point_size,
