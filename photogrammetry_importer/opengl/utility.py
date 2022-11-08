@@ -39,6 +39,7 @@ def _draw_coords_with_color(
     mesh_data.update()
 
     object_anchor_handle = bpy.data.objects.new(object_anchor_handle_name, mesh_data)
+    object_anchor_handle[POINT_CLOUD_POINT_SIZE_ID] = 1
     
     bpy.context.scene.collection.objects.link(object_anchor_handle)
     

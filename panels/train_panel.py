@@ -41,9 +41,11 @@ class NeRFTrainingPanelSettings(bpy.types.PropertyGroup):
 
     # Point cloud
     def get_viz_point_size(self):
+        return 1
         return NeRFScene.get_viz_point_size()
 
     def set_viz_point_size(self, value):
+        return
         NeRFScene.set_viz_point_size(value)
 
     viz_point_size: IntProperty(

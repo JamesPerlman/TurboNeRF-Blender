@@ -3,17 +3,37 @@ import bpy
 import gpu
 from gpu_extras.presets import draw_texture_2d
 import numpy as np
+import time
+from threading import Thread
 
-import blender_nerf_tools.renderer.ngp_testbed_manager
-
+from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
 from .ngp_testbed_manager import NGPTestbedManager
+import copy
 
+# TODO: this is a util
+# thank you https://stackoverflow.com/a/58567022/892990
+#simple image scaling to (nR x nC) size
+def scale(im, nR, nC):
+    nR0 = im.shape[0]     # source number of rows 
+    nC0 = im.shape[1]  # source number of columns 
+    if nR0 == nR and nC0 == nC:
+        return im
+
+    return np.array([
+        [im[int(nR0 * r / nR)][int(nC0 * c / nC)] for c in range(nC)]
+        for r in range(nR)
+    ])
+
+MAX_MIP_LEVEL = 4
 class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # These three members are used by blender to set up the
     # RenderEngine; define its internal name, visible name and capabilities.
     bl_idname = "INSTANT_NERF_RENDERER"
     bl_label = "Instant NeRF"
+    bl_use_eevee_viewport = True
     bl_use_preview = True
+    bl_use_exclude_layers = True
+    bl_use_custom_freestyle = True
 
     # Init is called whenever a new render engine instance is created. Multiple
     # instances may exist at the same time, for example for a viewport and final
@@ -21,6 +41,13 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     def __init__(self):
         self.scene_data = None
         self.draw_data = None
+        self.latest_render_result = None
+        self.needs_to_redraw = False
+        self.user_updated_scene = False
+
+        self.prev_view_dimensions = np.array([0, 0])
+        self.prev_region_camera_matrix = np.eye(4)
+        self.mip_level = MAX_MIP_LEVEL
 
     # When the render engine instance is destroy, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
@@ -30,6 +57,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
+        print("render")
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
         self.size_x = int(scene.render.resolution_x * scale)
@@ -57,6 +85,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
+        print("view_update")
         region = context.region
         view3d = context.space_data
         scene = depsgraph.scene
@@ -108,19 +137,12 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
 
                 # need to pass this into ngp
                 camera_matrix = np.matrix([list(r) for r in context.scene.camera.matrix_world])
-                # convert camera matrix to z-axis up
-                transform_matrix = np.matrix([
-                    [1, 0, 0, 0],
-                    [0, 1, 0, 0],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]
-                ])
-                camera_matrix *= transform_matrix
-
                 NGPTestbedManager.set_camera_matrix(camera_matrix[:-1,:])
-                print(f" set camera matrix {view_matrix}")
 
                 # get region_3d's focal length
+        # make sure to set this
+        self.user_updated_scene = True
+    
 
     # For viewport renders, this method is called whenever Blender redraws
     # the 3D viewport. The renderer is expected to quickly draw the render
@@ -128,36 +150,127 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
+        print("view_draw")
         region = context.region
         scene = depsgraph.scene
 
         # Get viewport dimensions
         dimensions = region.width, region.height
 
-        # Bind shader that converts from scene linear to display space,
-        gpu.state.blend_set('ALPHA_PREMULT')
-        self.bind_display_space_shader(scene)
+        # TODO: abstract this
+        def draw_latest_render_result():
+            if self.latest_render_result is not None:
+                gpu.state.blend_set('ALPHA_PREMULT')
+                self.bind_display_space_shader(scene)
 
-        self.draw_data = CustomDrawData(dimensions)
+                result = self.latest_render_result # scale(self.latest_render_result, region.width, region.height)
+                
+                self.draw_data = CustomDrawData(result, result.shape[1], result.shape[0])
 
-        self.draw_data.draw()
+                self.draw_data.draw()
 
-        self.unbind_display_space_shader()
-        gpu.state.blend_set('NONE')
+                self.unbind_display_space_shader()
+                gpu.state.blend_set('NONE')
+        
+        
+        def save_render_result(result: list):
+            self.latest_render_result = result
+            self.needs_to_redraw = True
+            self.is_rendering = False
+            self.tag_redraw()
+        
+        # First we must determine if the user initiated this view_draw
+        # To do this, we will check if the dimensions or the camera matrix has changed
+       
+        # TODO: abstract this
+        def get_region_camera_matrices():
+            for area in context.screen.areas:
+                if area.type == 'VIEW_3D':
+                    region_3d: bpy.types.RegionView3D = area.spaces.active.region_3d
+                    # P
+                    projection_matrix = np.array(region_3d.window_matrix)
+                    # V 
+                    view_matrix = np.array(region_3d.view_matrix)
+                    # P * V
+                    perspective_matrix = np.array(region_3d.perspective_matrix)
+
+                    return (projection_matrix, view_matrix, perspective_matrix)
+            
+            return (np.eye(4), np.eye(4), np.eye(4))
+        
+        (projection_matrix, view_matrix, perspective_matrix) = get_region_camera_matrices()
+        
+        dims_array = np.array([region.width, region.height])
+        updated_region_size = not np.array_equal(self.prev_view_dimensions, dims_array)
+        updated_region_view = not np.array_equal(self.prev_region_camera_matrix, perspective_matrix)
+        user_initiated_view_draw = updated_region_size or updated_region_view or self.user_updated_scene
+        if user_initiated_view_draw:
+            print("USER INITIATED!")
+            self.user_updated_scene = False
+            self.prev_view_dimensions = copy.copy(dims_array)
+            self.prev_region_camera_matrix = copy.copy(perspective_matrix)
+
+            # reset mip level
+            self.mip_level = MAX_MIP_LEVEL
+
+            # start a render chain
+            view_matrix = np.array(context.scene.camera.matrix_world)
+            NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
+            # TODO: set focal length, masks
+
+            # TODO: cancel previous render, or queue up next render.  request_nerf_render will not work if it is currently already rendering
+
+            
+
+            self.needs_to_redraw = False
+            self.is_rendering = True
+            NGPTestbedManager.request_render(region.width, region.height, self.mip_level, save_render_result)
+
+            draw_latest_render_result()
+            return
+
+        # user did NOT initiate this view_draw
+        draw_latest_render_result()
+        
+        if self.needs_to_redraw:
+            print(f"NEEDS TO REDRAW!")
+            self.needs_to_redraw = False
+
+            # kick off a new render at the next mip level
+            if self.mip_level > 1:
+                self.mip_level -= 1
+                # start a render chain
+                
+                view_matrix = np.array(context.scene.camera.matrix_world)
+                NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
+                # TODO: set focal length, masks
+                self.is_rendering = True
+                NGPTestbedManager.request_render(region.width, region.height, self.mip_level, save_render_result)
+
+
+        
+   
+    
+    def update(self, data: bpy.types.BlendData, depsgraph: bpy.types.Depsgraph):
+        print("update()")
+
+    def draw(self, context: bpy.types.Context, depsgraph: bpy.types.Depsgraph):
+        print("draw()")
+    
+    def tag_redraw(self):
+        print("tag_redraw()")
+    
+    def tag_update(self):
+        print("tag_update()")
 
 
 class CustomDrawData:
-    def __init__(self, dimensions):
+    def __init__(self, render_data, width, height):
         # Generate dummy float image buffer
-        self.dimensions = dimensions
-        width, height = dimensions
-        pixels: gpu.types.Buffer
-        if NGPTestbedManager.has_snapshot == True:
-            pixels = np.flip(NGPTestbedManager.render(width, height), 0).flatten()
-            pixels = gpu.types.Buffer('FLOAT', width * height * 4, pixels.tolist())
-        else:
-            pixels = gpu.types.Buffer('FLOAT', width * height * 4, width * height * [0.0, 0.0, 1.0, 1.0])
-        
+        self.dimensions = (width, height)
+        # pixels = np.flip(render_data, 0).flatten()
+        pixels = gpu.types.Buffer('FLOAT', width * height * 4, render_data)
+
         # Generate texture
         self.texture = gpu.types.GPUTexture((width, height), format='RGBA16F', data=pixels)
 
