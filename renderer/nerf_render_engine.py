@@ -7,6 +7,7 @@ import time
 from threading import Thread
 
 from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
+from blender_nerf_tools.renderer.utils.render_camera_utils import NGPRenderCamera
 from .ngp_testbed_manager import NGPTestbedManager
 import copy
 
@@ -44,6 +45,9 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         self.latest_render_result = None
         self.needs_to_redraw = False
         self.user_updated_scene = False
+        self.is_rendering = False
+        self.current_region3d: bpy.types.RegionView3D = None
+        self.prev_render_cam: NGPRenderCamera = None
 
         self.prev_view_dimensions = np.array([0, 0])
         self.prev_region_camera_matrix = np.eye(4)
@@ -137,7 +141,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
 
                 # need to pass this into ngp
                 camera_matrix = np.matrix([list(r) for r in context.scene.camera.matrix_world])
-                NGPTestbedManager.set_camera_matrix(camera_matrix[:-1,:])
+                # NGPTestbedManager.set_camera_props(matrix=camera_matrix[:-1,:], focal_length=projection_matrix[0,0])
 
                 # get region_3d's focal length
         # make sure to set this
@@ -150,6 +154,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
+        
         print("view_draw")
         region = context.region
         scene = depsgraph.scene
@@ -173,6 +178,10 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
                 gpu.state.blend_set('NONE')
         
         
+        if self.is_rendering:
+            draw_latest_render_result()
+            return
+
         def save_render_result(result: list):
             self.latest_render_result = result
             self.needs_to_redraw = True
@@ -181,41 +190,30 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         
         # First we must determine if the user initiated this view_draw
         # To do this, we will check if the dimensions or the camera matrix has changed
-       
-        # TODO: abstract this
-        def get_region_camera_matrices():
-            for area in context.screen.areas:
-                if area.type == 'VIEW_3D':
-                    region_3d: bpy.types.RegionView3D = area.spaces.active.region_3d
-                    # P
-                    projection_matrix = np.array(region_3d.window_matrix)
-                    # V 
-                    view_matrix = np.array(region_3d.view_matrix)
-                    # P * V
-                    perspective_matrix = np.array(region_3d.perspective_matrix)
-
-                    return (projection_matrix, view_matrix, perspective_matrix)
-            
-            return (np.eye(4), np.eye(4), np.eye(4))
         
-        (projection_matrix, view_matrix, perspective_matrix) = get_region_camera_matrices()
+        current_region3d: bpy.types.RegionView3D = None
+        for area in context.screen.areas:
+            if area.type == 'VIEW_3D':
+                current_region3d = area.spaces.active.region_3d
+        
+        render_cam = NGPRenderCamera(current_region3d, dimensions)
         
         dims_array = np.array([region.width, region.height])
         updated_region_size = not np.array_equal(self.prev_view_dimensions, dims_array)
-        updated_region_view = not np.array_equal(self.prev_region_camera_matrix, perspective_matrix)
+        updated_region_view = self.prev_render_cam != render_cam
         user_initiated_view_draw = updated_region_size or updated_region_view or self.user_updated_scene
         if user_initiated_view_draw:
             print("USER INITIATED!")
             self.user_updated_scene = False
             self.prev_view_dimensions = copy.copy(dims_array)
-            self.prev_region_camera_matrix = copy.copy(perspective_matrix)
+            self.prev_render_cam = render_cam
 
             # reset mip level
             self.mip_level = MAX_MIP_LEVEL
 
             # start a render chain
             view_matrix = np.array(context.scene.camera.matrix_world)
-            NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
+            # NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
             # TODO: set focal length, masks
 
             # TODO: cancel previous render, or queue up next render.  request_nerf_render will not work if it is currently already rendering
@@ -224,9 +222,9 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
 
             self.needs_to_redraw = False
             self.is_rendering = True
-            NGPTestbedManager.request_render(region.width, region.height, self.mip_level, save_render_result)
-
             draw_latest_render_result()
+            NGPTestbedManager.request_render(render_cam, region.width, region.height, self.mip_level, save_render_result)
+
             return
 
         # user did NOT initiate this view_draw
@@ -242,10 +240,10 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
                 # start a render chain
                 
                 view_matrix = np.array(context.scene.camera.matrix_world)
-                NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
+                # NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
                 # TODO: set focal length, masks
                 self.is_rendering = True
-                NGPTestbedManager.request_render(region.width, region.height, self.mip_level, save_render_result)
+                NGPTestbedManager.request_render(render_cam, region.width, region.height, self.mip_level, save_render_result)
 
 
         

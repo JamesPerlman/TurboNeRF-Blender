@@ -1,9 +1,13 @@
 from pathlib import Path
 
 import bpy
+import mathutils
 import numpy as np
 from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
+from blender_nerf_tools.blender_utility.render_camera_utility import get_camera_focal_length
+from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
 import blender_nerf_tools.utility.load_ngp
+
 import pyngp as ngp
 
 from blender_nerf_tools.constants import (
@@ -20,19 +24,42 @@ from blender_nerf_tools.constants import (
     MASK_TYPE_ID,
     MASK_TYPE_SPHERE,
     MASK_SPHERE_RADIUS_ID,
+    SNAPSHOT_AABB_CENTER_ID,
+    SNAPSHOT_AABB_SIZE_ID,
+    SNAPSHOT_PATH_ID,
+    RENDER_CAM_TYPE_ID,
+    RENDER_CAM_TYPE_PERSPECTIVE,
+    RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
+    RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
 )
 # todo: put into utils file
 DEFAULT_NGP_SCALE = 0.33
 DEFAULT_NGP_ORIGIN = np.array([0.5, 0.5, 0.5])
-def nerf_matrix_to_ngp(nerf_matrix: np.matrix) -> np.matrix:
-    result = np.matrix(nerf_matrix)
-    result[:, 0:3] *= DEFAULT_NGP_SCALE
-    result[:3, 3] = result[:3, 3] * DEFAULT_NGP_SCALE + DEFAULT_NGP_ORIGIN.reshape(3, 1)
 
+def nerf_matrix_to_ngp(nerf_matrix: np.array) -> np.array:
+    result = np.array(nerf_matrix)
+    result[:, 1:3] *= -1
+    result[:3, 3] = result[:3, 3] * DEFAULT_NGP_SCALE + DEFAULT_NGP_ORIGIN
     # Cycle axes xyz<-yzx
     result[:3, :] = np.roll(result[:3, :], -1, axis=0)
-
     return result
+
+def bl_matrix_to_ngp(bl_matrix: mathutils.Matrix) -> np.array:
+    return nerf_matrix_to_ngp(np.array(bl_matrix))
+
+def nerf_point_to_ngp(
+        xyz: np.array,
+        origin = DEFAULT_NGP_ORIGIN,
+        scale = DEFAULT_NGP_SCALE
+    ) -> np.array:
+    xyz_cycled = np.array([xyz[1], xyz[2], xyz[0]])
+    return scale * xyz_cycled + origin
+
+RENDER_CAM_TYPE_TO_NGP_CAM_MODEL = {
+    RENDER_CAM_TYPE_PERSPECTIVE: ngp.CameraModel.Perspective,
+    RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL: ngp.CameraModel.SphericalQuadrilateral,
+    RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON: ngp.CameraModel.QuadrilateralHexahedron,
+}
 
 __testbed__ = None
 def testbed():
@@ -45,25 +72,12 @@ def testbed():
 
 class NGPTestbedManager(object):
     has_snapshot = False
-    @classmethod
-    def load_snapshot(cls, snapshot_path: Path):
-        cls.has_snapshot = True
-        testbed().load_snapshot(str(snapshot_path))
-
-    @classmethod
-    def set_camera_matrix(cls, camera_matrix):
-        testbed().set_nerf_camera_matrix(camera_matrix)
+    active_camera = {}
     
     @classmethod
-    def request_render(cls, width, height, mip, callback):
+    def request_render(cls, camera, width, height, mip, callback):
         return testbed().request_nerf_render(
-            width=width,
-            height=height,
-            spp=16,
-            linear=True,
-            mip=mip,
-            flip_y=True,
-            masks=cls.get_all_ngp_masks(),
+            render_request=cls.create_render_request(camera, width, height, mip),
             render_callback=callback
         )
     
@@ -99,4 +113,80 @@ class NGPTestbedManager(object):
     def get_all_ngp_masks(cls):
         masks = NeRFRenderManager.get_all_masks()
         return [cls.parse_mask(mask) for mask in masks]
+    
+    @classmethod
+    def get_all_ngp_nerfs(cls):
+        snapshots = NeRFSnapshotManager.get_all_snapshots()
         
+        # TODO: abstract
+        def get_snapshot_ngp_bbox(snapshot):
+            aabb_center = snapshot[SNAPSHOT_AABB_CENTER_ID]
+            aabb_size = snapshot[SNAPSHOT_AABB_SIZE_ID]
+            
+            bbox = ngp.BoundingBox(
+                nerf_point_to_ngp(
+                    np.array([
+                        aabb_center[0] - aabb_size[0] / 2,
+                        aabb_center[1] - aabb_size[1] / 2,
+                        aabb_center[2] - aabb_size[2] / 2,
+                    ])
+                ),
+                nerf_point_to_ngp(
+                    np.array([
+                        aabb_center[0] + aabb_size[0] / 2,
+                        aabb_center[1] + aabb_size[1] / 2,
+                        aabb_center[2] + aabb_size[2] / 2,
+                    ])
+                ),
+            )
+            return bbox
+        nerfs = [
+            ngp.NerfDescriptor(
+                snapshot_path_str=s[SNAPSHOT_PATH_ID],
+                aabb=get_snapshot_ngp_bbox(s),
+                transform=nerf_matrix_to_ngp(np.eye(4)),
+                modifiers=ngp.RenderModifiers(masks=[]),
+            ) for s in snapshots]
+        return nerfs
+    
+    @classmethod
+    def create_render_request(cls, camera, width, height, mip):
+        resolution = np.array([width, height])
+        ds = ngp.DownsampleInfo.MakeFromMip(resolution, mip)
+        
+        output = ngp.RenderOutputProperties(
+            resolution=resolution,
+            ds=ds,
+            spp=1,
+            color_space=ngp.ColorSpace.SRGB,
+            tonemap_curve=ngp.TonemapCurve.Identity,
+            exposure=0.0,
+            background_color=np.array([0.0, 0.0, 0.0, 0.0]),
+            flip_y=True,
+        )
+
+        fl = camera.focal_length
+        print("focal len: ", fl)
+        camera = ngp.RenderCameraProperties(
+            transform=bl_matrix_to_ngp(camera.transform)[:-1, :],
+            model=ngp.CameraModel.Perspective, # RENDER_CAM_TYPE_TO_NGP_CAM_MODEL[camera[RENDER_CAM_TYPE_ID]],
+            focal_length=fl,
+            near_distance=0.0,
+            aperture_size=0.0,
+            focus_z=1.0,
+            spherical_quadrilateral=ngp.SphericalQuadrilateralConfig.Zero(),
+            quadrilateral_hexahedron=ngp.QuadrilateralHexahedronConfig.Zero(),
+        )
+
+        nerfs = cls.get_all_ngp_nerfs()
+
+        aabb = ngp.BoundingBox(
+            nerf_point_to_ngp(np.array([-4, -8, -8])),
+            nerf_point_to_ngp(np.array([8, 8, 8])),
+        )
+        render_modifiers = ngp.RenderModifiers(masks=cls.get_all_ngp_masks())
+
+        render_request = ngp.RenderRequest(output=output, camera=camera, modifiers=render_modifiers, nerfs=nerfs, aabb=aabb)
+        return render_request
+
+

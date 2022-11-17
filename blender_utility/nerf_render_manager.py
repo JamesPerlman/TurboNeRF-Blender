@@ -20,7 +20,7 @@ class NeRFRenderManager:
     def get_active_camera(cls):
         render_cameras = [cam for cam in cls.get_all_cameras() if bool(cam[RENDER_CAM_IS_ACTIVE_ID]) is True]
         return render_cameras[0] if len(render_cameras) > 0 else None
-    
+
     @classmethod
     def is_mask(cls, obj):
         return get_nerf_obj_type(obj) == OBJ_TYPE_MASK_SHAPE

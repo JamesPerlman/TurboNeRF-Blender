@@ -40,17 +40,11 @@ from blender_nerf_tools.renderer.ngp_testbed_manager import NGPTestbedManager
 from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
 from blender_nerf_tools.constants import SNAPSHOT_PATH_ID
 
-def reload_snapshots():
-    # snapshots = NeRFSnapshotManager.get_all_snapshots()
-    # if len(snapshots) > 0:
-    NGPTestbedManager.load_snapshot("E:\\2022\\nerf-library\\humans\\jperl-bluevishnu-scan\\ngp\\snapshot-10000.msgpack")
-
 @bpy.app.handlers.persistent
 def load_handler(dummy):
     Registration.register_drivers()
     redraw_points(dummy)
-    reload_snapshots()
-    print("LODED")
+
     
 
 def register():
@@ -65,7 +59,6 @@ def register():
     bpy.app.handlers.load_post.append(load_handler)
     Registration.register_drivers()
     Registration.register_render_engine()
-    reload_snapshots()
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
 
 def unregister_drivers():

@@ -33,7 +33,6 @@ class ImportNGPSnapshotOperator(bpy.types.Operator):
         input_path = Path(self.filepath)
         print(f"Importing instant-ngp snapshot from: {input_path}")
 
-        NGPTestbedManager.load_snapshot(input_path)
         NeRFSnapshotManager.add_snapshot(input_path)
 
         # Open JSON file and interpret
