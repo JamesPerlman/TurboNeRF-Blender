@@ -1,0 +1,30 @@
+step 1. decide on architecture
+
+Training and rendering can be done in the same project.  But it could get confusing.
+Do we allow multiple training datasets in the same project?
+
+Build it with the possibility, but don't allow it initially.
+
+
+Training could be done in Blender.
+https://blender.stackexchange.com/a/231693/141797
+^ how to show a progress bar
+
+
+Train button in Training panel
+Save snapshot button
+
+
+Import snapshot
+Point cloud cropping
+https://raw.githubusercontent.com/uhlik/bpy/master/space_view3d_point_cloud_visualizer.py
+Point clouds are for the preview screens
+
+
+Need to fix auto-align feature
+Fix import colmap, rotate to blender orientation
+
+AABB Size, not aabb crop (in training)
+
+FIRST TO DO:
+Preview Quality - make it preview fast in view_draw
