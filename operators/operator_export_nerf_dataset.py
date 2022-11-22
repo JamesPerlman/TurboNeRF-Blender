@@ -2,6 +2,7 @@ import json
 import math
 from pathlib import Path
 import bpy
+import numpy as np
 
 from bpy.props import StringProperty
 
@@ -61,6 +62,13 @@ def encode_props(obj, prop_map):
         props[dataset_key_id] = encoder(obj[nerf_prop_id])
     return props
 
+def encode_camera_props(cam):
+    """Encode the camera properties."""
+    props = {}
+    props["near"] = cam[CAMERA_NEAR_ID] * np.max(np.array(cam.matrix_world.to_scale()))
+    props["far"] = cam[CAMERA_FAR_ID] 
+    return props
+
 # aabb scale (for NGP)
 def get_aabb_scale():
     size = max(NeRFScene.get_aabb_size()) * 0.33
@@ -100,7 +108,7 @@ class BlenderNeRFExportDatasetOperator(bpy.types.Operator):
         # get frames
         frames = []
         for cam in cams:
-            props = encode_props(cam, CAM_PROP_MAP)
+            props = encode_camera_props(cam)
             file_path = Path(cam[CAMERA_IMAGE_PATH_ID])
 
             if self.use_relative_paths:
