@@ -140,11 +140,22 @@ class NGPTestbedManager(object):
                 ),
             )
             return bbox
+            
+        def bl2ngp(nerf_matrix: np.array) -> np.array:
+            result = np.array(nerf_matrix)
+            #result[:, 0:3] *= DEFAULT_NGP_SCALE
+            result[:3, 3] = result[:3, 3] * DEFAULT_NGP_SCALE# + DEFAULT_NGP_ORIGIN
+
+            # Cycle axes xyz<-yzx
+            result[:3, :] = np.roll(result[:3, :], -1, axis=0)
+
+            return result
+        
         nerfs = [
             ngp.NerfDescriptor(
                 snapshot_path_str=s[SNAPSHOT_PATH_ID],
                 aabb=get_snapshot_ngp_bbox(s),
-                transform=nerf_matrix_to_ngp(np.eye(4)),
+                transform=bl2ngp(np.array(s.matrix_world)),
                 modifiers=ngp.RenderModifiers(masks=[]),
             ) for s in snapshots]
         return nerfs
@@ -158,7 +169,7 @@ class NGPTestbedManager(object):
             resolution=resolution,
             ds=ds,
             spp=1,
-            color_space=ngp.ColorSpace.SRGB,
+            color_space=ngp.ColorSpace.Linear,
             tonemap_curve=ngp.TonemapCurve.Identity,
             exposure=0.0,
             background_color=np.array([0.0, 0.0, 0.0, 0.0]),
