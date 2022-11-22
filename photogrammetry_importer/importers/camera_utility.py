@@ -262,6 +262,19 @@ def add_cameras(
     # Adding cameras and image planes:
     for index, camera in enumerate(cameras):
 
+        if camera.has_undistorted_absolute_fp():
+            image_path = camera.get_undistorted_absolute_fp()
+        else:
+            image_path = camera.get_absolute_fp()
+
+        if not os.path.isfile(image_path):
+            log_report(
+                "WARNING", "Could not find image at " + str(image_path), op
+            )
+            continue
+        else:
+            log_report("INFO", "Found image at " + str(image_path), op)
+            
         # camera_name = "Camera %d" % index     # original code
         # Replace the camera name so it matches the image name (without extension)
         blender_image_name_stem = _get_camera_obj_gui_str(camera)
@@ -310,18 +323,6 @@ def add_cameras(
         if not add_image_planes and not add_background_images:
             continue
 
-        if camera.has_undistorted_absolute_fp():
-            image_path = camera.get_undistorted_absolute_fp()
-        else:
-            image_path = camera.get_absolute_fp()
-
-        if not os.path.isfile(image_path):
-            log_report(
-                "WARNING", "Could not find image at " + str(image_path), op
-            )
-            continue
-        else:
-            log_report("INFO", "Found image at " + str(image_path), op)
 
         blender_image = bpy.data.images.load(image_path)
 
