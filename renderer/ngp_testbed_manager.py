@@ -103,16 +103,20 @@ class NGPTestbedManager(object):
             aabb_size = snapshot[SNAPSHOT_AABB_SIZE_ID]
             
             bbox = ngp.BoundingBox(
-                np.array([
-                    aabb_center[0] - aabb_size[0] / 2,
-                    aabb_center[1] - aabb_size[1] / 2,
-                    aabb_center[2] - aabb_size[2] / 2,
-                ]),
-                np.array([
-                    aabb_center[0] + aabb_size[0] / 2,
-                    aabb_center[1] + aabb_size[1] / 2,
-                    aabb_center[2] + aabb_size[2] / 2,
-                ])
+                bl2ngp_pos(
+                    np.array([
+                        aabb_center[0] - aabb_size[0] / 2,
+                        aabb_center[1] - aabb_size[1] / 2,
+                        aabb_center[2] - aabb_size[2] / 2,
+                    ]),
+                ),
+                bl2ngp_pos(
+                    np.array([
+                        aabb_center[0] + aabb_size[0] / 2,
+                        aabb_center[1] + aabb_size[1] / 2,
+                        aabb_center[2] + aabb_size[2] / 2,
+                    ])
+                )
             )
             return bbox
 
@@ -120,7 +124,7 @@ class NGPTestbedManager(object):
             ngp.NerfDescriptor(
                 snapshot_path_str=s[SNAPSHOT_PATH_ID],
                 aabb=get_snapshot_ngp_bbox(s),
-                transform=bl2ngp_mat(s.matrix_world),
+                transform=s.matrix_world,
                 modifiers=ngp.RenderModifiers(masks=[]),
             ) for s in snapshots]
         return nerfs
