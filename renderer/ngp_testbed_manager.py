@@ -36,24 +36,27 @@ from blender_nerf_tools.constants import (
 DEFAULT_NGP_SCALE = 0.33
 DEFAULT_NGP_ORIGIN = np.array([0.5, 0.5, 0.5])
 
-def nerf_matrix_to_ngp(nerf_matrix: np.array) -> np.array:
+def nerf_matrix_to_ngp(nerf_matrix: np.array, offset, origin, scale) -> np.array:
     result = np.array(nerf_matrix)
-    result[:, 1:3] *= -1
-    result[:3, 3] = result[:3, 3] * DEFAULT_NGP_SCALE + DEFAULT_NGP_ORIGIN
-    # Cycle axes xyz<-yzx
-    result[:3, :] = np.roll(result[:3, :], -1, axis=0)
     return result
+    # result[:, 1:3] *= -1
+    # result[:3, 3] = (result[:3, 3] + offset) * scale + origin
+    # # Cycle axes xyz<-yzx
+    # result[:3, :] = np.roll(result[:3, :], -1, axis=0)
+    # return result
 
-def bl_matrix_to_ngp(bl_matrix: mathutils.Matrix) -> np.array:
-    return nerf_matrix_to_ngp(np.array(bl_matrix))
+def bl2ngp_mat(bl_matrix: mathutils.Matrix, offset = np.array([0.0, 0.0, 0.0]), origin = DEFAULT_NGP_ORIGIN, scale = DEFAULT_NGP_SCALE) -> np.array:
+    return np.array(bl_matrix)
+    # return nerf_matrix_to_ngp(np.array(bl_matrix), offset, origin, scale)
 
-def nerf_point_to_ngp(
+def bl2ngp_pt(
         xyz: np.array,
         origin = DEFAULT_NGP_ORIGIN,
         scale = DEFAULT_NGP_SCALE
     ) -> np.array:
-    xyz_cycled = np.array([xyz[1], xyz[2], xyz[0]])
-    return scale * xyz_cycled + origin
+    return xyz
+    # xyz_cycled = np.array([xyz[1], xyz[2], xyz[0]])
+    # return scale * xyz_cycled + origin
 
 RENDER_CAM_TYPE_TO_NGP_CAM_MODEL = {
     RENDER_CAM_TYPE_PERSPECTIVE: ngp.CameraModel.Perspective,
@@ -90,7 +93,7 @@ class NGPTestbedManager(object):
         }
 
         mode = NGP_MASK_MODES[mask[MASK_MODE_ID]]
-        transform = nerf_matrix_to_ngp(np.matrix(mask.matrix_world))
+        transform = bl2ngp_mat(mask.matrix_world)
         opacity = mask[MASK_OPACITY_ID]
         feather = mask[MASK_FEATHER_ID]
 
@@ -124,14 +127,14 @@ class NGPTestbedManager(object):
             aabb_size = snapshot[SNAPSHOT_AABB_SIZE_ID]
             
             bbox = ngp.BoundingBox(
-                nerf_point_to_ngp(
+                bl2ngp_pt(
                     np.array([
                         aabb_center[0] - aabb_size[0] / 2,
                         aabb_center[1] - aabb_size[1] / 2,
                         aabb_center[2] - aabb_size[2] / 2,
                     ])
                 ),
-                nerf_point_to_ngp(
+                bl2ngp_pt(
                     np.array([
                         aabb_center[0] + aabb_size[0] / 2,
                         aabb_center[1] + aabb_size[1] / 2,
@@ -140,11 +143,12 @@ class NGPTestbedManager(object):
                 ),
             )
             return bbox
+
         nerfs = [
             ngp.NerfDescriptor(
                 snapshot_path_str=s[SNAPSHOT_PATH_ID],
                 aabb=get_snapshot_ngp_bbox(s),
-                transform=nerf_matrix_to_ngp(np.eye(4)),
+                transform=s.matrix_world,
                 modifiers=ngp.RenderModifiers(masks=[]),
             ) for s in snapshots]
         return nerfs
@@ -168,7 +172,7 @@ class NGPTestbedManager(object):
         fl = camera.focal_length
         print("focal len: ", fl)
         camera = ngp.RenderCameraProperties(
-            transform=bl_matrix_to_ngp(camera.transform)[:-1, :],
+            transform=bl2ngp_mat(camera.transform)[:-1, :],
             model=ngp.CameraModel.Perspective, # RENDER_CAM_TYPE_TO_NGP_CAM_MODEL[camera[RENDER_CAM_TYPE_ID]],
             focal_length=fl,
             near_distance=0.0,
@@ -181,8 +185,8 @@ class NGPTestbedManager(object):
         nerfs = cls.get_all_ngp_nerfs()
 
         aabb = ngp.BoundingBox(
-            nerf_point_to_ngp(np.array([-4, -8, -8])),
-            nerf_point_to_ngp(np.array([8, 8, 8])),
+            bl2ngp_pt(np.array([-4, -8, -8])),
+            bl2ngp_pt(np.array([8, 8, 8])),
         )
         render_modifiers = ngp.RenderModifiers(masks=cls.get_all_ngp_masks())
 

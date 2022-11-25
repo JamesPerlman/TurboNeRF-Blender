@@ -31,7 +31,7 @@ def fl_to_angle(fl, dim):
     return 2 * math.atan(dim / (2 * fl))
 
 # matrix to serializable list
-def mat_to_list(mat):
+def u(mat):
     return [list(r) for r in mat]
 
 # prop maps
