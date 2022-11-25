@@ -120,11 +120,18 @@ class NGPTestbedManager(object):
             )
             return bbox
 
+        bl_rot = np.array([
+            [0, 0, 1, 0],
+            [-1, 0, 0, 0],
+            [0, -1, 0, 0],
+            [0, 0, 0, 1],
+        ])
+        
         nerfs = [
             ngp.NerfDescriptor(
                 snapshot_path_str=s[SNAPSHOT_PATH_ID],
                 aabb=get_snapshot_ngp_bbox(s),
-                transform=s.matrix_world,
+                transform=np.matmul(bl2ngp_mat(s.matrix_world), bl_rot),
                 modifiers=ngp.RenderModifiers(masks=[]),
             ) for s in snapshots]
         return nerfs
@@ -161,8 +168,8 @@ class NGPTestbedManager(object):
         nerfs = cls.get_all_ngp_nerfs()
 
         aabb = ngp.BoundingBox(
-            bl2ngp_pt(np.array([-4, -8, -8])),
-            bl2ngp_pt(np.array([8, 8, 8])),
+            np.array([-4, -8, -8]),
+            np.array([8, 8, 8]),
         )
         render_modifiers = ngp.RenderModifiers(masks=cls.get_all_ngp_masks())
 
