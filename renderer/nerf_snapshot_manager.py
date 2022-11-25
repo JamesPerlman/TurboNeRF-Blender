@@ -1,4 +1,5 @@
 import bpy
+import numpy as np
 from pathlib import Path
 
 from blender_nerf_tools.blender_utility.object_utility import add_cube, add_empty
@@ -10,6 +11,7 @@ from blender_nerf_tools.constants import (
     SNAPSHOT_AABB_SIZE_ID,
     SNAPSHOT_PATH_ID,
 )
+from blender_nerf_tools.utility.ngp_math import ngp2bl_mat
 
 def add_snapshot_aabb_cube_drivers(base:  bpy.types.Object, cube: bpy.types.Object):
     [lx, ly, lz] = [fc.driver for fc in cube.driver_add("location")]
@@ -66,5 +68,7 @@ class NeRFSnapshotManager():
         aabb_cube = add_cube("AABB Cube", size=1.0, collection=collection)
         aabb_cube.parent = snapshot_base
         aabb_cube.display_type = 'BOUNDS'
+
+        snapshot_base.matrix_world = ngp2bl_mat(np.eye(4))
 
         add_snapshot_aabb_cube_drivers(snapshot_base, aabb_cube)

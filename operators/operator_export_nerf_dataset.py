@@ -31,7 +31,7 @@ def fl_to_angle(fl, dim):
     return 2 * math.atan(dim / (2 * fl))
 
 # matrix to serializable list
-def u(mat):
+def mat_to_list(mat):
     return [list(r) for r in mat]
 
 # prop maps
@@ -71,7 +71,7 @@ def encode_camera_props(cam):
 
 # aabb scale (for NGP)
 def get_aabb_scale():
-    size = max(NeRFScene.get_aabb_size()) * 0.33
+    size = max(NeRFScene.get_aabb_size())
     # get the closest power of 2
     return 2 ** math.ceil(math.log2(size))
 
