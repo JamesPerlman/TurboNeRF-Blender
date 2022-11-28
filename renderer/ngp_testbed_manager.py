@@ -34,12 +34,6 @@ from blender_nerf_tools.constants import (
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
 )
 
-RENDER_CAM_TYPE_TO_NGP_CAM_MODEL = {
-    RENDER_CAM_TYPE_PERSPECTIVE: ngp.CameraModel.Perspective,
-    RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL: ngp.CameraModel.SphericalQuadrilateral,
-    RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON: ngp.CameraModel.QuadrilateralHexahedron,
-}
-
 __testbed__ = None
 def testbed():
     global __testbed__
@@ -54,11 +48,12 @@ class NGPTestbedManager(object):
     active_camera = {}
     
     @classmethod
-    def request_render(cls, camera, width, height, mip, callback):
-        return testbed().request_nerf_render(
-            render_request=cls.create_render_request(camera, width, height, mip),
-            render_callback=callback
-        )
+    def request_render(cls, camera, width, height, mip, callback=None):
+        render_request = cls.create_render_request(camera, width, height, mip)
+        if callback is None:
+            return testbed().request_nerf_render_sync(render_request)
+        else:
+            testbed().request_nerf_render_async(render_request, callback)
     
     # TODO: abstract
     @classmethod
@@ -74,8 +69,6 @@ class NGPTestbedManager(object):
         feather = mask[MASK_FEATHER_ID]
 
         shape = mask[MASK_TYPE_ID]
-
-        print(f"MASK DETIALS: {mode}, {opacity}, {feather}, {shape}")
 
         if shape == MASK_TYPE_BOX:
             dims = np.array(mask[MASK_BOX_DIMS_ID])
@@ -126,7 +119,7 @@ class NGPTestbedManager(object):
             [0, -1, 0, 0],
             [0, 0, 0, 1],
         ])
-        
+
         nerfs = [
             ngp.NerfDescriptor(
                 snapshot_path_str=s[SNAPSHOT_PATH_ID],
@@ -135,7 +128,7 @@ class NGPTestbedManager(object):
                 modifiers=ngp.RenderModifiers(masks=[]),
             ) for s in snapshots]
         return nerfs
-    
+
     @classmethod
     def create_render_request(cls, camera, width, height, mip):
         resolution = np.array([width, height])
@@ -152,19 +145,6 @@ class NGPTestbedManager(object):
             flip_y=True,
         )
 
-        fl = camera.focal_length
-        print("focal len: ", fl)
-        camera = ngp.RenderCameraProperties(
-            transform=bl2ngp_mat(camera.transform)[:-1, :],
-            model=ngp.CameraModel.Perspective, # RENDER_CAM_TYPE_TO_NGP_CAM_MODEL[camera[RENDER_CAM_TYPE_ID]],
-            focal_length=fl,
-            near_distance=0.0,
-            aperture_size=0.0,
-            focus_z=1.0,
-            spherical_quadrilateral=ngp.SphericalQuadrilateralConfig.Zero(),
-            quadrilateral_hexahedron=ngp.QuadrilateralHexahedronConfig.Zero(),
-        )
-
         nerfs = cls.get_all_ngp_nerfs()
 
         aabb = ngp.BoundingBox(
@@ -172,7 +152,7 @@ class NGPTestbedManager(object):
             np.array([8, 8, 8]),
         )
         render_modifiers = ngp.RenderModifiers(masks=cls.get_all_ngp_masks())
-
+        print(f"camera: {camera}")
         render_request = ngp.RenderRequest(output=output, camera=camera, modifiers=render_modifiers, nerfs=nerfs, aabb=aabb)
         return render_request
 

@@ -7,7 +7,7 @@ import time
 from threading import Thread
 
 from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
-from blender_nerf_tools.renderer.utils.render_camera_utils import NGPRenderCamera
+from blender_nerf_tools.renderer.utils.render_camera_utils import NGPRenderCamera, bl2ngp_cam
 from .ngp_testbed_manager import NGPTestbedManager
 import copy
 
@@ -61,27 +61,29 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
-        print("render")
+        print(f"RENDERING")
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
-        self.size_x = int(scene.render.resolution_x * scale)
-        self.size_y = int(scene.render.resolution_y * scale)
+        size_x = int(scene.render.resolution_x * scale)
+        size_y = int(scene.render.resolution_y * scale)
+
+        dims = (size_x, size_y)
 
         # Fill the render result with a flat color. The framebuffer is
         # defined as a list of pixels, each pixel itself being a list of
         # R,G,B,A values.
         if self.is_preview:
-            color = [0.1, 0.7, 0.5, 1.0]
-        else:
-            color = [0.7, 0.4, 0.1, 1.0]
+            pass
 
-        pixel_count = self.size_x * self.size_y
-        rect = [color] * pixel_count
+        active_cam = NeRFRenderManager.get_active_camera()
+        cam_props = bl2ngp_cam(active_cam, dims)
+        print(f"cam {active_cam.matrix_world}")
+        rect = NGPTestbedManager.request_render(cam_props, size_x, size_y, 0)
 
         # Here we write the pixel values to the RenderResult
-        result = self.begin_result(0, 0, self.size_x, self.size_y)
+        result = self.begin_result(0, 0, size_x, size_y)
         layer = result.layers[0].passes["Combined"]
-        layer.rect = rect
+        layer.rect = list(rect.reshape((-1, 4)))
         self.end_result(result)
 
     # For viewport renders, this method gets called once at the start and
@@ -154,8 +156,6 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
-        
-        print("view_draw")
         region = context.region
         scene = depsgraph.scene
 
@@ -196,17 +196,17 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
             if area.type == 'VIEW_3D':
                 current_region3d = area.spaces.active.region_3d
         
-        render_cam = NGPRenderCamera(current_region3d, dimensions)
-        
+        cam_props = bl2ngp_cam(current_region3d, dimensions)
+
         dims_array = np.array([region.width, region.height])
         updated_region_size = not np.array_equal(self.prev_view_dimensions, dims_array)
-        updated_region_view = self.prev_render_cam != render_cam
+        updated_region_view = self.prev_render_cam != cam_props
         user_initiated_view_draw = updated_region_size or updated_region_view or self.user_updated_scene
+        print(f"updated_region_size: {updated_region_size}, updated_region_view: {updated_region_view}, user_initiated_view_draw: {user_initiated_view_draw}")
         if user_initiated_view_draw:
-            print("USER INITIATED!")
             self.user_updated_scene = False
             self.prev_view_dimensions = copy.copy(dims_array)
-            self.prev_render_cam = render_cam
+            self.prev_render_cam = cam_props
 
             # reset mip level
             self.mip_level = MAX_MIP_LEVEL
@@ -223,7 +223,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
             self.needs_to_redraw = False
             self.is_rendering = True
             draw_latest_render_result()
-            NGPTestbedManager.request_render(render_cam, region.width, region.height, self.mip_level, save_render_result)
+            NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
 
             return
 
@@ -239,15 +239,8 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
                 self.mip_level -= 1
                 # start a render chain
                 
-                view_matrix = np.array(context.scene.camera.matrix_world)
-                # NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
-                # TODO: set focal length, masks
                 self.is_rendering = True
-                NGPTestbedManager.request_render(render_cam, region.width, region.height, self.mip_level, save_render_result)
-
-
-        
-   
+                NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
     
     def update(self, data: bpy.types.BlendData, depsgraph: bpy.types.Depsgraph):
         print("update()")

@@ -17,7 +17,7 @@ class NeRFRenderManager:
         return get_nerf_obj_type(obj) == OBJ_TYPE_RENDER_CAMERA
     
     @classmethod
-    def get_active_camera(cls):
+    def get_active_camera(cls) -> bpy.types.Object:
         render_cameras = [cam for cam in cls.get_all_cameras() if bool(cam[RENDER_CAM_IS_ACTIVE_ID]) is True]
         return render_cameras[0] if len(render_cameras) > 0 else None
 
