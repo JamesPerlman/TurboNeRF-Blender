@@ -91,7 +91,6 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
-        print("view_update")
         region = context.region
         view3d = context.space_data
         scene = depsgraph.scene
@@ -202,7 +201,6 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         updated_region_size = not np.array_equal(self.prev_view_dimensions, dims_array)
         updated_region_view = self.prev_render_cam != cam_props
         user_initiated_view_draw = updated_region_size or updated_region_view or self.user_updated_scene
-        print(f"updated_region_size: {updated_region_size}, updated_region_view: {updated_region_view}, user_initiated_view_draw: {user_initiated_view_draw}")
         if user_initiated_view_draw:
             self.user_updated_scene = False
             self.prev_view_dimensions = copy.copy(dims_array)
@@ -231,7 +229,6 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         draw_latest_render_result()
         
         if self.needs_to_redraw:
-            print(f"NEEDS TO REDRAW!")
             self.needs_to_redraw = False
 
             # kick off a new render at the next mip level
