@@ -27,6 +27,7 @@ from blender_nerf_tools.constants import (
     MASK_SPHERE_RADIUS_ID,
     SNAPSHOT_AABB_CENTER_ID,
     SNAPSHOT_AABB_SIZE_ID,
+    SNAPSHOT_OPACITY_ID,
     SNAPSHOT_PATH_ID,
     RENDER_CAM_TYPE_ID,
     RENDER_CAM_TYPE_PERSPECTIVE,
@@ -126,6 +127,7 @@ class NGPTestbedManager(object):
                 aabb=get_snapshot_ngp_bbox(s),
                 transform=np.matmul(bl2ngp_mat(s.matrix_world), bl_rot),
                 modifiers=ngp.RenderModifiers(masks=[mask for mask in cls.get_masks_ngp(parent=s)]),
+                opacity=s[SNAPSHOT_OPACITY_ID],
             ) for s in snapshots]
         return nerfs
 
