@@ -152,7 +152,6 @@ class NGPTestbedManager(object):
             np.array([8, 8, 8]),
         )
         render_modifiers = ngp.RenderModifiers(masks=cls.get_masks_ngp(parent=None))
-        print(f"camera: {camera}")
         render_request = ngp.RenderRequest(output=output, camera=camera, modifiers=render_modifiers, nerfs=nerfs, aabb=aabb)
         return render_request
 
