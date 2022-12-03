@@ -113,4 +113,4 @@ MASK_SPHERE_RADIUS_ID = "radius"
 SNAPSHOT_PATH_ID = "snapshot_path"
 SNAPSHOT_AABB_SIZE_ID = "aabb_size"
 SNAPSHOT_AABB_CENTER_ID = "aabb_center"
-
+SNAPSHOT_OPACITY_ID = "opacity"

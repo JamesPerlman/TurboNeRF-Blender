@@ -9,6 +9,7 @@ from blender_nerf_tools.constants import (
     OBJ_TYPE_NERF_SNAPSHOT,
     SNAPSHOT_AABB_CENTER_ID,
     SNAPSHOT_AABB_SIZE_ID,
+    SNAPSHOT_OPACITY_ID,
     SNAPSHOT_PATH_ID,
 )
 
@@ -59,9 +60,14 @@ class NeRFSnapshotManager():
         prop = snapshot_base.id_properties_ui(SNAPSHOT_AABB_CENTER_ID)
         
         snapshot_base[SNAPSHOT_AABB_SIZE_ID] = [8.0, 8.0, 8.0]
+
         # TODO: set correct min and max for AABB cropping
         prop = snapshot_base.id_properties_ui(SNAPSHOT_AABB_SIZE_ID)
         prop.update(min=0.0, max=16.0)
+
+        snapshot_base[SNAPSHOT_OPACITY_ID] = 1.0
+        prop = snapshot_base.id_properties_ui(SNAPSHOT_OPACITY_ID)
+        prop.update(min=0.0, max=1.0)
 
         # create AABB cube
         aabb_cube = add_cube("AABB Cube", size=1.0, collection=collection)
