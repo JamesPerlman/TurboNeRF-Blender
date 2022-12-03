@@ -72,8 +72,8 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         # Fill the render result with a flat color. The framebuffer is
         # defined as a list of pixels, each pixel itself being a list of
         # R,G,B,A values.
-        if self.is_preview:
-            pass
+        # if self.is_preview:
+        #    pass
 
         active_cam = NeRFRenderManager.get_active_camera()
         cam_props = bl2ngp_cam(active_cam, dims)
