@@ -64,7 +64,7 @@ class NGPTestbedManager(object):
         }
 
         mode = NGP_MASK_MODES[mask[MASK_MODE_ID]]
-        transform = bl2ngp_mat(mask.matrix_world)
+        transform = bl2ngp_mat(mask.matrix_local)
         opacity = mask[MASK_OPACITY_ID]
         feather = mask[MASK_FEATHER_ID]
 
@@ -82,9 +82,9 @@ class NGPTestbedManager(object):
             return ngp.Mask3D.Sphere(r, transform, mode, feather, opacity)
     
     @classmethod
-    def get_all_ngp_masks(cls):
+    def get_masks_ngp(cls, parent=None):
         masks = NeRFRenderManager.get_all_masks()
-        return [cls.parse_mask(mask) for mask in masks]
+        return [cls.parse_mask(mask) for mask in masks if mask.parent == parent]
     
     @classmethod
     def get_all_ngp_nerfs(cls):
@@ -125,7 +125,7 @@ class NGPTestbedManager(object):
                 snapshot_path_str=s[SNAPSHOT_PATH_ID],
                 aabb=get_snapshot_ngp_bbox(s),
                 transform=np.matmul(bl2ngp_mat(s.matrix_world), bl_rot),
-                modifiers=ngp.RenderModifiers(masks=[]),
+                modifiers=ngp.RenderModifiers(masks=[mask for mask in cls.get_masks_ngp(parent=s)]),
             ) for s in snapshots]
         return nerfs
 
@@ -151,7 +151,7 @@ class NGPTestbedManager(object):
             np.array([-4, -8, -8]),
             np.array([8, 8, 8]),
         )
-        render_modifiers = ngp.RenderModifiers(masks=cls.get_all_ngp_masks())
+        render_modifiers = ngp.RenderModifiers(masks=cls.get_masks_ngp(parent=None))
         print(f"camera: {camera}")
         render_request = ngp.RenderRequest(output=output, camera=camera, modifiers=render_modifiers, nerfs=nerfs, aabb=aabb)
         return render_request
