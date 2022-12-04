@@ -90,7 +90,7 @@ class NGPTestbedManager(object):
     @classmethod
     def get_all_ngp_nerfs(cls):
         snapshots = NeRFSnapshotManager.get_all_snapshots()
-        
+
         # TODO: abstract
         def get_snapshot_ngp_bbox(snapshot):
             aabb_center = snapshot[SNAPSHOT_AABB_CENTER_ID]
@@ -113,7 +113,8 @@ class NGPTestbedManager(object):
                 )
             )
             return bbox
-
+        
+        # TODO: figure out why we need this
         bl_rot = np.array([
             [0, 0, 1, 0],
             [-1, 0, 0, 0],
