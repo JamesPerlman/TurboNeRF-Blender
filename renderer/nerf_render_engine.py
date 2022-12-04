@@ -61,7 +61,6 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
-        print(f"RENDERING")
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
         size_x = int(scene.render.resolution_x * scale)
@@ -77,7 +76,6 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
 
         active_cam = NeRFRenderManager.get_active_camera()
         cam_props = bl2ngp_cam(active_cam, dims)
-        print(f"cam {active_cam.matrix_world}")
         rect = NGPTestbedManager.request_render(cam_props, size_x, size_y, 0)
 
         # Here we write the pixel values to the RenderResult
