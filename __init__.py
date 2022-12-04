@@ -19,19 +19,33 @@ bl_info = {
 import bpy
 import importlib
 
-# The root dir is Blenders addon folder.
-# Therefore, we need the "blender_nerf_tools" specifier for this addon
-from blender_nerf_tools.blender_utility.logging_utility import log_report
-from blender_nerf_tools.panels.nerf_panel import NeRFPanel
-from blender_nerf_tools.registration.registration import Registration
 
-# from photogrammetry_importer.panels.view_3d_panel import OpenGLPanel
 from .utility import developer_utility
-
 importlib.reload(developer_utility)
 modules = developer_utility.setup_addon_modules(
     __path__, __name__, "bpy" in locals()
 )
+
+
+# The root dir is Blenders addon folder.
+# Therefore, we need the "blender_nerf_tools" specifier for this addon
+from blender_nerf_tools.blender_utility.logging_utility import log_report
+from blender_nerf_tools.panels.train_panel import NeRFTrainingPanel
+from blender_nerf_tools.panels.render_panel import NeRFRenderPanel
+from blender_nerf_tools.registration.registration import Registration
+from blender_nerf_tools.photogrammetry_importer.opengl.utility import redraw_points
+
+# TODO: these should go in some external util
+from blender_nerf_tools.renderer.ngp_testbed_manager import NGPTestbedManager
+from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
+from blender_nerf_tools.constants import SNAPSHOT_PATH_ID
+
+@bpy.app.handlers.persistent
+def load_handler(dummy):
+    Registration.register_drivers()
+    redraw_points(dummy)
+
+    
 
 def register():
     """Register importers, exporters and panels."""
@@ -39,10 +53,16 @@ def register():
     Registration.register_importers()
     Registration.register_exporters()
 
-    bpy.utils.register_class(NeRFPanel)
-
+    bpy.utils.register_class(NeRFTrainingPanel)
+    bpy.utils.register_class(NeRFRenderPanel)
+    
+    bpy.app.handlers.load_post.append(load_handler)
+    Registration.register_drivers()
+    Registration.register_render_engine()
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
 
+def unregister_drivers():
+    Registration.unregister_drivers()
 
 def unregister():
     """Unregister importers, exporters and panels."""
@@ -50,7 +70,13 @@ def unregister():
     Registration.unregister_importers()
     Registration.unregister_exporters()
 
-    bpy.utils.unregister_class(NeRFPanel)
+    bpy.utils.unregister_class(NeRFTrainingPanel)
+    bpy.utils.unregister_class(NeRFRenderPanel)
+
+    bpy.app.handlers.load_post.remove(load_handler)
+    Registration.unregister_drivers()
+
+    Registration.unregister_render_engine()
 
     log_report("INFO", "Unregistered {}".format(bl_info["name"]))
 

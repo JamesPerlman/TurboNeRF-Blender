@@ -3,29 +3,23 @@ import bpy
 
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
-from blender_nerf_tools.operators.operator_export_nerf_render_json import (
-    ExportNeRFRenderJSON,
-)
 from blender_nerf_tools.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
-from blender_nerf_tools.operators.operator_export_world_matrix import (
-    ExportObjectWorldMatrix,
-)
+from blender_nerf_tools.operators.operator_export_world_matrix import ExportObjectWorldMatrix
 from blender_nerf_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
-from blender_nerf_tools.operators.operator_import_nerf_transforms import (
-    ImportNeRFTransforms,
+from blender_nerf_tools.operators.operator_import_nerf_transforms import ImportNeRFTransforms
+from blender_nerf_tools.panels.render_panel_operators.camera_models.quadrilateral_hexahedron_camera import get_quadrilateral_hexahedron_camera_node_quaternion_rotation
+from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import (
+    get_spherical_quadrilateral_camera_node_location,
+    get_spherical_quadrilateral_camera_node_quaternion_rotation,
 )
+from blender_nerf_tools.renderer.nerf_render_engine import (register_nerf_render_engine, unregister_nerf_render_engine)
 
 # Definining the following import and export functions within the
 # "Registration" class causes different errors when hovering over entries in
 # "file/import" of the following form:
 # "rna_uiItemO: operator missing srna 'import_scene.colmap_model'""
 
-# Import Functions
-def _instant_ngp_transforms_export_operator_function(topbar_file_export, context):
-    topbar_file_export.layout.operator(
-        ExportNeRFRenderJSON.bl_idname,
-        text="NeRF render.json"
-    )
+# Import/Export Functions
 
 def _world_matrix_export_operator_function(topbar_file_export, context):
     topbar_file_export.layout.operator(
@@ -50,6 +44,7 @@ def _hypernerf_cams_import_operator_function(topbar_file_import, context):
         ImportHyperNeRFCams.bl_idname,
         text="HyperNeRF Cameras.json"
     )
+
 class Registration:
     """Class to register import and export operators."""
 
@@ -107,10 +102,6 @@ class Registration:
     def register_exporters(cls):
         """Register exporters."""
         cls._register_exporter(
-            ExportNeRFRenderJSON,
-            _instant_ngp_transforms_export_operator_function,
-        )
-        cls._register_exporter(
             ExportObjectWorldMatrix,
             _world_matrix_export_operator_function,
         )
@@ -123,10 +114,6 @@ class Registration:
     def unregister_exporters(cls):
         """Unregister all registered exporters."""
         cls._unregister_exporter(
-            ExportNeRFRenderJSON,
-            _instant_ngp_transforms_export_operator_function
-        )
-        cls._unregister_exporter(
             ExportObjectWorldMatrix,
             _world_matrix_export_operator_function
         )
@@ -134,3 +121,24 @@ class Registration:
             ExportNerfiesCameras,
             _nerfies_cameras_export_operator_function,
         )
+    
+    @classmethod
+    def register_drivers(cls):
+        bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location'] = get_spherical_quadrilateral_camera_node_location
+        bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation'] = get_spherical_quadrilateral_camera_node_quaternion_rotation
+        bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation'] = get_quadrilateral_hexahedron_camera_node_quaternion_rotation
+
+    @classmethod
+    def unregister_drivers(cls):
+        del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location']
+        del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation']
+        del bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation']
+
+    @classmethod
+    def register_render_engine(cls):
+        register_nerf_render_engine()
+    
+    @classmethod
+    def unregister_render_engine(cls):
+        unregister_nerf_render_engine()
+

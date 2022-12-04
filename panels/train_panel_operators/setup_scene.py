@@ -1,3 +1,5 @@
+__reload_order_index__ = -1
+
 import bpy
 from blender_nerf_tools.blender_utility.logging_utility import log_report
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
