@@ -8,12 +8,14 @@ import bpy
 import json
 import math
 import mathutils
+import numpy as np
 from pathlib import Path
 
 # ExportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
 from bpy.props import StringProperty
 from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
+from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
 
 from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
 from blender_nerf_tools.constants import (
@@ -39,7 +41,13 @@ from blender_nerf_tools.constants import (
     RENDER_CAM_TYPE_PERSPECTIVE,
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
+    SNAPSHOT_AABB_CENTER_ID,
+    SNAPSHOT_AABB_SIZE_ID,
+    SNAPSHOT_PATH_ID,
+    SNAPSHOT_OPACITY_ID,
 )
+from blender_nerf_tools.renderer.utils.render_camera_utils import bl2ngp_fl
+from blender_nerf_tools.utility.ngp_math import bl2ngp_mat, bl2ngp_pos
 
 def mat_to_list(m: mathutils.Matrix) -> list[float]:
     return [list(r) for r in m]
@@ -106,7 +114,7 @@ def serialize_aabb():
     }
 
 # Serialize active camera for current frame
-def serialize_active_camera():
+def serialize_active_camera(out_dims):
     camera = NeRFRenderManager.get_active_camera()
     m = camera.matrix_world
     
@@ -121,16 +129,14 @@ def serialize_active_camera():
             ngp_aperture = cam_data.dof.aperture_fstop
             ngp_focus_target = cam_data.dof.focus_object.matrix_world.translation
             
-        (ngp_fov, _) = get_camera_fovs(camera)
-
         cam_json = {
             "type": camera[RENDER_CAM_TYPE_ID],
-            "m": mat_to_list(m),
+            "m": bl2ngp_mat(m).tolist(),
             "aperture": ngp_aperture,
             "focus_target": list(ngp_focus_target),
             "near": cam_data.clip_start,
             "far": 1e5,
-            "fov": ngp_fov,
+            "focal_len": bl2ngp_fl(camera, out_dims)
         }
     elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL:
         cam_json = {
@@ -139,7 +145,7 @@ def serialize_active_camera():
             "sh": camera[RENDER_CAM_SENSOR_HEIGHT_ID],
             "c": camera[RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID],
             "near": camera[RENDER_CAM_NEAR_ID],
-            "m": mat_to_list(m),
+            "m": bl2ngp_mat(m).tolist(),
         }
     elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON:
         cam_json = {
@@ -147,14 +153,15 @@ def serialize_active_camera():
             "fs": list(camera[RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID]),
             "bs": list(camera[RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID]),
             "sl": camera[RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID],
-            "m": mat_to_list(m),
+            "m": bl2ngp_mat(m).tolist(),
             "near": camera[RENDER_CAM_NEAR_ID],
         }
     
     return cam_json
 
-def serialize_masks():
-    masks = NeRFRenderManager.get_all_masks()
+# snapshot = None means global masks
+def serialize_masks(snapshot=None):
+    masks = [m for m in NeRFRenderManager.get_all_masks() if m.parent == snapshot]
     mask_json = []
     for mask in masks:
         specific_props = {}
@@ -177,11 +184,50 @@ def serialize_masks():
             "mode": mask[MASK_MODE_ID],
             "feather": mask[MASK_FEATHER_ID],
             "opacity": mask[MASK_OPACITY_ID],
-            "transform": mat_to_list(mask.matrix_world),
+            "transform": bl2ngp_mat(mask.matrix_local).tolist(),
             **specific_props
         })
     
     return mask_json
+
+def serialize_nerfs():
+    nerfs = NeRFSnapshotManager.get_all_snapshots()
+    nerfs_json = []
+    bl_rot = np.array([
+        [0, 0, 1, 0],
+        [-1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, 0, 1],
+    ])
+    for nerf in nerfs:
+        aabb_center = nerf[SNAPSHOT_AABB_CENTER_ID]
+        aabb_size = nerf[SNAPSHOT_AABB_SIZE_ID]
+        nerfs_json.append({
+            "path": nerf[SNAPSHOT_PATH_ID],
+            "opacity": nerf[SNAPSHOT_OPACITY_ID],
+            "transform": np.matmul(bl2ngp_mat(nerf.matrix_world), bl_rot).tolist(),
+            "aabb": {
+                "min": bl2ngp_pos(
+                    np.array([
+                        aabb_center[0] - aabb_size[0] / 2,
+                        aabb_center[1] - aabb_size[1] / 2,
+                        aabb_center[2] - aabb_size[2] / 2,
+                    ]),
+                ).tolist(),
+                "max": bl2ngp_pos(
+                    np.array([
+                        aabb_center[0] + aabb_size[0] / 2,
+                        aabb_center[1] + aabb_size[1] / 2,
+                        aabb_center[2] + aabb_size[2] / 2,
+                    ])
+                ).tolist(),
+            },
+            "modifiers": {
+                "masks": serialize_masks(nerf),
+            }
+        })
+    
+    return nerfs_json
 
 class BlenderNeRFExportRenderJSON(bpy.types.Operator):
 
@@ -214,22 +260,28 @@ class BlenderNeRFExportRenderJSON(bpy.types.Operator):
         # if global_transform != None:
         #     offset_matrix = global_transform.matrix_world.inverted()
 
+        render_scale = scene.render.resolution_percentage / 100.0
+        ngp_w = scene.render.resolution_x * render_scale
+        ngp_h = scene.render.resolution_y * render_scale
+
         # Walk through all frames, create a camera dict for each frame
         frames = []
         i = 0
         for frame in range(scene.frame_start, scene.frame_end + 1, scene.frame_step):
             scene.frame_set(frame)
             
-            aabb_data = serialize_aabb()
-            cam_data = serialize_active_camera()
+            cam_data = serialize_active_camera((ngp_w, ngp_h))
             mask_data = serialize_masks()
+            nerf_data = serialize_nerfs()
             
             # create dict for this frame
             frame_dict = {
                 "file_path": f"{i:05d}.png",
-                "aabb" : aabb_data,
                 "camera": cam_data,
-                "masks": mask_data,
+                "modifiers": {
+                    "masks": mask_data,
+                },
+                "nerfs": nerf_data,
                 "n_steps": NeRFScene.get_training_steps(),
                 "time": NeRFScene.get_time(),
             }
@@ -241,9 +293,6 @@ class BlenderNeRFExportRenderJSON(bpy.types.Operator):
         
         # Put it all together
 
-        render_scale = scene.render.resolution_percentage / 100.0
-        ngp_w = scene.render.resolution_x * render_scale
-        ngp_h = scene.render.resolution_y * render_scale
 
         ngp_transforms = {
             "w": ngp_w,
