@@ -2,6 +2,7 @@ import bpy
 import numpy as np
 from blender_nerf_tools.utility.ngp_math import bl2ngp_mat
 
+import blender_nerf_tools.utility.load_ngp
 import pyngp as ngp
 
 from blender_nerf_tools.constants import (
