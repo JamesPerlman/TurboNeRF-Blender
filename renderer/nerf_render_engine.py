@@ -192,8 +192,10 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         for area in context.screen.areas:
             if area.type == 'VIEW_3D':
                 current_region3d = area.spaces.active.region_3d
-        
+
         cam_props = bl2ngp_cam(current_region3d, dimensions)
+
+        # ??? patch_coords = current_region3d.view_perspective == 'CAMERA'
 
         dims_array = np.array([region.width, region.height])
         updated_region_size = not np.array_equal(self.prev_view_dimensions, dims_array)

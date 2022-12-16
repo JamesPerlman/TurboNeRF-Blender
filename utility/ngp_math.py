@@ -1,7 +1,6 @@
 import mathutils
 import numpy as np
 
-# todo: put into utils file
 DEFAULT_NGP_SCALE = 1.0
 DEFAULT_NGP_ORIGIN = np.array([0.0, 0.0, 0.0])
 

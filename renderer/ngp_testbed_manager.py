@@ -126,7 +126,7 @@ class NGPTestbedManager(object):
             ngp.NerfDescriptor(
                 snapshot_path_str=s[SNAPSHOT_PATH_ID],
                 aabb=get_snapshot_ngp_bbox(s),
-                transform=np.matmul(bl2ngp_mat(s.matrix_world), bl_rot),
+                transform=np.matmul(bl2ngp_mat(s.matrix_world, origin=[0.0, 0.0, 0.0]), bl_rot),
                 modifiers=ngp.RenderModifiers(masks=[mask for mask in cls.get_masks_ngp(parent=s)]),
                 opacity=s[SNAPSHOT_OPACITY_ID],
             ) for s in snapshots]

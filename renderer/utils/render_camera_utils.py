@@ -90,28 +90,28 @@ def bl2ngp_cam_perspective(camera: bpy.types.Object, output_dims: tuple[int, int
 
 def bl2ngp_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: tuple[int, int]) -> ngp.RenderCameraProperties:
     # P
-        projection_matrix = np.array(region_view_3d.window_matrix)
-        # V 
-        view_matrix = np.array(region_view_3d.view_matrix.inverted())
-        # P * V
-        perspective_matrix = np.array(region_view_3d.perspective_matrix)
+    projection_matrix = np.array(region_view_3d.window_matrix)
+    # V 
+    view_matrix = np.array(region_view_3d.view_matrix.inverted())
+    # P * V
+    perspective_matrix = np.array(region_view_3d.perspective_matrix)
 
-        is_perspective = region_view_3d.is_perspective
+    is_perspective = region_view_3d.is_perspective
 
-        # look into region_view_3d.view_persepctive
-        # get focal length
-        focal_length = 0.5 * img_dims[0] * projection_matrix[0, 0]
+    # look into region_view_3d.view_persepctive
+    # get focal length
+    focal_length = 0.5 * img_dims[0] * projection_matrix[0, 0]
 
-        return ngp.RenderCameraProperties(
-            transform=bl2ngp_mat(view_matrix)[:-1, :],
-            model=ngp.CameraModel.Perspective, # RENDER_CAM_TYPE_TO_NGP_CAM_MODEL[camera[RENDER_CAM_TYPE_ID]],
-            focal_length=focal_length,
-            near_distance=0.0,
-            aperture_size=0.0,
-            focus_z=1.0,
-            spherical_quadrilateral=ngp.SphericalQuadrilateralConfig.Zero(),
-            quadrilateral_hexahedron=ngp.QuadrilateralHexahedronConfig.Zero(),
-        )
+    return ngp.RenderCameraProperties(
+        transform=bl2ngp_mat(view_matrix)[:-1, :],
+        model=ngp.CameraModel.Perspective, # RENDER_CAM_TYPE_TO_NGP_CAM_MODEL[camera[RENDER_CAM_TYPE_ID]],
+        focal_length=focal_length,
+        near_distance=0.0,
+        aperture_size=0.0,
+        focus_z=1.0,
+        spherical_quadrilateral=ngp.SphericalQuadrilateralConfig.Zero(),
+        quadrilateral_hexahedron=ngp.QuadrilateralHexahedronConfig.Zero(),
+    )
 
 CAM_TYPE_DECODERS = {
     RENDER_CAM_TYPE_PERSPECTIVE: bl2ngp_cam_perspective,

@@ -271,7 +271,7 @@ def add_cameras(
             log_report(
                 "WARNING", "Could not find image at " + str(image_path), op
             )
-            continue
+            # continue
         else:
             log_report("INFO", "Found image at " + str(image_path), op)
             
@@ -323,33 +323,33 @@ def add_cameras(
         if not add_image_planes and not add_background_images:
             continue
 
+        if os.path.isfile(image_path):
+            blender_image = bpy.data.images.load(image_path)
 
-        blender_image = bpy.data.images.load(image_path)
+            if add_background_images:
+                camera_data = bpy.data.objects[camera_name].data
+                camera_data.show_background_images = True
+                background_image = camera_data.background_images.new()
+                background_image.image = blender_image
 
-        if add_background_images:
-            camera_data = bpy.data.objects[camera_name].data
-            camera_data.show_background_images = True
-            background_image = camera_data.background_images.new()
-            background_image.image = blender_image
+            if add_image_planes and not camera.is_panoramic():
+                image_plane_name = blender_image_name_stem + "_img"
 
-        if add_image_planes and not camera.is_panoramic():
-            image_plane_name = blender_image_name_stem + "_img"
+                image_plane_obj = add_camera_image_plane(
+                    np.eye(4),
+                    blender_image,
+                    camera=camera,
+                    name=image_plane_name,
+                    transparency=image_plane_transparency,
+                    add_image_plane_emission=add_image_plane_emission,
+                    image_planes_collection=camera_collection,
+                    op=op,
+                )
 
-            image_plane_obj = add_camera_image_plane(
-                np.eye(4),
-                blender_image,
-                camera=camera,
-                name=image_plane_name,
-                transparency=image_plane_transparency,
-                add_image_plane_emission=add_image_plane_emission,
-                image_planes_collection=camera_collection,
-                op=op,
-            )
+                image_plane_obj.parent = camera_object
+                image_plane_obj[OBJ_TYPE_ID] = OBJ_TYPE_IMG_PLANE
 
-            image_plane_obj.parent = camera_object
-            image_plane_obj[OBJ_TYPE_ID] = OBJ_TYPE_IMG_PLANE
-
-            add_camera_image_plane_drivers(camera_object, image_plane_obj)
+                add_camera_image_plane_drivers(camera_object, image_plane_obj)
 
         if not add_depth_maps_as_point_cloud:
             continue

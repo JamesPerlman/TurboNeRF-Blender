@@ -205,7 +205,7 @@ def serialize_nerfs():
         nerfs_json.append({
             "path": nerf[SNAPSHOT_PATH_ID],
             "opacity": nerf[SNAPSHOT_OPACITY_ID],
-            "transform": np.matmul(bl2ngp_mat(nerf.matrix_world), bl_rot).tolist(),
+            "transform": np.matmul(bl2ngp_mat(nerf.matrix_world, origin=[0.0, 0.0, 0.0], scale=1.0), bl_rot).tolist(),
             "aabb": {
                 "min": bl2ngp_pos(
                     np.array([
