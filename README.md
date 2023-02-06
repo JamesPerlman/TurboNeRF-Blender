@@ -1,7 +1,7 @@
 
 ## 🚧 UNDER ACTIVE DEVELOPMENT 🚧
 
-Hello, fellow NeRF enthusaist! I'm James. I'm working on building some tools so I can make NeRF art, and lucky for you they are all open-source!  
+Hello, fellow NeRF enthusiast! I'm James. I'm working on building some tools so I can make NeRF art, and lucky for you they are all open-source!  
 
 Previously this repo loaded the python bindings from [instant-ngp](https://github.com/NVLabs/instant-ngp) to perform rendering inside Blender.  For a while this was just a pet project and it was fun to evaluate instant-ngp for artistic uses, however now I have made this my life goal and so I have decided to create my own NeRF rendering engine based on the more permissively-licensed [tiny-cuda-nn](https://github.com/NVLabs/tiny-cuda-nn) and plenty of public NeRF research.
 
