@@ -33,7 +33,6 @@ from blender_nerf_tools.constants import (
     TRAINING_STEPS_DEFAULT,
     TRAINING_STEPS_ID,
 )
-from blender_nerf_tools.photogrammetry_importer.opengl.draw_manager import DrawManager
 
 class NeRFScene:
     @classmethod

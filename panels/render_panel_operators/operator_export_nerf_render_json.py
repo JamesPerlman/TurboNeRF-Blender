@@ -46,8 +46,8 @@ from blender_nerf_tools.constants import (
     SNAPSHOT_PATH_ID,
     SNAPSHOT_OPACITY_ID,
 )
-from blender_nerf_tools.renderer.utils.render_camera_utils import bl2ngp_fl
-from blender_nerf_tools.utility.ngp_math import bl2ngp_mat, bl2ngp_pos
+from blender_nerf_tools.renderer.utils.render_camera_utils import bl2nerf_fl
+from blender_nerf_tools.utility.math import bl2nerf_mat, bl2nerf_pos
 
 def mat_to_list(m: mathutils.Matrix) -> list[float]:
     return [list(r) for r in m]
@@ -131,12 +131,12 @@ def serialize_active_camera(out_dims):
             
         cam_json = {
             "type": camera[RENDER_CAM_TYPE_ID],
-            "m": bl2ngp_mat(m).tolist(),
+            "m": bl2nerf_mat(m).tolist(),
             "aperture": ngp_aperture,
             "focus_target": list(ngp_focus_target),
             "near": cam_data.clip_start,
             "far": 1e5,
-            "focal_len": bl2ngp_fl(camera, out_dims)
+            "focal_len": bl2nerf_fl(camera, out_dims)
         }
     elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL:
         cam_json = {
@@ -145,7 +145,7 @@ def serialize_active_camera(out_dims):
             "sh": camera[RENDER_CAM_SENSOR_HEIGHT_ID],
             "c": camera[RENDER_CAM_SPHERICAL_QUAD_CURVATURE_ID],
             "near": camera[RENDER_CAM_NEAR_ID],
-            "m": bl2ngp_mat(m).tolist(),
+            "m": bl2nerf_mat(m).tolist(),
         }
     elif camera[RENDER_CAM_TYPE_ID] == RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON:
         cam_json = {
@@ -153,7 +153,7 @@ def serialize_active_camera(out_dims):
             "fs": list(camera[RENDER_CAM_QUAD_HEX_FRONT_SENSOR_SIZE_ID]),
             "bs": list(camera[RENDER_CAM_QUAD_HEX_BACK_SENSOR_SIZE_ID]),
             "sl": camera[RENDER_CAM_QUAD_HEX_SENSOR_LENGTH_ID],
-            "m": bl2ngp_mat(m).tolist(),
+            "m": bl2nerf_mat(m).tolist(),
             "near": camera[RENDER_CAM_NEAR_ID],
         }
     
@@ -184,7 +184,7 @@ def serialize_masks(snapshot=None):
             "mode": mask[MASK_MODE_ID],
             "feather": mask[MASK_FEATHER_ID],
             "opacity": mask[MASK_OPACITY_ID],
-            "transform": bl2ngp_mat(mask.matrix_local).tolist(),
+            "transform": bl2nerf_mat(mask.matrix_local).tolist(),
             **specific_props
         })
     
@@ -205,16 +205,16 @@ def serialize_nerfs():
         nerfs_json.append({
             "path": nerf[SNAPSHOT_PATH_ID],
             "opacity": nerf[SNAPSHOT_OPACITY_ID],
-            "transform": np.matmul(bl2ngp_mat(nerf.matrix_world, origin=[0.0, 0.0, 0.0], scale=1.0), bl_rot).tolist(),
+            "transform": np.matmul(bl2nerf_mat(nerf.matrix_world, origin=[0.0, 0.0, 0.0], scale=1.0), bl_rot).tolist(),
             "aabb": {
-                "min": bl2ngp_pos(
+                "min": bl2nerf_pos(
                     np.array([
                         aabb_center[0] - aabb_size[0] / 2,
                         aabb_center[1] - aabb_size[1] / 2,
                         aabb_center[2] - aabb_size[2] / 2,
                     ]),
                 ).tolist(),
-                "max": bl2ngp_pos(
+                "max": bl2nerf_pos(
                     np.array([
                         aabb_center[0] + aabb_size[0] / 2,
                         aabb_center[1] + aabb_size[1] / 2,

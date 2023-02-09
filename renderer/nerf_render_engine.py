@@ -3,34 +3,20 @@ import bpy
 import gpu
 from gpu_extras.presets import draw_texture_2d
 import numpy as np
-import time
-from threading import Thread
 
 from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
-from blender_nerf_tools.renderer.utils.render_camera_utils import NGPRenderCamera, bl2ngp_cam
-from .ngp_testbed_manager import NGPTestbedManager
+from blender_nerf_tools.renderer.utils.render_camera_utils import NeRFRenderCamera, bl2nerf_cam
+
+from blender_nerf_tools.utility.pylib import PyTurboNeRF as tn
+
 import copy
 
-# TODO: this is a util
-# thank you https://stackoverflow.com/a/58567022/892990
-#simple image scaling to (nR x nC) size
-def scale(im, nR, nC):
-    nR0 = im.shape[0]     # source number of rows 
-    nC0 = im.shape[1]  # source number of columns 
-    if nR0 == nR and nC0 == nC:
-        return im
-
-    return np.array([
-        [im[int(nR0 * r / nR)][int(nC0 * c / nC)] for c in range(nC)]
-        for r in range(nR)
-    ])
-
 MAX_MIP_LEVEL = 4
-class InstantNeRFRenderEngine(bpy.types.RenderEngine):
+class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # These three members are used by blender to set up the
     # RenderEngine; define its internal name, visible name and capabilities.
-    bl_idname = "INSTANT_NERF_RENDERER"
-    bl_label = "Instant NeRF"
+    bl_idname = "TURBO_NERF_RENDERER"
+    bl_label = "TurboNeRF"
     bl_use_eevee_viewport = True
     bl_use_preview = True
     bl_use_exclude_layers = True
@@ -47,11 +33,13 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         self.user_updated_scene = False
         self.is_rendering = False
         self.current_region3d: bpy.types.RegionView3D = None
-        self.prev_render_cam: NGPRenderCamera = None
+        self.prev_render_cam: NeRFRenderCamera = None
 
         self.prev_view_dimensions = np.array([0, 0])
         self.prev_region_camera_matrix = np.eye(4)
         self.mip_level = MAX_MIP_LEVEL
+
+        print(tn.Camera)
 
     # When the render engine instance is destroy, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
@@ -75,13 +63,13 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
         #    pass
 
         active_cam = NeRFRenderManager.get_active_camera()
-        cam_props = bl2ngp_cam(active_cam, dims)
-        rect = NGPTestbedManager.request_render(cam_props, size_x, size_y, 0)
+        cam_props = bl2nerf_cam(active_cam, dims)
+        # rect = NGPTestbedManager.request_render(cam_props, size_x, size_y, 0)
 
         # Here we write the pixel values to the RenderResult
         result = self.begin_result(0, 0, size_x, size_y)
         layer = result.layers[0].passes["Combined"]
-        layer.rect = list(rect.reshape((-1, 4)))
+        # layer.rect = list(rect.reshape((-1, 4)))
         self.end_result(result)
 
     # For viewport renders, this method gets called once at the start and
@@ -193,7 +181,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
             if area.type == 'VIEW_3D':
                 current_region3d = area.spaces.active.region_3d
 
-        cam_props = bl2ngp_cam(current_region3d, dimensions)
+        cam_props = bl2nerf_cam(current_region3d, dimensions)
 
         # ??? patch_coords = current_region3d.view_perspective == 'CAMERA'
 
@@ -221,7 +209,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
             self.needs_to_redraw = False
             self.is_rendering = True
             draw_latest_render_result()
-            NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
+            # NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
 
             return
 
@@ -237,7 +225,7 @@ class InstantNeRFRenderEngine(bpy.types.RenderEngine):
                 # start a render chain
                 
                 self.is_rendering = True
-                NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
+                # NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
     
     def update(self, data: bpy.types.BlendData, depsgraph: bpy.types.Depsgraph):
         print("update()")
@@ -293,16 +281,16 @@ def get_panels():
 
 def register_nerf_render_engine():
     # Register the RenderEngine
-    bpy.utils.register_class(InstantNeRFRenderEngine)
+    bpy.utils.register_class(TurboNeRFRenderEngine)
 
     for panel in get_panels():
-        panel.COMPAT_ENGINES.add('INSTANT_NERF_RENDERER')
+        panel.COMPAT_ENGINES.add('TURBO_NERF_RENDERER')
 
 
 def unregister_nerf_render_engine():
-    bpy.utils.unregister_class(InstantNeRFRenderEngine)
+    bpy.utils.unregister_class(TurboNeRFRenderEngine)
 
     for panel in get_panels():
         if 'CUSTOM' in panel.COMPAT_ENGINES:
-            panel.COMPAT_ENGINES.remove('INSTANT_NERF_RENDERER')
+            panel.COMPAT_ENGINES.remove('TURBO_NERF_RENDERER')
 

@@ -48,7 +48,7 @@ class ImportNeRFTransforms(bpy.types.Operator):
             
             camera_data = bpy.data.cameras.new(name='Camera')
             camera_obj = bpy.data.objects.new('Camera', camera_data)
-            bpy.context.scene.collection.objects.link(camera_obj)
+            scene.collection.objects.link(camera_obj)
 
             # fetch properties from JSON object
             # rot_mat = mathutils.Matrix(f["orientation"])
@@ -80,7 +80,7 @@ class ImportNeRFTransforms(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportNeRFTransforms.bl_idname, text="NeRF Transforms.json")
+    self.layout.operator(ImportNeRFTransforms.bl_idname, text="NeRF Transforms (JSON)")
 
 def register():
     bpy.utils.register_class(ImportNeRFTransforms)

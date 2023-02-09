@@ -1,11 +1,6 @@
 import bpy
 
-import blender_nerf_tools.utility.load_ngp
-
-from blender_nerf_tools.renderer.ngp_testbed_manager import NGPTestbedManager
 from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
-
-import pyngp #noqa
 
 bl_info = {
     "name": "Import Instant-NGP Properties",

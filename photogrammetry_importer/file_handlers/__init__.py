@@ -1,1 +1,0 @@
-""" File handlers for COLMAP importer """

@@ -1,1 +1,0 @@
-""" Operators for COLMAP importer """

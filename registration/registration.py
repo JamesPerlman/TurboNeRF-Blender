@@ -12,6 +12,7 @@ from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_qu
     get_spherical_quadrilateral_camera_node_location,
     get_spherical_quadrilateral_camera_node_quaternion_rotation,
 )
+from blender_nerf_tools.preferences.addon_preferences import (register_addon_preferences, unregister_addon_preferences)
 from blender_nerf_tools.renderer.nerf_render_engine import (register_nerf_render_engine, unregister_nerf_render_engine)
 
 # Definining the following import and export functions within the
@@ -36,7 +37,7 @@ def _nerfies_cameras_export_operator_function(topbar_file_export, context):
 def _nerf_transforms_import_operator_function(topbar_file_import, context):
     topbar_file_import.layout.operator(
         ImportNeRFTransforms.bl_idname,
-        text="NeRF Transforms.json"
+        text="NeRF Transforms (JSON)"
     )
 
 def _hypernerf_cams_import_operator_function(topbar_file_import, context):
@@ -135,10 +136,12 @@ class Registration:
         del bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation']
 
     @classmethod
-    def register_render_engine(cls):
+    def register_misc_components(cls):
         register_nerf_render_engine()
-    
+        register_addon_preferences()
+
     @classmethod
-    def unregister_render_engine(cls):
+    def unregister_misc_components(cls):
         unregister_nerf_render_engine()
+        unregister_addon_preferences()
 

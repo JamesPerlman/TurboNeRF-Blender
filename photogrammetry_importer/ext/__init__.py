@@ -1,1 +1,0 @@
-""" Package with external dependencies. """

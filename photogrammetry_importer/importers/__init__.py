@@ -1,1 +1,0 @@
-""" COLMAP helper importers """

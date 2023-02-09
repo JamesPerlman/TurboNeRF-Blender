@@ -29,7 +29,7 @@ class ImportHyperNeRFCams(bpy.types.Operator):
     bl_label = "Import"
     bl_options = {'REGISTER'}
 
-    filepath: bpy.props.StringProperty(subtype='FILE_PATH')
+    filepath: StringProperty(subtype='FILE_PATH')
     filename_ext = ".json"
     filter_glob: StringProperty(default='*.json', options={'HIDDEN'})
     directory: StringProperty()

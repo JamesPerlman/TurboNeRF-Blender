@@ -17,7 +17,6 @@ from blender_nerf_tools.blender_utility.object_utility import (
 )
 from blender_nerf_tools.constants import OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE
 from blender_nerf_tools.operators.operator_export_nerf_dataset import BlenderNeRFExportDatasetOperator
-from blender_nerf_tools.panels.train_panel_operators.redraw_point_cloud import BlenderNeRFRedrawPointCloudOperator
 from blender_nerf_tools.panels.train_panel_operators.scene_operators import BlenderNeRFAutoAlignSceneOperator, BlenderNeRFFitSceneInBoundingBoxOperator
 from blender_nerf_tools.panels.train_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
 from blender_nerf_tools.panels.train_panel_operators.camera_selection_operators import (
@@ -31,7 +30,6 @@ from blender_nerf_tools.panels.train_panel_operators.camera_selection_operators 
     BlenderNeRFSetActiveFromSelectedCameraOperator,
     BlenderNeRFUpdateCameraImagePlaneVisibilityOperator,
 )
-from blender_nerf_tools.photogrammetry_importer.operators.colmap_import_op import ImportColmapOperator
 
 
 class NeRFTrainingPanelSettings(bpy.types.PropertyGroup):
@@ -267,8 +265,6 @@ class NeRFTrainingPanel(bpy.types.Panel):
         )
 
         bpy.utils.register_class(BlenderNeRFSetupSceneOperator)
-        bpy.utils.register_class(ImportColmapOperator)
-        bpy.utils.register_class(BlenderNeRFRedrawPointCloudOperator)
         bpy.utils.register_class(BlenderNeRFSelectAllCamerasOperator)
         bpy.utils.register_class(BlenderNeRFSelectCamerasInsideRadiusOperator)
         bpy.utils.register_class(BlenderNeRFSelectCamerasOutsideRadiusOperator)
@@ -285,7 +281,6 @@ class NeRFTrainingPanel(bpy.types.Panel):
         cls.subscribe_to_events()
 
 
-
     @classmethod
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
@@ -294,8 +289,6 @@ class NeRFTrainingPanel(bpy.types.Panel):
 
         bpy.utils.unregister_class(NeRFTrainingPanelSettings)
         bpy.utils.unregister_class(BlenderNeRFSetupSceneOperator)
-        bpy.utils.unregister_class(ImportColmapOperator)
-        bpy.utils.unregister_class(BlenderNeRFRedrawPointCloudOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectAllCamerasOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectCamerasInsideRadiusOperator)
         bpy.utils.unregister_class(BlenderNeRFSelectCamerasOutsideRadiusOperator)
@@ -355,29 +348,6 @@ class NeRFTrainingPanel(bpy.types.Panel):
 
         if not is_scene_set_up:
             return
-        
-        # Import COLMAP action
-        
-        row = section.row()
-        row.operator(ImportColmapOperator.bl_idname)
-        row.enabled = is_scene_set_up
-
-        # Redraw Point Cloud action
-
-        point_cloud_exists = NeRFScene.point_cloud() is not None
-
-        point_section = layout.box()
-        point_section.label(
-            text="Point Cloud"
-        )
-
-        row = point_section.row()
-        row.prop(settings, "viz_point_size")
-        row.enabled = point_cloud_exists
-
-        row = point_section.row()
-        row.operator(BlenderNeRFRedrawPointCloudOperator.bl_idname)
-        row.enabled = point_cloud_exists
         
         # Camera Settings section
 
