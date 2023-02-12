@@ -41,10 +41,10 @@ from blender_nerf_tools.constants import (
     RENDER_CAM_TYPE_PERSPECTIVE,
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
-    SNAPSHOT_AABB_CENTER_ID,
-    SNAPSHOT_AABB_SIZE_ID,
-    SNAPSHOT_PATH_ID,
-    SNAPSHOT_OPACITY_ID,
+    NERF_AABB_CENTER_ID,
+    NERF_AABB_SIZE_ID,
+    NERF_PATH_ID,
+    NERF_OPACITY_ID,
 )
 from blender_nerf_tools.renderer.utils.render_camera_utils import bl2nerf_fl
 from blender_nerf_tools.utility.math import bl2nerf_mat, bl2nerf_pos
@@ -200,11 +200,11 @@ def serialize_nerfs():
         [0, 0, 0, 1],
     ])
     for nerf in nerfs:
-        aabb_center = nerf[SNAPSHOT_AABB_CENTER_ID]
-        aabb_size = nerf[SNAPSHOT_AABB_SIZE_ID]
+        aabb_center = nerf[NERF_AABB_CENTER_ID]
+        aabb_size = nerf[NERF_AABB_SIZE_ID]
         nerfs_json.append({
-            "path": nerf[SNAPSHOT_PATH_ID],
-            "opacity": nerf[SNAPSHOT_OPACITY_ID],
+            "path": nerf[NERF_PATH_ID],
+            "opacity": nerf[NERF_OPACITY_ID],
             "transform": np.matmul(bl2nerf_mat(nerf.matrix_world, origin=[0.0, 0.0, 0.0], scale=1.0), bl_rot).tolist(),
             "aabb": {
                 "min": bl2nerf_pos(
