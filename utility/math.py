@@ -18,10 +18,10 @@ def nerf_matrix_to_blender(nerf_matrix: np.array, offset, origin, scale) -> np.a
     result[:, 1:3] *= -1
     return result
 
-def bl2nerf_mat(bl_matrix: mathutils.Matrix, offset = np.array([0.0, 0.0, 0.0]), origin = DEFAULT_NGP_ORIGIN, scale = DEFAULT_NGP_SCALE) -> np.array:
+def nerf2bl_mat(bl_matrix: mathutils.Matrix, offset = np.array([0.0, 0.0, 0.0]), origin = DEFAULT_NGP_ORIGIN, scale = DEFAULT_NGP_SCALE) -> np.array:
     return nerf_matrix_to_blender(np.array(bl_matrix), offset, origin, scale)
 
-def nerf2bl_mat(nrc_matrix: np.array, offset = np.array([0.0, 0.0, 0.0]), origin = DEFAULT_NGP_ORIGIN, scale = DEFAULT_NGP_SCALE) -> mathutils.Matrix:
+def bl2nerf_mat(nrc_matrix: np.array, offset = np.array([0.0, 0.0, 0.0]), origin = DEFAULT_NGP_ORIGIN, scale = DEFAULT_NGP_SCALE) -> mathutils.Matrix:
     return mathutils.Matrix(blender_matrix_to_nerf(nrc_matrix, offset, origin, scale))
 
 def bl2nerf_pos(
