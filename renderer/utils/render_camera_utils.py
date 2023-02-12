@@ -1,5 +1,7 @@
 import bpy
+import math
 import numpy as np
+
 from blender_nerf_tools.utility.math import bl2nerf_mat
 
 from blender_nerf_tools.utility.pylib import PyTurboNeRF as tn
@@ -65,11 +67,20 @@ def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: t
 
     # look into region_view_3d.view_persepctive
     # get focal length
-    focal_length = 0.5 * img_dims[0] * projection_matrix[0, 0]
+    fl_x = 0.5 * img_dims[0] * projection_matrix[0, 0]
+    fl_y = 0.5 * img_dims[1] * projection_matrix[1, 1]
 
-    # return tn.Camera(
+    view_angle_x = 2.0 * math.atan2(0.5 * img_dims[0], fl_x)
+    view_angle_y = 2.0 * math.atan2(0.5 * img_dims[1], fl_y)
 
-    # )
+    return tn.Camera(
+        resolution=img_dims,
+        near=0.1,
+        far=10.0,
+        focal_length=(fl_x, fl_y),
+        view_angle=(view_angle_x, view_angle_y),
+        transform=tn.Transform4f(perspective_matrix)
+    )
 
 def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]):
     if isinstance(source, bpy.types.RegionView3D):
@@ -119,12 +130,12 @@ class NeRFRenderCamera:
         self.transform = view_matrix
     
     def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, NGPRenderCamera):
+        if not isinstance(__o, tn.Camera):
             return False
         return self.focal_length == __o.focal_length and np.array_equal(self.transform, __o.transform)
     
     def __ne__(self, __o: object) -> bool:
-        if not isinstance(__o, NGPRenderCamera):
+        if not isinstance(__o, tn.Camera):
             return True
         
         return not self.__eq__(__o)
