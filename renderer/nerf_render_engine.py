@@ -1,15 +1,15 @@
-from pathlib import Path
 import bpy
 import gpu
-from gpu_extras.presets import draw_texture_2d
+import bgl
 import numpy as np
 
 from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
 from blender_nerf_tools.renderer.utils.render_camera_utils import NeRFRenderCamera, bl2nerf_cam
+from blender_nerf_tools.utility.nerf_manager import NeRFManager
 
 from blender_nerf_tools.utility.pylib import PyTurboNeRF as tn
 
-import copy
+import threading
 
 MAX_MIP_LEVEL = 4
 class TurboNeRFRenderEngine(bpy.types.RenderEngine):
@@ -27,21 +27,26 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # render.
     def __init__(self):
         self.scene_data = None
-        self.draw_data = None
-        self.latest_render_result = None
-        self.needs_to_redraw = False
-        self.user_updated_scene = False
+        self.is_painting = False
         self.is_rendering = False
+        self.needs_to_redraw = False
+        self.cancel_current_render = False
         self.current_region3d: bpy.types.RegionView3D = None
         self.prev_render_cam: NeRFRenderCamera = None
+        self.render_thread = None
+        self.write_to_surface = None
+        self.surface_is_allocated = False
 
         self.prev_view_dimensions = np.array([0, 0])
         self.prev_region_camera_matrix = np.eye(4)
-        self.mip_level = MAX_MIP_LEVEL
 
-        print(tn.Camera)
+        self.renderer = tn.Renderer(batch_size=2<<20)
+        self.surface = None
 
-    # When the render engine instance is destroy, this is called. Clean up any
+        tn.BlenderRenderEngine.init()
+    
+
+    # When the render engine instance is destroyed, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
     def __del__(self):
         pass
@@ -72,68 +77,73 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         # layer.rect = list(rect.reshape((-1, 4)))
         self.end_result(result)
 
+    def start_rendering(self, context: bpy.types.Context, depsgraph: bpy.types.Depsgraph):
+        # start render thread
+        if self.is_rendering:
+            self.cancel_current_render = True
+            return
+    
+        print("STARTING RENDER THREAD")
+        self.is_rendering = True
+        self.cancel_current_render = False
+
+        # Get viewport dimensions
+        region = context.region
+        dimensions = region.width, region.height
+        
+        # Get current camera
+        current_region3d: bpy.types.RegionView3D = None
+        for area in context.screen.areas:
+            area: bpy.types.Area
+            if area.type == 'VIEW_3D':
+                current_region3d = area.spaces.active.region_3d
+
+        # create a render surface, if needed (or just resize it)
+        if self.surface is None:
+            self.surface = tn.OpenGLRenderSurface(region.width, region.height)
+            self.surface.allocate()
+        elif self.surface.width != region.width or self.surface.height != region.height:
+            self.surface.resize(region.width, region.height)
+            
+        # Render thread
+        def render():
+            # Partial result & completion callback
+            def on_render_result(is_done):
+                if is_done:
+                    self.is_rendering = False
+                    self.needs_to_redraw = False
+                else:
+                    if not self.is_painting:
+                        print("REDRAWING!")
+                        self.needs_to_redraw = True
+                        self.tag_redraw()
+            
+            # Cancellation poll
+            def should_cancel_render():
+                return self.cancel_current_render
+
+            cam = bl2nerf_cam(current_region3d, dimensions)
+
+            request = tn.RenderRequest(
+                camera=cam,
+                nerfs=[NeRFManager.items[0].nerf],
+                output=self.surface,
+                on_result=on_render_result,
+                should_cancel=should_cancel_render
+            )
+
+            self.renderer.submit(request)
+
+        self.render_thread = threading.Thread(target=render)
+        self.render_thread.start()
+
     # For viewport renders, this method gets called once at the start and
     # whenever the scene or 3D viewport changes. This method is where data
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
-        region = context.region
-        view3d = context.space_data
-        scene = depsgraph.scene
-
-        # Get viewport dimensions
-        dimensions = region.width, region.height
-
-        if not self.scene_data:
-            # First time initialization
-            self.scene_data = []
-            first_time = True
-
-            # Loop over all datablocks used in the scene.
-            for datablock in depsgraph.ids:
-                pass
-        else:
-            first_time = False
-
-            # Test which datablocks changed
-            for update in depsgraph.updates:
-                print("Datablock updated: ", update.id.name)
-
-            # Test if any material was added, removed or changed.
-            if depsgraph.id_type_updated('MATERIAL'):
-                print("Materials updated")
-
-        # Loop over all object instances in the scene.
-        if first_time or depsgraph.id_type_updated('OBJECT'):
-            #print(f"{dir(depsgraph)}")
-            #print(f"{depsgraph.objects}")
-            for obj in depsgraph.objects:
-                if "prop" in obj:
-                    print(obj["prop"])
-            for instance in depsgraph.object_instances:
-                instance: bpy.types.DepsgraphObjectInstance
-                #print(f"{dir(instance)}")
-                pass
-        
-        for area in context.screen.areas:
-            area: bpy.types.Area
-            if area.type == 'VIEW_3D':
-                region_3d: bpy.types.RegionView3D = area.spaces.active.region_3d
-                # P
-                projection_matrix = region_3d.window_matrix
-                # V 
-                view_matrix = region_3d.view_matrix
-                # P * V
-                view_projection_matrix = region_3d.perspective_matrix
-
-                # need to pass this into ngp
-                camera_matrix = np.matrix([list(r) for r in context.scene.camera.matrix_world])
-                # NGPTestbedManager.set_camera_props(matrix=camera_matrix[:-1,:], focal_length=projection_matrix[0,0])
-
-                # get region_3d's focal length
-        # make sure to set this
-        self.user_updated_scene = True
-    
+        print("UPDATE")
+        self.tag_redraw()
 
     # For viewport renders, this method is called whenever Blender redraws
     # the 3D viewport. The renderer is expected to quickly draw the render
@@ -141,123 +151,30 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
-        region = context.region
-        scene = depsgraph.scene
+        if not self.needs_to_redraw:
+            self.start_rendering(context, depsgraph)
 
-        # Get viewport dimensions
-        dimensions = region.width, region.height
-
-        # TODO: abstract this
-        def draw_latest_render_result():
-            if self.latest_render_result is not None:
-                gpu.state.blend_set('ALPHA_PREMULT')
-                self.bind_display_space_shader(scene)
-
-                result = self.latest_render_result # scale(self.latest_render_result, region.width, region.height)
-                
-                self.draw_data = CustomDrawData(result, result.shape[1], result.shape[0])
-
-                self.draw_data.draw()
-
-                self.unbind_display_space_shader()
-                gpu.state.blend_set('NONE')
-        
-        
-        if self.is_rendering:
-            draw_latest_render_result()
-            return
-
-        def save_render_result(result: list):
-            self.latest_render_result = result
-            self.needs_to_redraw = True
-            self.is_rendering = False
-            self.tag_redraw()
-        
-        # First we must determine if the user initiated this view_draw
-        # To do this, we will check if the dimensions or the camera matrix has changed
-        
-        current_region3d: bpy.types.RegionView3D = None
-        for area in context.screen.areas:
-            if area.type == 'VIEW_3D':
-                current_region3d = area.spaces.active.region_3d
-
-        cam_props = bl2nerf_cam(current_region3d, dimensions)
-
-        # ??? patch_coords = current_region3d.view_perspective == 'CAMERA'
-
-        dims_array = np.array([region.width, region.height])
-        updated_region_size = not np.array_equal(self.prev_view_dimensions, dims_array)
-        updated_region_view = self.prev_render_cam != cam_props
-        user_initiated_view_draw = updated_region_size or updated_region_view or self.user_updated_scene
-        if user_initiated_view_draw:
-            self.user_updated_scene = False
-            self.prev_view_dimensions = copy.copy(dims_array)
-            self.prev_render_cam = cam_props
-
-            # reset mip level
-            self.mip_level = MAX_MIP_LEVEL
-
-            # start a render chain
-            view_matrix = np.array(context.scene.camera.matrix_world)
-            # NGPTestbedManager.set_camera_matrix(view_matrix[:-1,:])
-            # TODO: set focal length, masks
-
-            # TODO: cancel previous render, or queue up next render.  request_nerf_render will not work if it is currently already rendering
-
-            
-
-            self.needs_to_redraw = False
-            self.is_rendering = True
-            draw_latest_render_result()
-            # NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
-
-            return
-
-        # user did NOT initiate this view_draw
-        draw_latest_render_result()
-        
         if self.needs_to_redraw:
             self.needs_to_redraw = False
 
-            # kick off a new render at the next mip level
-            if self.mip_level > 1:
-                self.mip_level -= 1
-                # start a render chain
-                
-                self.is_rendering = True
-                # NGPTestbedManager.request_render(cam_props, region.width, region.height, self.mip_level, save_render_result)
-    
-    def update(self, data: bpy.types.BlendData, depsgraph: bpy.types.Depsgraph):
-        print("update()")
+            self.is_painting = True
+            self.renderer.write_to(self.surface)
+            
+            scene = depsgraph.scene
 
-    def draw(self, context: bpy.types.Context, depsgraph: bpy.types.Depsgraph):
-        print("draw()")
-    
-    def tag_redraw(self):
-        print("tag_redraw()")
-    
-    def tag_update(self):
-        print("tag_update()")
+            bgl.glEnable(bgl.GL_BLEND)
+            bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
+            self.bind_display_space_shader(scene)
+            
+            tn.BlenderRenderEngine.draw(self.surface)
+            
+            self.unbind_display_space_shader()
+            bgl.glDisable(bgl.GL_BLEND)
 
+            self.is_painting = False
 
-class CustomDrawData:
-    def __init__(self, render_data, width, height):
-        # Generate dummy float image buffer
-        self.dimensions = (width, height)
-        # pixels = np.flip(render_data, 0).flatten()
-        pixels = gpu.types.Buffer('FLOAT', width * height * 4, render_data)
-
-        # Generate texture
-        self.texture = gpu.types.GPUTexture((width, height), format='RGBA16F', data=pixels)
-
-        # Note: This is just a didactic example.
-        # In this case it would be more convenient to fill the texture with:
-
-    def __del__(self):
-        del self.texture
-
-    def draw(self):
-        draw_texture_2d(self.texture, (0, 0), self.texture.width, self.texture.height)
+            if self.needs_to_redraw:
+                self.tag_redraw()
 
 
 # RenderEngines also need to tell UI Panels that they are compatible with.
