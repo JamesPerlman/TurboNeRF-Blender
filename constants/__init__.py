@@ -7,7 +7,6 @@ GLOBAL_TRANSFORM_ID = "GLOBAL_TRANSFORM"
 AABB_BOX_ID = "AABB_BOX"
 NERF_PROPS_ID = "NERF_PROPERTIES"
 
-# TODO: Come up with a way to present NGP coords instead of Blender/NeRF coords
 AABB_SIZE_ID = "aabb_size"
 AABB_SIZE_DEFAULT = 16 / 0.33
 
@@ -64,7 +63,7 @@ OBJ_TYPE_RENDER_CAMERA = "render_camera"
 OBJ_TYPE_IMG_PLANE = "image_plane"
 OBJ_TYPE_POINT_CLOUD = "point_cloud"
 OBJ_TYPE_MASK_SHAPE = "mask_shape"
-OBJ_TYPE_NERF_SNAPSHOT = "nerf_snapshot"
+OBJ_TYPE_NERF = "nerf"
 
 # Render cameras
 
@@ -109,8 +108,9 @@ MASK_CYLINDER_HEIGHT_ID = "height"
 
 MASK_SPHERE_RADIUS_ID = "radius"
 
-# Snapshot Properties
-SNAPSHOT_PATH_ID = "snapshot_path"
-SNAPSHOT_AABB_SIZE_ID = "aabb_size"
-SNAPSHOT_AABB_CENTER_ID = "aabb_center"
-SNAPSHOT_OPACITY_ID = "opacity"
+# NeRF Properties
+NERF_PATH_ID = "snapshot_path"
+NERF_AABB_SIZE_ID = "aabb_size"
+NERF_AABB_CENTER_ID = "aabb_center"
+NERF_OPACITY_ID = "opacity"
+NERF_DATASET_PATH_ID = "dataset_path"
