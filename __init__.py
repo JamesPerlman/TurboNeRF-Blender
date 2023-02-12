@@ -30,13 +30,12 @@ modules = developer_utility.setup_addon_modules(
 # The root dir is Blenders addon folder.
 # Therefore, we need the "blender_nerf_tools" specifier for this addon
 from blender_nerf_tools.blender_utility.logging_utility import log_report
-from blender_nerf_tools.panels.train_panel import NeRFTrainingPanel
-from blender_nerf_tools.panels.render_panel import NeRFRenderPanel
+from blender_nerf_tools.panels.nerf_panel import NeRFPanel
 from blender_nerf_tools.registration.registration import Registration
 
 
 from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
-from blender_nerf_tools.constants import SNAPSHOT_PATH_ID
+from blender_nerf_tools.constants import NERF_PATH_ID
 
 @bpy.app.handlers.persistent
 def load_handler(dummy):
@@ -49,8 +48,9 @@ def register():
     Registration.register_importers()
     Registration.register_exporters()
 
-    bpy.utils.register_class(NeRFTrainingPanel)
-    bpy.utils.register_class(NeRFRenderPanel)
+    # bpy.utils.register_class(NeRFTrainingPanel)
+    # bpy.utils.register_class(NeRFRenderPanel)
+    bpy.utils.register_class(NeRFPanel)
     
     bpy.app.handlers.load_post.append(load_handler)
     Registration.register_misc_components()
@@ -67,8 +67,9 @@ def unregister():
     Registration.unregister_importers()
     Registration.unregister_exporters()
 
-    bpy.utils.unregister_class(NeRFTrainingPanel)
-    bpy.utils.unregister_class(NeRFRenderPanel)
+    # bpy.utils.unregister_class(NeRFTrainingPanel)
+    # bpy.utils.unregister_class(NeRFRenderPanel)
+    bpy.utils.unregister_class(NeRFPanel)
 
     bpy.app.handlers.load_post.remove(load_handler)
     Registration.unregister_misc_components()
