@@ -26,10 +26,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # instances may exist at the same time, for example for a viewport and final
     # render.
     def __init__(self):
+        self.render_lock = threading.Lock()
         self.scene_data = None
         self.is_painting = False
         self.is_rendering = False
-        self.needs_to_redraw = False
+        self.redraw_from_render_result = False
         self.cancel_current_render = False
         self.current_region3d: bpy.types.RegionView3D = None
         self.prev_render_cam: NeRFRenderCamera = None
@@ -38,12 +39,10 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.surface_is_allocated = False
 
         self.prev_view_dimensions = np.array([0, 0])
-        self.prev_region_camera_matrix = np.eye(4)
+        self.prev_region_camera_matrix = np.eye(4)[:3,:4]
 
-        self.renderer = tn.Renderer(batch_size=2<<20)
-        self.surface = None
-
-        tn.BlenderRenderEngine.init()
+        self.render_engine = tn.BlenderRenderEngine()
+        self.render_engine.set_tag_redraw_callback(self.tag_redraw)
     
 
     # When the render engine instance is destroyed, this is called. Clean up any
@@ -77,33 +76,12 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         # layer.rect = list(rect.reshape((-1, 4)))
         self.end_result(result)
 
-    def start_rendering(self, context: bpy.types.Context, depsgraph: bpy.types.Depsgraph):
+    def start_rendering(self, camera: tn.Camera):
+        print("START RENDERING")
         # start render thread
-        if self.is_rendering:
-            self.cancel_current_render = True
-            return
-    
-        print("STARTING RENDER THREAD")
+        
         self.is_rendering = True
         self.cancel_current_render = False
-
-        # Get viewport dimensions
-        region = context.region
-        dimensions = region.width, region.height
-        
-        # Get current camera
-        current_region3d: bpy.types.RegionView3D = None
-        for area in context.screen.areas:
-            area: bpy.types.Area
-            if area.type == 'VIEW_3D':
-                current_region3d = area.spaces.active.region_3d
-
-        # create a render surface, if needed (or just resize it)
-        if self.surface is None:
-            self.surface = tn.OpenGLRenderSurface(region.width, region.height)
-            self.surface.allocate()
-        elif self.surface.width != region.width or self.surface.height != region.height:
-            self.surface.resize(region.width, region.height)
             
         # Render thread
         def render():
@@ -111,21 +89,19 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             def on_render_result(is_done):
                 if is_done:
                     self.is_rendering = False
-                    self.needs_to_redraw = False
                 else:
-                    if not self.is_painting:
-                        print("REDRAWING!")
-                        self.needs_to_redraw = True
-                        self.tag_redraw()
+                    self.needs_redraw = True
+                
+                if self.needs_redraw:
+                    self.tag_redraw()
             
             # Cancellation poll
             def should_cancel_render():
                 return self.cancel_current_render
 
-            cam = bl2nerf_cam(current_region3d, dimensions)
 
             request = tn.RenderRequest(
-                camera=cam,
+                camera=camera,
                 nerfs=[NeRFManager.items[0].nerf],
                 output=self.surface,
                 on_result=on_render_result,
@@ -151,31 +127,45 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
-        if not self.needs_to_redraw:
-            self.start_rendering(context, depsgraph)
+        self.render_engine.did_begin_drawing()
+        # # Get viewport dimensions
+        region = context.region
+        dimensions = region.width, region.height
+        
+        self.render_engine.resize_render_surface(region.width, region.height)
+        
+        # Get current camera
+        current_region3d: bpy.types.RegionView3D = None
+        for area in context.screen.areas:
+            area: bpy.types.Area
+            if area.type == 'VIEW_3D':
+                current_region3d = area.spaces.active.region_3d
 
-        if self.needs_to_redraw:
-            self.needs_to_redraw = False
+        camera = bl2nerf_cam(current_region3d, dimensions)
+        
+        # Determine if the user initiated this view_draw call
+        
+        new_region_camera_matrix = np.array(camera.transform)
+        user_initiated = np.not_equal(self.prev_region_camera_matrix, camera.transform).any()
+        print("USER INITIATED", user_initiated)
+        self.prev_region_camera_matrix = new_region_camera_matrix
 
-            self.is_painting = True
-            self.renderer.write_to(self.surface)
-            
-            scene = depsgraph.scene
+        if user_initiated:
+            self.render_engine.request_render(camera, [NeRFManager.items[0].nerf])
+            return
+        
+        scene = depsgraph.scene
 
-            bgl.glEnable(bgl.GL_BLEND)
-            bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
-            self.bind_display_space_shader(scene)
-            
-            tn.BlenderRenderEngine.draw(self.surface)
-            
-            self.unbind_display_space_shader()
-            bgl.glDisable(bgl.GL_BLEND)
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
+        self.bind_display_space_shader(scene)
+        
+        self.render_engine.draw()
+        
+        self.unbind_display_space_shader()
+        bgl.glDisable(bgl.GL_BLEND)
 
-            self.is_painting = False
-
-            if self.needs_to_redraw:
-                self.tag_redraw()
-
+        self.render_engine.did_finish_drawing()
 
 # RenderEngines also need to tell UI Panels that they are compatible with.
 # We recommend to enable all panels marked as BLENDER_RENDER, and then
