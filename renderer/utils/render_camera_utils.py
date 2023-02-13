@@ -127,7 +127,7 @@ class NeRFRenderCamera:
         # look into region_view_3d.view_persepctive
         # get focal length
         self.focal_length = 0.5 * dimensions[0] * projection_matrix[0, 0]
-        self.transform = view_matrix
+        self.transform = view_matrix[:3, :4]
     
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, tn.Camera):
