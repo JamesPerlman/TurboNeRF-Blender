@@ -76,43 +76,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         # layer.rect = list(rect.reshape((-1, 4)))
         self.end_result(result)
 
-    def start_rendering(self, camera: tn.Camera):
-        print("START RENDERING")
-        # start render thread
-        
-        self.is_rendering = True
-        self.cancel_current_render = False
-            
-        # Render thread
-        def render():
-            # Partial result & completion callback
-            def on_render_result(is_done):
-                if is_done:
-                    self.is_rendering = False
-                else:
-                    self.needs_redraw = True
-                
-                if self.needs_redraw:
-                    self.tag_redraw()
-            
-            # Cancellation poll
-            def should_cancel_render():
-                return self.cancel_current_render
-
-
-            request = tn.RenderRequest(
-                camera=camera,
-                nerfs=[NeRFManager.items[0].nerf],
-                output=self.surface,
-                on_result=on_render_result,
-                should_cancel=should_cancel_render
-            )
-
-            self.renderer.submit(request)
-
-        self.render_thread = threading.Thread(target=render)
-        self.render_thread.start()
-
     # For viewport renders, this method gets called once at the start and
     # whenever the scene or 3D viewport changes. This method is where data
     # should be read from Blender in the same thread. Typically a render
