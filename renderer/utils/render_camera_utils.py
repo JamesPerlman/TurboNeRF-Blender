@@ -63,6 +63,8 @@ def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: t
     # P * V
     perspective_matrix = np.array(region_view_3d.perspective_matrix)
 
+    bl_camera_matrix = tn.Transform4f(view_matrix)
+
     is_perspective = region_view_3d.is_perspective
 
     # look into region_view_3d.view_persepctive
@@ -79,7 +81,7 @@ def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: t
         far=10.0,
         focal_length=(fl_x, fl_y),
         view_angle=(view_angle_x, view_angle_y),
-        transform=tn.Transform4f(perspective_matrix)
+        transform=bl_camera_matrix.from_nerf()
     )
 
 def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]):
