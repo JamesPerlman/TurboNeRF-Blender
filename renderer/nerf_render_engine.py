@@ -118,7 +118,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
-        print("UPDATE")
         self.tag_redraw()
 
     # For viewport renders, this method is called whenever Blender redraws
@@ -127,7 +126,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
-        self.render_engine.did_begin_drawing()
         # # Get viewport dimensions
         region = context.region
         dimensions = region.width, region.height
@@ -147,13 +145,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         new_region_camera_matrix = np.array(camera.transform)
         user_initiated = np.not_equal(self.prev_region_camera_matrix, camera.transform).any()
-        print("USER INITIATED", user_initiated)
         self.prev_region_camera_matrix = new_region_camera_matrix
 
         if user_initiated:
             self.render_engine.request_render(camera, [NeRFManager.items[0].nerf])
-            return
-        
+                    
         scene = depsgraph.scene
 
         bgl.glEnable(bgl.GL_BLEND)
@@ -165,7 +161,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.unbind_display_space_shader()
         bgl.glDisable(bgl.GL_BLEND)
 
-        self.render_engine.did_finish_drawing()
 
 # RenderEngines also need to tell UI Panels that they are compatible with.
 # We recommend to enable all panels marked as BLENDER_RENDER, and then
