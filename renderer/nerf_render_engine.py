@@ -6,7 +6,7 @@ import numpy as np
 from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
 from blender_nerf_tools.renderer.utils.render_camera_utils import NeRFRenderCamera, bl2nerf_cam
 from blender_nerf_tools.utility.nerf_manager import NeRFManager
-
+from blender_nerf_tools.utility.notification_center import NotificationCenter
 from blender_nerf_tools.utility.pylib import PyTurboNeRF as tn
 
 import threading
@@ -33,7 +33,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.redraw_from_render_result = False
         self.cancel_current_render = False
         self.current_region3d: bpy.types.RegionView3D = None
-        self.prev_render_cam: NeRFRenderCamera = None
+        self.latest_camera = None
         self.render_thread = None
         self.write_to_surface = None
         self.surface_is_allocated = False
@@ -41,14 +41,21 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.prev_view_dimensions = np.array([0, 0])
         self.prev_region_camera_matrix = np.eye(4)[:3,:4]
 
-        self.render_engine = tn.BlenderRenderEngine()
-        self.render_engine.set_tag_redraw_callback(self.tag_redraw)
+        self.render_engine = NeRFManager.bridge()
+        self.render_engine.set_request_redraw_callback(self.tag_redraw)
+        NotificationCenter.default().add_observer("TRAIN_STEP", self.on_train_step)
     
 
     # When the render engine instance is destroyed, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
     def __del__(self):
         pass
+    
+    def on_train_step(self, step):
+        if step % 16 == 0:
+            flags = tn.RenderFlags.Preview
+            print("on_train flags = ", flags)
+            self.render_engine.request_render(self.latest_camera, [NeRFManager.items[0].nerf], flags)
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
@@ -111,7 +118,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.prev_region_camera_matrix = new_region_camera_matrix
 
         if user_initiated:
-            self.render_engine.request_render(camera, [NeRFManager.items[0].nerf])
+            flags = tn.RenderFlags.Preview
+            if not NeRFManager.is_training():
+                flags = flags | tn.RenderFlags.Final
+
+            self.render_engine.request_render(camera, [NeRFManager.items[0].nerf], flags)
                     
         scene = depsgraph.scene
 
@@ -123,6 +134,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         self.unbind_display_space_shader()
         bgl.glDisable(bgl.GL_BLEND)
+
+        self.latest_camera = camera
 
 
 # RenderEngines also need to tell UI Panels that they are compatible with.

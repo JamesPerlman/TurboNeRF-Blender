@@ -1,6 +1,7 @@
 import bpy
 from blender_nerf_tools.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from blender_nerf_tools.panels.nerf_panel_operators.train_nerf_operator import TrainNeRFOperator
+from blender_nerf_tools.utility.nerf_manager import NeRFManager
 
 class NeRFPanelProps(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D View"""
@@ -62,13 +63,10 @@ class NeRFPanel(bpy.types.Panel):
         box = layout.box()
         box.label(text="Train")
 
-        #row = box.row()
-        #row.operator(TrainNeRFOperator.bl_idname, text="Train NeRF")
-
         row = box.row()
-        row.prop(props, "n_steps_max", text="Steps:")
-
-        row = box.row()
-        row.operator(TrainNeRFOperator.bl_idname, text="Start Training")
+        row.operator(
+            TrainNeRFOperator.bl_idname,
+            text="Start Training" if not NeRFManager.is_training() else "Stop Training"
+        )
 
         row = box.row()

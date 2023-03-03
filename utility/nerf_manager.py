@@ -1,24 +1,42 @@
 from .dotdict import dotdict
+from .notification_center import NotificationCenter
 from .pylib import PyTurboNeRF as tn
+from threading import Thread
 
 class NeRFManager():
     n_items = 0
 
     items = {}
 
-    manager = None
+    _bridge = None
+    _manager = None
+
+    training_thread = None
 
     @classmethod
     def mgr(cls):
-        if cls.manager is None:
-            cls.manager = tn.Manager()
-        
-        return cls.manager
+        if cls._manager is None:
+            cls._manager = tn.Manager()
+
+        return cls._manager
     
+    @classmethod
+    def bridge(cls):
+        if cls._bridge is None:
+            cls._bridge = tn.BlenderBridge()
+
+            # TODO: put this in an initializer or something
+            def on_train_step(step):
+                NotificationCenter.default().post_notification("TRAIN_STEP", step)
+            
+            cls._bridge.set_training_callback(on_train_step)
+
+        return cls._bridge
+
     @classmethod
     def create_trainable(cls, dataset_path):
         dataset = tn.Dataset(file_path=dataset_path)
-        nerf = cls.mgr().create_trainable(bbox=dataset.bounding_box)
+        nerf = cls.mgr().create(bbox=dataset.bounding_box)
 
         item_id = cls.n_items
         item = dotdict({})
@@ -30,28 +48,69 @@ class NeRFManager():
         cls.n_items += 1
 
         return item_id
+    
+    @classmethod
+    def is_training(cls):
+        return cls.bridge().is_training()
+    
+    @classmethod
+    def start_training(cls):
+        item = cls.items[0]
+        cls.bridge().prepare_for_training(
+            dataset=item.dataset,
+            proxy=item.nerf,
+            batch_size=2<<20
+        )
+        cls.bridge().start_training()
+    
+    @classmethod
+    def stop_training(cls):
+        cls.bridge().stop_training()
 
     @classmethod
-    def train(cls, item_id, n_steps):
-        item = cls.items[item_id]
+    def toggle_training(cls):
+        if cls.is_training():
+            cls.stop_training()
+        else:
+            cls.start_training()
 
-        if not item.can_train:
-            item.trainer = tn.Trainer(
-                dataset=item.dataset,
-                nerf=item.nerf,
-                batch_size=2<<21
-            )
-            item.trainer.prepare_for_training()
-            item.can_train = True
+    # @classmethod
+    # def train_async(cls, item_id, n_steps):
+    #     if cls.training_thread is not None:
+    #         return
         
-        while item.trainer.get_training_step() < n_steps:
+    #     def on_finish():
+    #         cls.training_thread = None
+        
+    #     cls.training_thread = Thread(
+    #         target=cls.train,
+    #         args=(item_id, n_steps, on_finish)
+    #     )
+
+    #     cls.training_thread.start()
+
+    # @classmethod
+    # def train(cls, item_id, n_steps, callback=None):
+    #     item = cls.items[item_id]
+
+    #     if not item.can_train:
             
-            item.trainer.train_step()
+    #         item.can_train = True
 
-            training_step = item.trainer.get_training_step()
+    #     cur_step = item.trainer.get_training_step()
+    #     total_steps = cur_step + n_steps
+        
+    #     while item.trainer.get_training_step() < total_steps:
+            
+    #         item.trainer.train_step()
 
-            if training_step % 16 == 0 and training_step > 0:
-                print(f"Step {training_step} of {n_steps} done")
-                item.trainer.update_occupancy_grid(
-                    selection_threshold=0.9,
-                )
+    #         training_step = item.trainer.get_training_step()
+
+    #         if training_step % 16 == 0 and training_step > 0:
+    #             print(f"Step {training_step} of {n_steps} done")
+    #             item.trainer.update_occupancy_grid(
+    #                 selection_threshold=0.9,
+    #             )
+    
+    #     if callback is not None:
+    #         callback()

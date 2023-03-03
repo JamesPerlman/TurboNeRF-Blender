@@ -23,7 +23,7 @@ class NotificationCenter:
         
         self.observers[name].remove(observer)
     
-    def notify(self, name, *args, **kwargs):
+    def post_notification(self, name, *args, **kwargs):
         if name not in self.observers:
             return
         

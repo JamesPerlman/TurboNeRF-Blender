@@ -1,4 +1,5 @@
 import bpy
+import threading
 
 from blender_nerf_tools.utility.nerf_manager import NeRFManager
 
@@ -12,6 +13,6 @@ class TrainNeRFOperator(bpy.types.Operator):
     def execute(self, context):
         """Execute the operator."""
 
-        NeRFManager.train(item_id=0, n_steps=128)
+        NeRFManager.toggle_training()
 
         return {"FINISHED"}
