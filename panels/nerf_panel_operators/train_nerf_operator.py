@@ -1,5 +1,4 @@
 import bpy
-import threading
 
 from blender_nerf_tools.utility.nerf_manager import NeRFManager
 
