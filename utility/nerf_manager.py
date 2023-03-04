@@ -71,8 +71,10 @@ class NeRFManager():
     def toggle_training(cls):
         if cls.is_training():
             cls.stop_training()
+            NotificationCenter.default().post_notification("TRAINING_STOPPED")
         else:
             cls.start_training()
+            NotificationCenter.default().post_notification("TRAINING_STARTED")
 
     # @classmethod
     # def train_async(cls, item_id, n_steps):

@@ -44,18 +44,28 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.render_engine = NeRFManager.bridge()
         self.render_engine.set_request_redraw_callback(self.tag_redraw)
         NotificationCenter.default().add_observer("TRAIN_STEP", self.on_train_step)
+        NotificationCenter.default().add_observer("TRAINING_STOPPED", self.on_training_stopped)
     
 
     # When the render engine instance is destroyed, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
     def __del__(self):
         pass
+
+    # Notification handlers
     
     def on_train_step(self, step):
         if step % 16 == 0:
             flags = tn.RenderFlags.Preview
             print("on_train flags = ", flags)
-            self.render_engine.request_render(self.latest_camera, [NeRFManager.items[0].nerf], flags)
+            self.rerequest_render(flags=tn.RenderFlags.Preview)
+    
+    def on_training_stopped(self):
+        self.rerequest_render(flags=tn.RenderFlags.Final)
+    
+    # This method re-requests the latest render
+    def rerequest_render(self, flags):
+        self.render_engine.request_render(self.latest_camera, [NeRFManager.items[0].nerf], flags)
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
