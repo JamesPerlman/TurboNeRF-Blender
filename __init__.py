@@ -3,17 +3,17 @@ A Blender addon that makes it easy to work with NeRF Datasets
 """
 
 bl_info = {
-    "name": "Blender NeRF Tools",
+    "name": "TurboNeRF",
     # Do not break this line, otherwise the addon can not be activated!
     "description": "Allows you to work with NeRF datasets.",
     "author": "James Perlman",
     "version": (0, 0, 1),
     "blender": (3, 0, 0),
-    "location": "File/Import and File/Export",
+    "location": "View3D > Sidebar > TurboNeRF",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
-    "category": "Import-Export",
+    "category": "3D View",
 }
 
 import bpy
