@@ -26,13 +26,13 @@ jobs:
           directory: '/tmp'
           path: 'turbo_nerf'
           exclusions: '*/.git*, */.github*'
-          filename: '/tmp/turbo_nerf.zip'
+          filename: '/tmp/TurboNeRF-BlenderAddon.zip'
 
       - name: Generate Release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: '/tmp/turbo_nerf.zip'
+          artifacts: '/tmp/TurboNeRF-BlenderAddon.zip'
           bodyFile: 'docs/release.md'
           commit: ${{ github.sha }}
           makeLatest: true
