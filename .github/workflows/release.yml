@@ -17,8 +17,8 @@ jobs:
       
       - name: Create Addon Folder Structure
         run: |
-          mkdir -p /tmp/turbo_nerf/turbo_nerf
-          cp -R . /tmp/turbo_nerf/turbo_nerf
+          mkdir -p /tmp/turbo_nerf
+          cp -R . /tmp/turbo_nerf
       
       - name: Archive Build Result
         uses: thedoctor0/zip-release@0.7.1
