@@ -25,7 +25,7 @@ jobs:
         with:
           directory: '/tmp'
           path: 'turbo_nerf'
-          exclusions: '**/.git*, **/.github*'
+          exclusions: '*/.git*, */.github*'
           filename: '/tmp/turbo_nerf.zip'
 
       - name: Generate Release
