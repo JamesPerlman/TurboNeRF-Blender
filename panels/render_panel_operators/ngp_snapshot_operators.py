@@ -1,6 +1,6 @@
 import bpy
 
-from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
+from turbo_nerf.renderer.nerf_snapshot_manager import NeRFSnapshotManager
 
 bl_info = {
     "name": "Import Instant-NGP Properties",
@@ -16,7 +16,7 @@ from bpy.props import StringProperty
 class ImportNGPSnapshotOperator(bpy.types.Operator):
 
     """Import NeRF Transforms"""
-    bl_idname = "blender_nerf_tools.import_ngp_snapshot"
+    bl_idname = "turbo_nerf.import_ngp_snapshot"
     bl_label = "Import"
     bl_options = {'REGISTER'}
 

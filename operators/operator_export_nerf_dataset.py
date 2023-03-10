@@ -6,8 +6,8 @@ import numpy as np
 
 from bpy.props import StringProperty
 
-from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
-from blender_nerf_tools.constants import (
+from turbo_nerf.blender_utility.nerf_scene import NeRFScene
+from turbo_nerf.constants import (
     CAMERA_CX_ID,
     CAMERA_CY_ID,
     CAMERA_FAR_ID,

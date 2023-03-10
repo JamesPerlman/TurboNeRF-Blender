@@ -2,7 +2,7 @@ import bpy
 import math
 import mathutils
 import numpy as np
-from blender_nerf_tools.constants import (
+from turbo_nerf.constants import (
     OBJ_TYPE_ID,
     OBJ_TYPE_RENDER_CAMERA,
     RENDER_CAM_NEAR_ID,
@@ -14,7 +14,7 @@ from blender_nerf_tools.constants import (
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
 )
 
-from blender_nerf_tools.blender_utility.object_utility import add_empty
+from turbo_nerf.blender_utility.object_utility import add_empty
 
 # https://www.desmos.com/calculator/gxvsrnpd0d
 

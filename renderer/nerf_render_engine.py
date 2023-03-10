@@ -3,11 +3,11 @@ import gpu
 import bgl
 import numpy as np
 
-from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
-from blender_nerf_tools.renderer.utils.render_camera_utils import NeRFRenderCamera, bl2nerf_cam
-from blender_nerf_tools.utility.nerf_manager import NeRFManager
-from blender_nerf_tools.utility.notification_center import NotificationCenter
-from blender_nerf_tools.utility.pylib import PyTurboNeRF as tn
+from turbo_nerf.blender_utility.nerf_render_manager import NeRFRenderManager
+from turbo_nerf.renderer.utils.render_camera_utils import NeRFRenderCamera, bl2nerf_cam
+from turbo_nerf.utility.nerf_manager import NeRFManager
+from turbo_nerf.utility.notification_center import NotificationCenter
+from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
 import threading
 
@@ -55,7 +55,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Notification handlers
     
     def on_train_step(self, step):
-        if step % 16 == 0:
+        if step % 128 == 0:
             flags = tn.RenderFlags.Preview
             print("on_train flags = ", flags)
             self.rerequest_render(flags=tn.RenderFlags.Preview)

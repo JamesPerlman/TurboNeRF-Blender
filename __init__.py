@@ -28,14 +28,14 @@ modules = developer_utility.setup_addon_modules(
 
 
 # The root dir is Blenders addon folder.
-# Therefore, we need the "blender_nerf_tools" specifier for this addon
-from blender_nerf_tools.blender_utility.logging_utility import log_report
-from blender_nerf_tools.panels.nerf_panel import NeRFPanel
-from blender_nerf_tools.registration.registration import Registration
+# Therefore, we need the "turbo_nerf" specifier for this addon
+from turbo_nerf.blender_utility.logging_utility import log_report
+from turbo_nerf.panels.nerf_panel import NeRFPanel
+from turbo_nerf.registration.registration import Registration
 
 
-from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
-from blender_nerf_tools.constants import NERF_PATH_ID
+from turbo_nerf.renderer.nerf_snapshot_manager import NeRFSnapshotManager
+from turbo_nerf.constants import NERF_PATH_ID
 
 @bpy.app.handlers.persistent
 def load_handler(dummy):

@@ -3,17 +3,17 @@ import bpy
 
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
-from blender_nerf_tools.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
-from blender_nerf_tools.operators.operator_export_world_matrix import ExportObjectWorldMatrix
-from blender_nerf_tools.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
-from blender_nerf_tools.operators.operator_import_nerf_transforms import ImportNeRFTransforms
-from blender_nerf_tools.panels.render_panel_operators.camera_models.quadrilateral_hexahedron_camera import get_quadrilateral_hexahedron_camera_node_quaternion_rotation
-from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import (
+from turbo_nerf.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
+from turbo_nerf.operators.operator_export_world_matrix import ExportObjectWorldMatrix
+from turbo_nerf.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
+from turbo_nerf.operators.operator_import_nerf_transforms import ImportNeRFTransforms
+from turbo_nerf.panels.render_panel_operators.camera_models.quadrilateral_hexahedron_camera import get_quadrilateral_hexahedron_camera_node_quaternion_rotation
+from turbo_nerf.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import (
     get_spherical_quadrilateral_camera_node_location,
     get_spherical_quadrilateral_camera_node_quaternion_rotation,
 )
-from blender_nerf_tools.preferences.addon_preferences import (register_addon_preferences, unregister_addon_preferences)
-from blender_nerf_tools.renderer.nerf_render_engine import (register_nerf_render_engine, unregister_nerf_render_engine)
+from turbo_nerf.preferences.addon_preferences import (register_addon_preferences, unregister_addon_preferences)
+from turbo_nerf.renderer.nerf_render_engine import (register_nerf_render_engine, unregister_nerf_render_engine)
 
 # Definining the following import and export functions within the
 # "Registration" class causes different errors when hovering over entries in

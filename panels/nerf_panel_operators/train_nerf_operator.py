@@ -1,11 +1,11 @@
 import bpy
 
-from blender_nerf_tools.utility.nerf_manager import NeRFManager
+from turbo_nerf.utility.nerf_manager import NeRFManager
 
 class TrainNeRFOperator(bpy.types.Operator):
     """Class that defines the operator for training NeRF."""
 
-    bl_idname = "blender_nerf_tools.train_nerf"
+    bl_idname = "turbo_nerf.train_nerf"
     bl_label = "Train NeRF"
     bl_options = {"REGISTER"}
 

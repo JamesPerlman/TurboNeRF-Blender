@@ -21,7 +21,7 @@ from bpy.types import Operator
 class ImportNeRFTransforms(bpy.types.Operator):
 
     """Import NeRF Transforms"""
-    bl_idname = "blender_nerf_tools.import_transforms"
+    bl_idname = "turbo_nerf.import_transforms"
     bl_label = "Import"
     bl_options = {'REGISTER'}
 

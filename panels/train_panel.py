@@ -9,17 +9,17 @@ from bpy.props import (
     FloatVectorProperty,
     FloatProperty,
 )
-from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
+from turbo_nerf.blender_utility.nerf_scene import NeRFScene
 
-from blender_nerf_tools.blender_utility.object_utility import (
+from turbo_nerf.blender_utility.object_utility import (
     get_selected_empty,
     get_selected_object,
 )
-from blender_nerf_tools.constants import OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE
-from blender_nerf_tools.operators.operator_export_nerf_dataset import BlenderNeRFExportDatasetOperator
-from blender_nerf_tools.panels.train_panel_operators.scene_operators import BlenderNeRFAutoAlignSceneOperator, BlenderNeRFFitSceneInBoundingBoxOperator
-from blender_nerf_tools.panels.train_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
-from blender_nerf_tools.panels.train_panel_operators.camera_selection_operators import (
+from turbo_nerf.constants import OBJ_TYPE_ID, OBJ_TYPE_IMG_PLANE
+from turbo_nerf.operators.operator_export_nerf_dataset import BlenderNeRFExportDatasetOperator
+from turbo_nerf.panels.train_panel_operators.scene_operators import BlenderNeRFAutoAlignSceneOperator, BlenderNeRFFitSceneInBoundingBoxOperator
+from turbo_nerf.panels.train_panel_operators.setup_scene import BlenderNeRFSetupSceneOperator
+from turbo_nerf.panels.train_panel_operators.camera_selection_operators import (
     BlenderNeRFSelectAllCamerasOperator,
     BlenderNeRFSelectCamerasInsideRadiusOperator,
     BlenderNeRFSelectCamerasOutsideRadiusOperator,

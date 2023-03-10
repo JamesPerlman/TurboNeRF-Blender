@@ -2,9 +2,9 @@ import bpy
 import numpy as np
 from pathlib import Path
 
-from blender_nerf_tools.blender_utility.object_utility import add_cube, add_empty
-from blender_nerf_tools.blender_utility.obj_type_utility import get_nerf_obj_type
-from blender_nerf_tools.constants import (
+from turbo_nerf.blender_utility.object_utility import add_cube, add_empty
+from turbo_nerf.blender_utility.obj_type_utility import get_nerf_obj_type
+from turbo_nerf.constants import (
     OBJ_TYPE_ID,
     OBJ_TYPE_NERF,
     NERF_AABB_CENTER_ID,

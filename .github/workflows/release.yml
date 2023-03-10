@@ -7,18 +7,24 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
         with:
           ref: ${{ github.sha }}
           submodules: recursive
-   
+      
+      - name: Archive Build Result
+        uses: thedoctor0/zip-release@0.7.1
+        with:
+          filename: 'turbo_nerf.zip'
+
       - name: Generate Release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
+          artifacts: 'turbo_nerf.zip'
           bodyFile: 'docs/release.md'
           commit: ${{ github.sha }}
           makeLatest: true

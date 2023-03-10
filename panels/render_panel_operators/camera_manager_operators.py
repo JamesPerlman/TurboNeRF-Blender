@@ -1,17 +1,17 @@
 import bpy
 
-from blender_nerf_tools.constants import (
+from turbo_nerf.constants import (
     RENDER_CAM_IS_ACTIVE_ID,
     RENDER_CAM_TYPE_PERSPECTIVE,
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
 )
-from blender_nerf_tools.panels.render_panel_operators.camera_models.perspective_camera import add_perspective_camera
-from blender_nerf_tools.panels.render_panel_operators.camera_models.quadrilateral_hexahedron_camera import add_quadrilateral_hexahedron_camera
-from blender_nerf_tools.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import add_spherical_quadrilateral_camera
+from turbo_nerf.panels.render_panel_operators.camera_models.perspective_camera import add_perspective_camera
+from turbo_nerf.panels.render_panel_operators.camera_models.quadrilateral_hexahedron_camera import add_quadrilateral_hexahedron_camera
+from turbo_nerf.panels.render_panel_operators.camera_models.spherical_quadrilateral_camera import add_spherical_quadrilateral_camera
 
 class BlenderNeRFAddRenderCameraOperator(bpy.types.Operator):
-    bl_idname = "blender_nerf_tools.add_render_camera"
+    bl_idname = "turbo_nerf.add_render_camera"
     bl_label = "Add Render Camera"
     bl_description = "Add a camera to the scene for rendering"
     bl_options = {"REGISTER", "UNDO"}

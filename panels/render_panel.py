@@ -9,13 +9,13 @@ from bpy.props import (
     FloatVectorProperty,
     FloatProperty,
 )
-from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
+from turbo_nerf.blender_utility.nerf_scene import NeRFScene
 
-from blender_nerf_tools.blender_utility.object_utility import (
+from turbo_nerf.blender_utility.object_utility import (
     get_selected_empty,
     get_selected_object,
 )
-from blender_nerf_tools.constants import (
+from turbo_nerf.constants import (
     MASK_MODE_ADD,
     MASK_MODE_SUBTRACT,
     MASK_TYPE_BOX,
@@ -29,10 +29,10 @@ from blender_nerf_tools.constants import (
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON,
 )
 
-from blender_nerf_tools.panels.render_panel_operators.camera_manager_operators import BlenderNeRFAddRenderCameraOperator
-from blender_nerf_tools.panels.render_panel_operators.operator_export_nerf_render_json import BlenderNeRFExportRenderJSON
-from blender_nerf_tools.panels.render_panel_operators.mask_shape_operators import BlenderNeRFAddMaskShapeOperator
-from blender_nerf_tools.panels.render_panel_operators.ngp_snapshot_operators import ImportNGPSnapshotOperator
+from turbo_nerf.panels.render_panel_operators.camera_manager_operators import BlenderNeRFAddRenderCameraOperator
+from turbo_nerf.panels.render_panel_operators.operator_export_nerf_render_json import BlenderNeRFExportRenderJSON
+from turbo_nerf.panels.render_panel_operators.mask_shape_operators import BlenderNeRFAddMaskShapeOperator
+from turbo_nerf.panels.render_panel_operators.ngp_snapshot_operators import ImportNGPSnapshotOperator
 
 CAMERA_TYPES = {
     RENDER_CAM_TYPE_PERSPECTIVE: {

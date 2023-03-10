@@ -1,6 +1,6 @@
 import enum
 import bpy
-from blender_nerf_tools.constants import (
+from turbo_nerf.constants import (
     MASK_BOX_DIMS_ID,
     MASK_CYLINDER_HEIGHT_ID,
     MASK_CYLINDER_RADIUS_ID,
@@ -16,7 +16,7 @@ from blender_nerf_tools.constants import (
     OBJ_TYPE_MASK_SHAPE,
 )
 
-from blender_nerf_tools.blender_utility.object_utility import add_cube, add_cylinder, add_empty, add_sphere, select_object
+from turbo_nerf.blender_utility.object_utility import add_cube, add_cylinder, add_empty, add_sphere, select_object
 
 # TODO: these should be in a different file
 def lock_scale_with_drivers(obj):

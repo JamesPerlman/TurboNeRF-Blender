@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 
-from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
+from turbo_nerf.blender_utility.nerf_scene import NeRFScene
 
 class BlenderNeRFAutoAlignSceneOperator(bpy.types.Operator):
     bl_idname = "nerf.auto_align_scene"

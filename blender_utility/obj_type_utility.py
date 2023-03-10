@@ -1,6 +1,6 @@
 __reload_order_index__ = -1
 
-from blender_nerf_tools.constants import (
+from turbo_nerf.constants import (
     OBJ_TYPE_ID,
     OBJ_TYPE_IMG_PLANE,
     OBJ_TYPE_TRAIN_CAMERA,

@@ -14,11 +14,11 @@ from pathlib import Path
 # ExportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
 from bpy.props import StringProperty
-from blender_nerf_tools.blender_utility.nerf_render_manager import NeRFRenderManager
-from blender_nerf_tools.renderer.nerf_snapshot_manager import NeRFSnapshotManager
+from turbo_nerf.blender_utility.nerf_render_manager import NeRFRenderManager
+from turbo_nerf.renderer.nerf_snapshot_manager import NeRFSnapshotManager
 
-from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
-from blender_nerf_tools.constants import (
+from turbo_nerf.blender_utility.nerf_scene import NeRFScene
+from turbo_nerf.constants import (
     MASK_BOX_DIMS_ID,
     MASK_CYLINDER_HEIGHT_ID,
     MASK_CYLINDER_RADIUS_ID,
@@ -46,8 +46,8 @@ from blender_nerf_tools.constants import (
     NERF_PATH_ID,
     NERF_OPACITY_ID,
 )
-from blender_nerf_tools.renderer.utils.render_camera_utils import bl2nerf_fl
-from blender_nerf_tools.utility.math import bl2nerf_mat, bl2nerf_pos
+from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_fl
+from turbo_nerf.utility.math import bl2nerf_mat, bl2nerf_pos
 
 def mat_to_list(m: mathutils.Matrix) -> list[float]:
     return [list(r) for r in m]
@@ -232,7 +232,7 @@ def serialize_nerfs():
 class BlenderNeRFExportRenderJSON(bpy.types.Operator):
 
     """Export main camera as NeRF render.json"""
-    bl_idname = "blender_nerf_tools.export_render_json"
+    bl_idname = "turbo_nerf.export_render_json"
     bl_label = "Export"
     bl_options = {'REGISTER'}
 

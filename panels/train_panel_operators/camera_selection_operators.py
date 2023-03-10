@@ -2,7 +2,7 @@ __reload_order_index__ = -1
 
 import bpy
 
-from blender_nerf_tools.blender_utility.nerf_scene import NeRFScene
+from turbo_nerf.blender_utility.nerf_scene import NeRFScene
 
 class BlenderNeRFSelectAllCamerasOperator(bpy.types.Operator):
     """Select all cameras in the scene."""
@@ -65,7 +65,7 @@ class BlenderNeRFSelectNextCameraOperator(bpy.types.Operator):
 
 class BlenderNeRFSelectCamerasInsideRadiusOperator(bpy.types.Operator):
     """Select cameras in radius"""
-    bl_idname = "blender_nerf_tools.select_cameras_in_radius"
+    bl_idname = "turbo_nerf.select_cameras_in_radius"
     bl_label = "Select Cameras in Radius"
     bl_description = "Select cameras in radius"
 
@@ -75,7 +75,7 @@ class BlenderNeRFSelectCamerasInsideRadiusOperator(bpy.types.Operator):
 
 class BlenderNeRFSelectCamerasOutsideRadiusOperator(bpy.types.Operator):
     """Select cameras outside radius"""
-    bl_idname = "blender_nerf_tools.select_cameras_outside_radius"
+    bl_idname = "turbo_nerf.select_cameras_outside_radius"
     bl_label = "Select Cameras Outside Radius"
     bl_description = "Select cameras outside radius"
 
@@ -85,7 +85,7 @@ class BlenderNeRFSelectCamerasOutsideRadiusOperator(bpy.types.Operator):
 
 class BlenderNeRFSetActiveFromSelectedCameraOperator(bpy.types.Operator):
     """Set active camera from selected camera"""
-    bl_idname = "blender_nerf_tools.set_active_from_selected_camera"
+    bl_idname = "turbo_nerf.set_active_from_selected_camera"
     bl_label = "Set Active Camera from Selected Camera"
     bl_description = "Set active camera from selected camera"
 
@@ -95,7 +95,7 @@ class BlenderNeRFSetActiveFromSelectedCameraOperator(bpy.types.Operator):
 
 class BlenderNeRFUpdateCameraImagePlaneVisibilityOperator(bpy.types.Operator):
     """Update camera image plane visibility"""
-    bl_idname = "blender_nerf_tools.update_camera_image_plane_visibility"
+    bl_idname = "turbo_nerf.update_camera_image_plane_visibility"
     bl_label = "Update Camera Image Plane Visibility"
     bl_description = "Update camera image plane visibility"
 

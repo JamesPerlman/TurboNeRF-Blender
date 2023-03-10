@@ -1,7 +1,7 @@
 import bpy
 
-from blender_nerf_tools.blender_utility.obj_type_utility import get_nerf_obj_type
-from blender_nerf_tools.constants import (
+from turbo_nerf.blender_utility.obj_type_utility import get_nerf_obj_type
+from turbo_nerf.constants import (
     OBJ_TYPE_MASK_SHAPE,
     OBJ_TYPE_RENDER_CAMERA,
     RENDER_CAM_IS_ACTIVE_ID,

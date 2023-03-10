@@ -1,8 +1,8 @@
 import mathutils
 import numpy as np
 
-from blender_nerf_tools.blender_utility.object_utility import add_empty, select_object
-from blender_nerf_tools.constants import (
+from turbo_nerf.blender_utility.object_utility import add_empty, select_object
+from turbo_nerf.constants import (
     OBJ_TYPE_ID,
     OBJ_TYPE_RENDER_CAMERA,
     RENDER_CAM_IS_ACTIVE_ID,

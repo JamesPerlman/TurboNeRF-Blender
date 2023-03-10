@@ -2,11 +2,11 @@ import bpy
 import math
 import numpy as np
 
-from blender_nerf_tools.utility.math import bl2nerf_mat
+from turbo_nerf.utility.math import bl2nerf_mat
 
-from blender_nerf_tools.utility.pylib import PyTurboNeRF as tn
+from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
-from blender_nerf_tools.constants import (
+from turbo_nerf.constants import (
     RENDER_CAM_TYPE_ID,
     RENDER_CAM_TYPE_PERSPECTIVE,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,

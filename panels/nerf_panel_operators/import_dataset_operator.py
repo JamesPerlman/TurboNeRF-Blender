@@ -4,17 +4,17 @@ import math
 import mathutils
 from pathlib import Path
 
-from blender_nerf_tools.blender_utility.object_utility import add_cube
-from blender_nerf_tools.constants import (
+from turbo_nerf.blender_utility.object_utility import add_cube
+from turbo_nerf.constants import (
     NERF_AABB_SIZE_ID,
     NERF_AABB_CENTER_ID,
     NERF_DATASET_PATH_ID,
 )
-from blender_nerf_tools.utility.nerf_manager import NeRFManager
+from turbo_nerf.utility.nerf_manager import NeRFManager
 
 class ImportNeRFDatasetOperator(bpy.types.Operator):
     """An Operator to import a NeRF dataset from a directory."""
-    bl_idname = "blender_nerf_tools.import_dataset"
+    bl_idname = "turbo_nerf.import_dataset"
     bl_label = "Import Dataset"
     bl_description = "Import a dataset from a directory"
 

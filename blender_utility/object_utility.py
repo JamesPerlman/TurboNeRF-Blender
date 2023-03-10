@@ -1,7 +1,7 @@
 import bpy
 import bmesh
 
-from blender_nerf_tools.blender_utility.logging_utility import log_report
+from turbo_nerf.blender_utility.logging_utility import log_report
 
 
 def add_empty(name, collection=None, type='PLAIN_AXES') -> bpy.types.Object:

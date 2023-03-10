@@ -14,13 +14,13 @@ import bpy
 # Thank you https://devtalk.blender.org/t/how-to-save-custom-user-preferences-for-an-addon/10362 
 
 def fetch_pref(name: str):
-    prefs = bpy.context.preferences.addons['blender_nerf_tools'].preferences
+    prefs = bpy.context.preferences.addons['turbo_nerf'].preferences
     if prefs is None:
         return None
     return prefs[name]
 
 class TurboNeRFPreferences(AddonPreferences):
-    bl_idname = "blender_nerf_tools"
+    bl_idname = "turbo_nerf"
     
     pylib_dir: StringProperty(
         name="PyTurboNeRF Directory",

@@ -2,7 +2,7 @@ import importlib
 from pathlib import Path
 import sys
 
-from blender_nerf_tools.preferences.addon_preferences import fetch_pref
+from turbo_nerf.preferences.addon_preferences import fetch_pref
 
 tn = None
 

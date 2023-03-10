@@ -1,4 +1,4 @@
-""" Constants for blender_nerf_tools. """
+""" Constants for turbo_nerf. """
 
 __reload_order_index__ = -10
 
