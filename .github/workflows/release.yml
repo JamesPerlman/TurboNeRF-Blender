@@ -1,0 +1,29 @@
+name: continuous release
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.sha }}
+          submodules: recursive
+   
+      - name: Generate Release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          bodyFile: 'docs/release.md'
+          commit: ${{ github.sha }}
+          makeLatest: true
+          name: 'TurboNeRF Blender Addon'
+          prerelease: true
+          replacesArtifacts: true
+          tag: 'pre-release'
+          token: ${{ secrets.GITHUB_TOKEN }}
