@@ -15,16 +15,24 @@ jobs:
           ref: ${{ github.sha }}
           submodules: recursive
       
+      - name: Create Addon Folder Structure
+        run: |
+          mkdir -p /tmp/turbo_nerf/turbo_nerf
+          cp -R . /tmp/turbo_nerf/turbo_nerf
+      
       - name: Archive Build Result
         uses: thedoctor0/zip-release@0.7.1
         with:
-          filename: 'turbo_nerf.zip'
+          directory: '/tmp'
+          path: 'turbo_nerf'
+          exclusions: '*.git*, .vscode'
+          filename: '/tmp/turbo_nerf.zip'
 
       - name: Generate Release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: 'turbo_nerf.zip'
+          artifacts: '/tmp/turbo_nerf.zip'
           bodyFile: 'docs/release.md'
           commit: ${{ github.sha }}
           makeLatest: true
