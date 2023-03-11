@@ -73,6 +73,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # this just cancels the preview.  TODO: rename
         self.render_engine.cancel_preview()
+        self.render_engine.stop_training()
+        self.render_engine.wait_for_training_to_stop()
         
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
@@ -86,14 +88,15 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         camera = bl2nerf_cam(active_cam, dims)
         
         img = np.array(self.render_engine.render_final(camera, [NeRFManager.items[0].nerf]))
-        # reverse pixels
-        # reverse img
+        img = img.reshape((size_y, size_x, 4))
 
         # Here we write the pixel values to the RenderResult
         result = self.begin_result(0, 0, size_x, size_y)
         layer = result.layers[0].passes["Combined"]
         
-        layer.rect = list(img.reshape((-1, 4)))
+        y_flipped = img[::-1, :, :].reshape((-1, 4))
+        layer.rect = list(y_flipped)
+        
         self.end_result(result)
 
     # For viewport renders, this method gets called once at the start and
