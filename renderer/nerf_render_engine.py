@@ -72,7 +72,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             return
 
         # this just cancels the preview.  TODO: rename
-        self.render_engine.cancel_render()
+        self.render_engine.cancel_preview()
         
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
