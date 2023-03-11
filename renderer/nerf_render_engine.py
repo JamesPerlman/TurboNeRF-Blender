@@ -4,14 +4,13 @@ import bgl
 import numpy as np
 
 from turbo_nerf.blender_utility.nerf_render_manager import NeRFRenderManager
-from turbo_nerf.renderer.utils.render_camera_utils import NeRFRenderCamera, bl2nerf_cam
+from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_cam
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.notification_center import NotificationCenter
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
 import threading
 
-MAX_MIP_LEVEL = 4
 class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # These three members are used by blender to set up the
     # RenderEngine; define its internal name, visible name and capabilities.
@@ -28,7 +27,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     def __init__(self):
         self.render_lock = threading.Lock()
         self.scene_data = None
-        self.is_painting = False
         self.is_rendering = False
         self.redraw_from_render_result = False
         self.cancel_current_render = False
@@ -70,6 +68,12 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
+        if self.is_preview:
+            return
+
+        # this just cancels the preview.  TODO: rename
+        self.render_engine.cancel_render()
+        
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
         size_x = int(scene.render.resolution_x * scale)
@@ -77,20 +81,19 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         dims = (size_x, size_y)
 
-        # Fill the render result with a flat color. The framebuffer is
-        # defined as a list of pixels, each pixel itself being a list of
-        # R,G,B,A values.
-        # if self.is_preview:
-        #    pass
-
-        active_cam = NeRFRenderManager.get_active_camera()
-        cam_props = bl2nerf_cam(active_cam, dims)
-        # rect = NGPTestbedManager.request_render(cam_props, size_x, size_y, 0)
+        active_cam = scene.camera
+        # NeRFRenderManager.get_active_camera()
+        camera = bl2nerf_cam(active_cam, dims)
+        
+        img = np.array(self.render_engine.render_final(camera, [NeRFManager.items[0].nerf]))
+        # reverse pixels
+        # reverse img
 
         # Here we write the pixel values to the RenderResult
         result = self.begin_result(0, 0, size_x, size_y)
         layer = result.layers[0].passes["Combined"]
-        # layer.rect = list(rect.reshape((-1, 4)))
+        
+        layer.rect = list(img.reshape((-1, 4)))
         self.end_result(result)
 
     # For viewport renders, this method gets called once at the start and

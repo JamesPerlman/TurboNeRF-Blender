@@ -84,11 +84,40 @@ def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: t
         transform=bl_camera_matrix.from_nerf()
     )
 
+def bl2nerf_cam_perspective(blender_camera: bpy.types.Camera, img_dims: tuple[int, int]):
+    view_matrix = np.array(blender_camera.matrix_world)
+
+    bl_camera_matrix = tn.Transform4f(view_matrix)
+
+    # look into region_view_3d.view_persepctive
+    # get focal length
+    fl_x = bl2nerf_fl(blender_camera, img_dims)
+    fl_y = fl_x
+
+    view_angle_x = 2.0 * math.atan2(0.5 * img_dims[0], fl_x)
+    view_angle_y = 2.0 * math.atan2(0.5 * img_dims[1], fl_y)
+
+    return tn.Camera(
+        resolution=img_dims,
+        near=0.1,
+        far=10.0,
+        focal_length=(fl_x, fl_y),
+        view_angle=(view_angle_x, view_angle_y),
+        transform=bl_camera_matrix.from_nerf()
+    )
+
 def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]):
     if isinstance(source, bpy.types.RegionView3D):
         return bl2nerf_cam_regionview3d(source, img_dims)
     elif isinstance(source, bpy.types.Object):
-        camera_model = source[RENDER_CAM_TYPE_ID]
+        camera_model = RENDER_CAM_TYPE_PERSPECTIVE
+
+        if RENDER_CAM_TYPE_ID in source:
+            camera_model = source[RENDER_CAM_TYPE_ID]
+        
+        if camera_model not in CAM_TYPE_DECODERS:
+            camera_model = RENDER_CAM_TYPE_PERSPECTIVE
+        
         decoder = CAM_TYPE_DECODERS[camera_model]
         return decoder(source, img_dims)
     else:
@@ -97,47 +126,7 @@ def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tup
 
 
 CAM_TYPE_DECODERS = {
-    RENDER_CAM_TYPE_PERSPECTIVE: bl2nerf_cam,
+    RENDER_CAM_TYPE_PERSPECTIVE: bl2nerf_cam_perspective,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL: None,
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON: None,
 }
-
-class NeRFRenderCamera:
-
-    focal_length: float
-    transform: np.ndarray
-
-    def __init__(self, source: bpy.types.RegionView3D | bpy.types.Camera, dimensions: tuple[int, int]):
-        if isinstance(source, bpy.types.RegionView3D):
-            self._init_from_region_view_3d(source, dimensions)
-        elif isinstance(source, bpy.types.Camera):
-            self._init_from_camera(source)
-    
-    def _init_from_camera(self, camera: bpy.types.Camera):
-        pass
-
-    def _init_from_region_view_3d(self, region_view_3d: bpy.types.RegionView3D, dimensions: tuple[int, int]):
-        # P
-        projection_matrix = np.array(region_view_3d.window_matrix)
-        # V 
-        view_matrix = np.array(region_view_3d.view_matrix.inverted())
-        # P * V
-        perspective_matrix = np.array(region_view_3d.perspective_matrix)
-
-        is_perspective = region_view_3d.is_perspective
-
-        # look into region_view_3d.view_persepctive
-        # get focal length
-        self.focal_length = 0.5 * dimensions[0] * projection_matrix[0, 0]
-        self.transform = view_matrix[:3, :4]
-    
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, tn.Camera):
-            return False
-        return self.focal_length == __o.focal_length and np.array_equal(self.transform, __o.transform)
-    
-    def __ne__(self, __o: object) -> bool:
-        if not isinstance(__o, tn.Camera):
-            return True
-        
-        return not self.__eq__(__o)
