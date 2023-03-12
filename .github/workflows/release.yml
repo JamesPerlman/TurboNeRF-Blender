@@ -41,5 +41,5 @@ jobs:
           name: 'TurboNeRF Blender Addon'
           prerelease: true
           replacesArtifacts: true
-          tag: ${{ github.event.client_payload.tag }}
+          tag: 'pre-release'
           token: ${{ secrets.GITHUB_TOKEN }}
