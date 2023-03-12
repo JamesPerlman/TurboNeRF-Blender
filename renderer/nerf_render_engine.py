@@ -1,3 +1,4 @@
+import weakref
 import bpy
 import gpu
 import bgl
@@ -6,7 +7,6 @@ import numpy as np
 from turbo_nerf.blender_utility.nerf_render_manager import NeRFRenderManager
 from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_cam
 from turbo_nerf.utility.nerf_manager import NeRFManager
-from turbo_nerf.utility.notification_center import NotificationCenter
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
 import threading
@@ -39,42 +39,117 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.prev_view_dimensions = np.array([0, 0])
         self.prev_region_camera_matrix = np.eye(4)[:3,:4]
 
-        self.render_engine = NeRFManager.bridge()
-        self.render_engine.set_request_redraw_callback(self.tag_redraw)
-        NotificationCenter.default().add_observer("TRAIN_STEP", self.on_train_step)
-        NotificationCenter.default().add_observer("TRAINING_STOPPED", self.on_training_stopped)
+        self.bridge = NeRFManager.bridge()
+        self.event_observers = []
+        
+        self.add_event_observers()
+
+    # Add bridge event observers
+    def add_event_observers(self):
+        BBE = tn.BlenderBridgeEvent
+
+        # weak reference to self is used to avoid circular reference
+        weak_self = weakref.ref(self)
+
+        # OnTrainingStep
+        def on_training_step():
+            wself = weak_self()
+            if wself is None:
+                return
+            step = wself.bridge.get_training_step()
+            if step % 128 == 0:
+                wself.rerequest_preview(flags=tn.RenderFlags.Preview)
+        
+        obid = self.bridge.add_observer(BBE.OnTrainingStep, on_training_step)
+        self.event_observers.append(obid)
+
+        # OnTrainingStopped
+        def on_training_stopped():
+            wself = weak_self()
+            if wself is None:
+                return
+            if wself.bridge.is_rendering():
+                return
+            # wself.rerequest_preview(flags=tn.RenderFlags.Final)
+        
+        obid = self.bridge.add_observer(BBE.OnTrainingStopped, on_training_stopped)
+        self.event_observers.append(obid)
     
+        # OnPreviewProgress
+        def on_preview_progress():
+            wself = weak_self()
+            if wself is None:
+                return
+            wself.bridge.enqueue_redraw()
+
+        obid = self.bridge.add_observer(BBE.OnPreviewProgress, on_preview_progress)
+        self.event_observers.append(obid)
+        
+        # OnPreviewComplete
+        def on_preview_complete():
+            wself = weak_self()
+            if wself is None:
+                return
+            wself.bridge.enqueue_redraw()
+        
+        obid = self.bridge.add_observer(BBE.OnPreviewComplete, on_preview_complete)
+        self.event_observers.append(obid)
+        
+        # OnRenderProgress
+        def on_render_progress():
+            wself = weak_self()
+            if wself is None:
+                return
+            if wself.test_break():
+                wself.bridge.cancel_render()
+        
+        obid = self.bridge.add_observer(BBE.OnRenderProgress, on_render_progress)
+        self.event_observers.append(obid)
+        
+        # OnRenderComplete
+        def on_request_redraw():
+            wself = weak_self()
+            if wself is None:
+                return
+            wself.tag_redraw()
+        
+        obid = self.bridge.add_observer(BBE.OnRequestRedraw, on_request_redraw)
+        self.event_observers.append(obid)
+
+    # Remove bridge event observers
+    def remove_event_observers(self):
+        for obs_id in self.event_observers:
+            self.bridge.remove_observer(obs_id)
+            print("Removed observer with id", obs_id)
+        self.event_observers = []
 
     # When the render engine instance is destroyed, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
+
     def __del__(self):
+        print("del was called :(")
+        self.remove_event_observers()
         pass
 
     # Notification handlers
     
-    def on_train_step(self, step):
-        if step % 128 == 0:
-            flags = tn.RenderFlags.Preview
-            print("on_train flags = ", flags)
-            self.rerequest_render(flags=tn.RenderFlags.Preview)
-    
-    def on_training_stopped(self):
-        self.rerequest_render(flags=tn.RenderFlags.Final)
     
     # This method re-requests the latest render
-    def rerequest_render(self, flags):
-        self.render_engine.request_render(self.latest_camera, [NeRFManager.items[0].nerf], flags)
+    def rerequest_preview(self, flags):
+        if self.latest_camera is None:
+            return
+        self.bridge.request_preview(self.latest_camera, [NeRFManager.items[0].nerf], flags)
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
         if self.is_preview:
             return
-
+        
         # this just cancels the preview.  TODO: rename
-        self.render_engine.cancel_preview()
-        self.render_engine.stop_training()
-        self.render_engine.wait_for_training_to_stop()
+        self.bridge.stop_training()
+        self.bridge.cancel_preview()
+        self.bridge.wait_for_runloop_to_stop()
         
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
@@ -87,7 +162,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         # NeRFRenderManager.get_active_camera()
         camera = bl2nerf_cam(active_cam, dims)
         
-        img = np.array(self.render_engine.render_final(camera, [NeRFManager.items[0].nerf]))
+        img = np.array(self.bridge.request_render(camera, [NeRFManager.items[0].nerf]))
         img = img.reshape((size_y, size_x, 4))
 
         # Here we write the pixel values to the RenderResult
@@ -116,7 +191,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         region = context.region
         dimensions = region.width, region.height
         
-        self.render_engine.resize_render_surface(region.width, region.height)
+        self.bridge.resize_preview_surface(region.width, region.height)
         
         # Get current camera
         current_region3d: bpy.types.RegionView3D = None
@@ -138,7 +213,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             if not NeRFManager.is_training():
                 flags = flags | tn.RenderFlags.Final
 
-            self.render_engine.request_render(camera, [NeRFManager.items[0].nerf], flags)
+            self.bridge.request_preview(camera, [NeRFManager.items[0].nerf], flags)
                     
         scene = depsgraph.scene
 
@@ -146,8 +221,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
         self.bind_display_space_shader(scene)
         
-        self.render_engine.draw()
-        
+        self.bridge.draw()
         self.unbind_display_space_shader()
         bgl.glDisable(bgl.GL_BLEND)
 

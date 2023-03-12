@@ -1,5 +1,4 @@
 from .dotdict import dotdict
-from .notification_center import NotificationCenter
 from .pylib import PyTurboNeRF as tn
 from threading import Thread
 
@@ -24,12 +23,6 @@ class NeRFManager():
     def bridge(cls):
         if cls._bridge is None:
             cls._bridge = tn.BlenderBridge()
-
-            # TODO: put this in an initializer or something
-            def on_train_step(step):
-                NotificationCenter.default().post_notification("TRAIN_STEP", step)
-            
-            cls._bridge.set_training_callback(on_train_step)
 
         return cls._bridge
 
@@ -71,10 +64,8 @@ class NeRFManager():
     def toggle_training(cls):
         if cls.is_training():
             cls.stop_training()
-            NotificationCenter.default().post_notification("TRAINING_STOPPED")
         else:
             cls.start_training()
-            NotificationCenter.default().post_notification("TRAINING_STARTED")
 
     # @classmethod
     # def train_async(cls, item_id, n_steps):
