@@ -70,7 +70,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
                 return
             if wself.bridge.is_rendering():
                 return
-            # wself.rerequest_preview(flags=tn.RenderFlags.Final)
+            wself.rerequest_preview(flags=tn.RenderFlags.Final)
         
         obid = self.bridge.add_observer(BBE.OnTrainingStopped, on_training_stopped)
         self.event_observers.append(obid)
@@ -159,6 +159,10 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         dims = (size_x, size_y)
 
         active_cam = scene.camera
+        
+        if active_cam is None:
+            return
+        
         # NeRFRenderManager.get_active_camera()
         camera = bl2nerf_cam(active_cam, dims)
         
@@ -199,8 +203,14 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             area: bpy.types.Area
             if area.type == 'VIEW_3D':
                 current_region3d = area.spaces.active.region_3d
+        
+        if current_region3d is None:
+            return
 
         camera = bl2nerf_cam(current_region3d, dimensions)
+
+        if camera is None:
+            return
         
         # Determine if the user initiated this view_draw call
         
