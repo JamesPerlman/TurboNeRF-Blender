@@ -4,6 +4,8 @@ on:
   #   branches:
   #     - main
   workflow_dispatch:
+  repository_dispatch:
+    types: [release]
 
 jobs:
   build:
@@ -39,5 +41,5 @@ jobs:
           name: 'TurboNeRF Blender Addon'
           prerelease: true
           replacesArtifacts: true
-          tag: 'pre-release'
+          tag: ${{ github.event.client_payload.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
