@@ -1,10 +1,10 @@
+import ctypes
+from time import sleep, time
 import weakref
 import bpy
-import gpu
 import bgl
 import numpy as np
 
-from turbo_nerf.blender_utility.nerf_render_manager import NeRFRenderManager
 from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_cam
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
@@ -53,6 +53,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # OnTrainingStep
         def on_training_step():
+            print("OnTrainingStep")
             wself = weak_self()
             if wself is None:
                 return
@@ -65,10 +66,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # OnTrainingStopped
         def on_training_stopped():
+            print("OnTrainingStopped")
             wself = weak_self()
             if wself is None:
-                return
-            if wself.bridge.is_rendering():
                 return
             wself.rerequest_preview(flags=tn.RenderFlags.Final)
         
@@ -77,6 +77,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     
         # OnPreviewProgress
         def on_preview_progress():
+            print("OnPreviewProgress")
             wself = weak_self()
             if wself is None:
                 return
@@ -87,6 +88,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         # OnPreviewComplete
         def on_preview_complete():
+            print("OnPreviewComplete")
             wself = weak_self()
             if wself is None:
                 return
@@ -95,19 +97,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         obid = self.bridge.add_observer(BBE.OnPreviewComplete, on_preview_complete)
         self.event_observers.append(obid)
         
-        # OnRenderProgress
-        def on_render_progress():
-            wself = weak_self()
-            if wself is None:
-                return
-            if wself.test_break():
-                wself.bridge.cancel_render()
-        
-        obid = self.bridge.add_observer(BBE.OnRenderProgress, on_render_progress)
-        self.event_observers.append(obid)
-        
         # OnRenderComplete
         def on_request_redraw():
+            print("OnRequestRedraw")
             wself = weak_self()
             if wself is None:
                 return
@@ -146,10 +138,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         if self.is_preview:
             return
         
-        # this just cancels the preview.  TODO: rename
-        self.bridge.stop_training()
-        self.bridge.cancel_preview()
-        self.bridge.wait_for_runloop_to_stop()
+        # get properties
         
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
@@ -158,25 +147,95 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         dims = (size_x, size_y)
 
+        # get camera
         active_cam = scene.camera
         
         if active_cam is None:
+            # TODO: error?
+            print("ERROR: No active camera during render!")
             return
-        
-        # NeRFRenderManager.get_active_camera()
+
+        # convert to TurboNeRF camera
         camera = bl2nerf_cam(active_cam, dims)
         
-        img = np.array(self.bridge.request_render(camera, [NeRFManager.items[0].nerf]))
-        img = img.reshape((size_y, size_x, 4))
-
-        # Here we write the pixel values to the RenderResult
+        # launch render request
+        self.bridge.request_render(camera, [NeRFManager.items[0].nerf])
+        
+        # begin renter result
         result = self.begin_result(0, 0, size_x, size_y)
-        layer = result.layers[0].passes["Combined"]
+
+        # register render events
+        render_events = []
+
+        # OnRenderProgress
+        def on_render_progress():
+            print("goobers")
+            # get latest from the render buffer
+            rgba_buf = self.bridge.get_render_rgba()
+            n_pixels = self.bridge.get_render_n_pixels()
+
+            print(f"rgba_buf: {rgba_buf.obj}")
+
+
+            # print("get_latest_render took", time_b - time_a)
+            #
+
+            # flip the y-axis
+            #img = img[::-1, :, :]
+
+            # this is a total hack from https://devtalk.blender.org/t/pass-a-render-result-as-a-numpy-array-to-bpy-types-renderengine/11615/8?u=jperl
+            # and I love it :] thank you @Kinwailo
+
+            # interpret the buffer as a numpy array (no copying!)
+            rgba_view = memoryview(rgba_buf)
+            img = np.asarray(rgba_view)
+
+            # convert to raw data
+            img = img.ctypes.data_as(ctypes.c_void_p)
+            
+            # copy image data into the renderpass.rect buffer!
+            render_pass = result.layers[0].passes["Combined"]
+            dst = render_pass.as_pointer() + 96
+            dst = ctypes.cast(dst, ctypes.POINTER(ctypes.c_void_p))
+            float_size = ctypes.sizeof(ctypes.c_float)
+            ctypes.memmove(dst.contents, img, 4 * float_size * n_pixels)
+    
+            self.update_result(result)
+
+            # update the progress bar
+            print("them progress be updatin" + str(self.bridge.get_render_progress()))
+            self.update_progress(self.bridge.get_render_progress())
         
-        y_flipped = img[::-1, :, :].reshape((-1, 4))
-        layer.rect = list(y_flipped)
-        
+        # add OnRenderProgress observer
+        event_id = self.bridge.add_observer(tn.BlenderBridgeEvent.OnRenderProgress, on_render_progress)
+        render_events.append(event_id)
+
+        # OnRenderComplete
+        def on_render_complete():
+            print("derp?")
+            on_render_progress()
+
+        # add OnRenderComplete observer
+        event_id = self.bridge.add_observer(tn.BlenderBridgeEvent.OnRenderComplete, on_render_complete)
+        render_events.append(event_id)
+
+        # keep alive until render is complete
+        while self.bridge.is_rendering():
+            print("we be renderin, yo")
+            # check for cancel
+            if self.test_break():
+                self.bridge.cancel_render()
+                break
+            
+            sleep(0.1)
+
+        # end result
+        print("we done renderin, yo")
         self.end_result(result)
+        
+        # remove event observers
+        for id in render_events:
+            self.bridge.remove_observer(id)
 
     # For viewport renders, this method gets called once at the start and
     # whenever the scene or 3D viewport changes. This method is where data
