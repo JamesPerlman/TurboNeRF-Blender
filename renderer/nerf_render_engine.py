@@ -53,7 +53,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # OnTrainingStep
         def on_training_step():
-            print("OnTrainingStep")
             wself = weak_self()
             if wself is None:
                 return
@@ -66,7 +65,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # OnTrainingStopped
         def on_training_stopped():
-            print("OnTrainingStopped")
             wself = weak_self()
             if wself is None:
                 return
@@ -77,7 +75,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     
         # OnPreviewProgress
         def on_preview_progress():
-            print("OnPreviewProgress")
             wself = weak_self()
             if wself is None:
                 return
@@ -88,7 +85,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         # OnPreviewComplete
         def on_preview_complete():
-            print("OnPreviewComplete")
             wself = weak_self()
             if wself is None:
                 return
@@ -99,7 +95,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         # OnRenderComplete
         def on_request_redraw():
-            print("OnRequestRedraw")
             wself = weak_self()
             if wself is None:
                 return
@@ -112,14 +107,12 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     def remove_event_observers(self):
         for obs_id in self.event_observers:
             self.bridge.remove_observer(obs_id)
-            print("Removed observer with id", obs_id)
         self.event_observers = []
 
     # When the render engine instance is destroyed, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
 
     def __del__(self):
-        print("del was called :(")
         self.remove_event_observers()
         pass
 
@@ -169,19 +162,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # OnRenderProgress
         def on_render_progress():
-            print("goobers")
             # get latest from the render buffer
             rgba_buf = self.bridge.get_render_rgba()
             n_pixels = self.bridge.get_render_n_pixels()
-
-            print(f"rgba_buf: {rgba_buf.obj}")
-
-
-            # print("get_latest_render took", time_b - time_a)
-            #
-
-            # flip the y-axis
-            #img = img[::-1, :, :]
 
             # this is a total hack from https://devtalk.blender.org/t/pass-a-render-result-as-a-numpy-array-to-bpy-types-renderengine/11615/8?u=jperl
             # and I love it :] thank you @Kinwailo
@@ -203,7 +186,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             self.update_result(result)
 
             # update the progress bar
-            print("them progress be updatin" + str(self.bridge.get_render_progress()))
             self.update_progress(self.bridge.get_render_progress())
         
         # add OnRenderProgress observer
@@ -212,7 +194,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # OnRenderComplete
         def on_render_complete():
-            print("derp?")
             on_render_progress()
 
         # add OnRenderComplete observer
@@ -221,16 +202,15 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # keep alive until render is complete
         while self.bridge.is_rendering():
-            print("we be renderin, yo")
             # check for cancel
             if self.test_break():
                 self.bridge.cancel_render()
                 break
             
+            # I have no idea why, but this keeps blender responsive
             sleep(0.1)
 
         # end result
-        print("we done renderin, yo")
         self.end_result(result)
         
         # remove event observers
