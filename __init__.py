@@ -5,7 +5,7 @@ A Blender addon that makes it easy to work with NeRF Datasets
 bl_info = {
     "name": "TurboNeRF",
     # Do not break this line, otherwise the addon can not be activated!
-    "description": "Allows you to work with NeRF datasets.",
+    "description": "An artistic tool for working with NeRFs in Blender",
     "author": "James Perlman",
     "version": (0, 0, 1),
     "blender": (3, 0, 0),
