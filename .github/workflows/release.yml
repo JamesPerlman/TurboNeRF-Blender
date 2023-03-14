@@ -41,6 +41,5 @@ jobs:
           name: 'TurboNeRF Blender Addon'
           prerelease: true
           replacesArtifacts: true
-          repo: JamesPerlman/TurboNeRF-Blender
           tag: 'pre-release'
           token: ${{ secrets.GITHUB_TOKEN }}
