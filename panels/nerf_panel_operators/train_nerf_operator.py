@@ -9,6 +9,11 @@ class TrainNeRFOperator(bpy.types.Operator):
     bl_label = "Train NeRF"
     bl_options = {"REGISTER"}
 
+    @classmethod
+    def poll(cls, context):
+        """Return the availability status of the operator."""
+        return NeRFManager.can_train()
+
     def execute(self, context):
         """Execute the operator."""
 

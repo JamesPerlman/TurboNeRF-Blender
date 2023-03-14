@@ -22,6 +22,10 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
     filename_ext = ".json"
     filter_glob: bpy.props.StringProperty(default='*.json', options={'HIDDEN'})
 
+    @classmethod
+    def poll(cls, context):
+        return NeRFManager.can_import()
+
     def execute(self, context):
         # Get some scene references
         scene = context.scene

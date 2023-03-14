@@ -55,6 +55,17 @@ class NeRFManager():
     @classmethod
     def is_training(cls):
         return cls.bridge().is_training()
+
+    @classmethod
+    def can_train(cls):
+        # the condition here should be: if a nerf is currently selected
+        # for now we just check if there are any nerfs
+        return cls.n_items > 0
+
+    @classmethod
+    def can_import(cls):
+        # this should not exist longterm
+        return cls.n_items == 0
     
     @classmethod
     def start_training(cls):
