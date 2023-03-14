@@ -1,6 +1,5 @@
 from .dotdict import dotdict
 from .pylib import PyTurboNeRF as tn
-from threading import Thread
 
 # TODO: move this somewhere else? make it a range? this code seems smelly
 class NeRFManager():
@@ -11,8 +10,6 @@ class NeRFManager():
     _bridge = None
     _manager = None
 
-    training_thread = None
-    
     @classmethod
     def pylib_version(cls):
         return tn.__version__
@@ -79,44 +76,3 @@ class NeRFManager():
             cls.stop_training()
         else:
             cls.start_training()
-
-    # @classmethod
-    # def train_async(cls, item_id, n_steps):
-    #     if cls.training_thread is not None:
-    #         return
-        
-    #     def on_finish():
-    #         cls.training_thread = None
-        
-    #     cls.training_thread = Thread(
-    #         target=cls.train,
-    #         args=(item_id, n_steps, on_finish)
-    #     )
-
-    #     cls.training_thread.start()
-
-    # @classmethod
-    # def train(cls, item_id, n_steps, callback=None):
-    #     item = cls.items[item_id]
-
-    #     if not item.can_train:
-            
-    #         item.can_train = True
-
-    #     cur_step = item.trainer.get_training_step()
-    #     total_steps = cur_step + n_steps
-        
-    #     while item.trainer.get_training_step() < total_steps:
-            
-    #         item.trainer.train_step()
-
-    #         training_step = item.trainer.get_training_step()
-
-    #         if training_step % 16 == 0 and training_step > 0:
-    #             print(f"Step {training_step} of {n_steps} done")
-    #             item.trainer.update_occupancy_grid(
-    #                 selection_threshold=0.9,
-    #             )
-    
-    #     if callback is not None:
-    #         callback()
