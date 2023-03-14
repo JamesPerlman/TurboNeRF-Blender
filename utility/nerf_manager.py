@@ -2,6 +2,7 @@ from .dotdict import dotdict
 from .pylib import PyTurboNeRF as tn
 from threading import Thread
 
+# TODO: move this somewhere else? make it a range? this code seems smelly
 class NeRFManager():
     n_items = 0
 
@@ -11,6 +12,18 @@ class NeRFManager():
     _manager = None
 
     training_thread = None
+    
+    @classmethod
+    def pylib_version(cls):
+        return tn.__version__
+    
+    @classmethod
+    def required_pylib_version(cls):
+        return "0.0.1"
+
+    @classmethod
+    def is_pylib_compatible(cls):
+        return cls.pylib_version() == cls.required_pylib_version()
 
     @classmethod
     def mgr(cls):

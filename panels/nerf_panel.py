@@ -1,6 +1,7 @@
 import bpy
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.train_nerf_operator import TrainNeRFOperator
+from turbo_nerf.utility.layout_utility import add_multiline_label
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
 class NeRFPanelProps(bpy.types.PropertyGroup):
@@ -53,6 +54,15 @@ class NeRFPanel(bpy.types.Panel):
         props = context.scene.nerf_panel_props
 
         layout = self.layout
+        
+        if not NeRFManager.is_pylib_compatible():
+            add_multiline_label(
+                context=context,
+                text=f"You have PyTurboNeRF version {NeRFManager.pylib_version()}, which is not compatible with this version of the TurboNeRF addon.  Please upgrade PyTurboNeRF to version {NeRFManager.required_pylib_version()}.",
+                parent=layout
+            )
+            
+            return
 
         box = layout.box()
         box.label(text="Import")
