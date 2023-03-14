@@ -5,7 +5,7 @@ import bpy
 import bgl
 import numpy as np
 
-from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_cam, camera_with_flipped_y
+from turbo_nerf.utility.render_camera_utils import bl2nerf_cam, camera_with_flipped_y
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
