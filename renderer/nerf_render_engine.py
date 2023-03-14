@@ -5,7 +5,7 @@ import bpy
 import bgl
 import numpy as np
 
-from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_cam
+from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_cam, camera_with_flipped_y
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
@@ -150,6 +150,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         # convert to TurboNeRF camera
         camera = bl2nerf_cam(active_cam, dims)
+        camera = camera_with_flipped_y(camera)
         
         # launch render request
         self.bridge.request_render(camera, [NeRFManager.items[0].nerf])

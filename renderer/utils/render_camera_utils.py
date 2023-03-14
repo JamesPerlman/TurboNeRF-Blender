@@ -2,6 +2,8 @@ import bpy
 import math
 import numpy as np
 
+from copy import copy
+
 from turbo_nerf.utility.math import bl2nerf_mat
 
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
@@ -106,7 +108,7 @@ def bl2nerf_cam_perspective(blender_camera: bpy.types.Camera, img_dims: tuple[in
         transform=bl_camera_matrix.from_nerf()
     )
 
-def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]):
+def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]) -> tn.Camera:
     if isinstance(source, bpy.types.RegionView3D):
         return bl2nerf_cam_regionview3d(source, img_dims)
     elif isinstance(source, bpy.types.Object):
@@ -124,6 +126,20 @@ def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tup
         print(f"INVALID CAMERA SOURCE: {source}")
         return None
 
+def camera_with_flipped_y(cam: tn.Camera) -> tn.Camera:
+    yflip = np.array(cam.transform)
+    yflip[:, 1] *= -1.0
+    transform = tn.Transform4f(yflip)
+
+    return tn.Camera(
+        resolution=cam.resolution,
+        near=cam.near,
+        far=cam.far,
+        focal_length=cam.focal_length,
+        view_angle=cam.view_angle,
+        transform=transform,
+        dist_params=cam.dist_params
+    )
 
 CAM_TYPE_DECODERS = {
     RENDER_CAM_TYPE_PERSPECTIVE: bl2nerf_cam_perspective,
