@@ -1,7 +1,6 @@
 from .dotdict import dotdict
 from .pylib import PyTurboNeRF as tn
 
-# TODO: move this somewhere else? make it a range? this code seems smelly
 class NeRFManager():
     n_items = 0
 
