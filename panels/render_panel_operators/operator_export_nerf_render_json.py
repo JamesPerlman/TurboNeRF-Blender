@@ -46,7 +46,7 @@ from turbo_nerf.constants import (
     NERF_PATH_ID,
     NERF_OPACITY_ID,
 )
-from turbo_nerf.renderer.utils.render_camera_utils import bl2nerf_fl
+from turbo_nerf.utility.render_camera_utils import bl2nerf_fl
 from turbo_nerf.utility.math import bl2nerf_mat, bl2nerf_pos
 
 def mat_to_list(m: mathutils.Matrix) -> list[float]:
