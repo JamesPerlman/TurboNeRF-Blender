@@ -42,16 +42,17 @@ jobs:
         run: |
           echo 'RELEASE_TAG=${{ github.event.client_payload.tag || inputs.tag }}' >> $GITHUB_ENV
       
-      - name: Set Release URL
+      - name: Set PyTurboNeRF URL
         run: |
-          echo "RELEASE_URL=${{ github.event.client_payload.release_url:-https://github.com/JamesPerlman/TurboNeRF/releases/tag/${{ env.RELEASE_TAG }}}}" >> $GITHUB_ENV
+          echo "PYLIB_URL=${{ github.event.client_payload.release_url:-https://github.com/JamesPerlman/TurboNeRF/releases/tag/${{ env.RELEASE_TAG }}}}" >> $GITHUB_ENV
 
       - name: Generate Release
+        id: gen-release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           artifacts: '/tmp/TurboNeRF-BlenderAddon.zip'
-          body: 'Please download [PyTurboNeRF ${{ env.RELEASE_TAG }}](${{ env.RELEASE_URL }}) along with this addon.'
+          body: 'Please download [PyTurboNeRF ${{ env.RELEASE_TAG }}](${{ env.PYLIB_URL }}) along with this addon.'
           commit: ${{ github.sha }}
           makeLatest: true
           name: 'TurboNeRF Blender Addon'
@@ -59,6 +60,10 @@ jobs:
           replacesArtifacts: true
           tag: ${{ env.RELEASE_TAG }}
           token: ${{ secrets.GITHUB_TOKEN }}
+    
+    outputs:
+      tag: ${{ env.RELEASE_TAG }}
+      release_url: ${{ steps.gen-release.outputs.url }}
       
   notify-discord:
     runs-on: ubuntu-20.04
@@ -69,5 +74,6 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          args: "A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ inputs.tag }}](${{ env.RELEASE_URL }})""
+          tag: 
+          args: "A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ needs.build-pylib-binaries.outputs.tag }}](${{ needs.build-pylib-binaries.outputs.release_url }})""
 
