@@ -73,10 +73,10 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
             # camera_obj.location = t_vec
             camera_obj.matrix_world = mathutils.Matrix(f["transform_matrix"])
 
-            # focal len
+            # TODO: focal len
             # sensor_diag = math.sqrt(camera_data.sensor_width ** 2 + camera_data.sensor_height ** 2)
-            sensor_width = camera_data.sensor_width
-            camera_data.lens = 0.5 * sensor_width / math.tan(0.5 * float(data["camera_angle_x"]))
+            # sensor_width = camera_data.sensor_width
+            # camera_data.lens = 0.5 * sensor_width / math.tan(0.5 * float(data["camera_angle_x"]))
             
 
         return {'FINISHED'}

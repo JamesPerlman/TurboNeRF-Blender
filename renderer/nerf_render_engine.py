@@ -151,7 +151,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         # convert to TurboNeRF camera
         camera = bl2nerf_cam(active_cam, dims)
         camera = camera_with_flipped_y(camera)
-        
+
         # launch render request
         self.bridge.request_render(camera, [NeRFManager.items[0].nerf])
         

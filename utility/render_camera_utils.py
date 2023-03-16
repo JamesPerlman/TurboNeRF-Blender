@@ -5,6 +5,7 @@ import numpy as np
 from copy import copy
 
 from turbo_nerf.utility.math import bl2nerf_mat
+from turbo_nerf.utility.nerf_manager import NeRFManager
 
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
@@ -74,15 +75,17 @@ def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: t
     fl_x = 0.5 * img_dims[0] * projection_matrix[0, 0]
     fl_y = 0.5 * img_dims[1] * projection_matrix[1, 1]
 
-    view_angle_x = 2.0 * math.atan2(0.5 * img_dims[0], fl_x)
-    view_angle_y = 2.0 * math.atan2(0.5 * img_dims[1], fl_y)
+    # ever since the principle point change in TurboNeRF main repo
+    # now we need to multiply the focal length by 10... so weird
+    fl_x *= 10
+    fl_y *= 10
 
     return tn.Camera(
         resolution=img_dims,
         near=0.1,
         far=10.0,
         focal_length=(fl_x, fl_y),
-        view_angle=(view_angle_x, view_angle_y),
+        principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
     )
 
@@ -96,15 +99,15 @@ def bl2nerf_cam_perspective(blender_camera: bpy.types.Camera, img_dims: tuple[in
     fl_x = bl2nerf_fl(blender_camera, img_dims)
     fl_y = fl_x
 
-    view_angle_x = 2.0 * math.atan2(0.5 * img_dims[0], fl_x)
-    view_angle_y = 2.0 * math.atan2(0.5 * img_dims[1], fl_y)
+    fl_x *= 10
+    fl_y *= 10
 
     return tn.Camera(
         resolution=img_dims,
         near=0.1,
         far=10.0,
         focal_length=(fl_x, fl_y),
-        view_angle=(view_angle_x, view_angle_y),
+        principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
     )
 
@@ -136,7 +139,7 @@ def camera_with_flipped_y(cam: tn.Camera) -> tn.Camera:
         near=cam.near,
         far=cam.far,
         focal_length=cam.focal_length,
-        view_angle=cam.view_angle,
+        principal_point=cam.principal_point,
         transform=transform,
         dist_params=cam.dist_params
     )
