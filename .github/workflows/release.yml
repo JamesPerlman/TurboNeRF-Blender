@@ -72,5 +72,5 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          args: 'A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ needs.release-addon.outputs.tag }}](${{ needs.release-addon.outputs.release_url }})'
+          args: 'A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ needs.release-addon.outputs.tag }}](<${{ needs.release-addon.outputs.release_url }}>)'
 
