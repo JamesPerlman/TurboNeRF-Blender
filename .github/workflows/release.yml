@@ -4,18 +4,19 @@ on:
   #   branches:
   #     - main
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: false
+        default: 'pre-release'
+
   repository_dispatch:
     types: [release]
 
-inputs:
-  tag:
-    description: 'Tag to release'
-    required: false
-    default: 'pre-release'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
@@ -39,14 +40,18 @@ jobs:
       - name: Set Release Tag
         # if ${{ github.event.client_payload.tag }} is set then use it, otherwise use the input tag
         run: |
-          echo "RELEASE_TAG=${{ github.event.client_payload.tag || inputs.tag }}" >> $GITHUB_ENV
+          echo 'RELEASE_TAG=${{ github.event.client_payload.tag || inputs.tag }}' >> $GITHUB_ENV
+      
+      - name: Set Release URL
+        run: |
+          echo "RELEASE_URL=${{ github.event.client_payload.release_url:-https://github.com/JamesPerlman/TurboNeRF/releases/tag/${{ env.RELEASE_TAG }}}}" >> $GITHUB_ENV
 
       - name: Generate Release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           artifacts: '/tmp/TurboNeRF-BlenderAddon.zip'
-          body: 'Please download [PyTurboNeRF ${{ env.RELEASE_TAG }}](https://github.com/JamesPerlman/TurboNeRF/releases/tag/${{ env.RELEASE_TAG }}) along with this addon.'
+          body: 'Please download [PyTurboNeRF ${{ env.RELEASE_TAG }}](${{ env.RELEASE_URL }}) along with this addon.'
           commit: ${{ github.sha }}
           makeLatest: true
           name: 'TurboNeRF Blender Addon'
@@ -54,3 +59,15 @@ jobs:
           replacesArtifacts: true
           tag: ${{ env.RELEASE_TAG }}
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+  notify-discord:
+    runs-on: ubuntu-20.04
+    needs: build-pylib-binaries
+    steps:
+      - name: Dispatch Release Notification
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: "A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ inputs.tag }}](${{ env.RELEASE_URL }})""
+
