@@ -54,7 +54,7 @@ jobs:
         with:
           allowUpdates: true
           artifacts: '/tmp/TurboNeRF-BlenderAddon.zip'
-          body: 'Please download [PyTurboNeRF ${{ env.RELEASE_TAG }}](${{ env.PYLIB_URL }}) along with this addon.  ${{ env.PYLIB_URL }} ${{ env.NAIVE_PYLIB_URL }}'
+          body: 'Please download [PyTurboNeRF ${{ env.RELEASE_TAG }}](${{ env.PYLIB_URL }}) along with this addon.'
           commit: ${{ github.sha }}
           makeLatest: true
           name: 'TurboNeRF Blender Addon'
@@ -67,14 +67,14 @@ jobs:
       tag: ${{ env.RELEASE_TAG }}
       release_url: ${{ steps.gen-release.outputs.html_url }}
       
-  # notify-discord:
-  #   runs-on: ubuntu-20.04
-  #   needs: release-addon
-  #   steps:
-  #     - name: Dispatch Release Notification
-  #       uses: Ilshidur/action-discord@0.3.2
-  #       env:
-  #         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-  #       with:
-  #         args: 'A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ needs.release-addon.outputs.tag }}](<${{ needs.release-addon.outputs.release_url }}>)'
+  notify-discord:
+    runs-on: ubuntu-20.04
+    needs: release-addon
+    steps:
+      - name: Dispatch Release Notification
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: 'A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ needs.release-addon.outputs.tag }}](<${{ needs.release-addon.outputs.release_url }}>)'
 
