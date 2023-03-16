@@ -7,6 +7,12 @@ on:
   repository_dispatch:
     types: [release]
 
+inputs:
+  tag:
+    description: 'Tag to release'
+    required: false
+    default: 'pre-release'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,6 +35,11 @@ jobs:
           path: 'turbo_nerf'
           exclusions: '*/.git*, */.github*'
           filename: '/tmp/TurboNeRF-BlenderAddon.zip'
+      
+      - name: Set Release Tag
+        # if ${{ github.event.client_payload.tag }} is set then use it, otherwise use the input tag
+        run: |
+          echo "RELEASE_TAG=${{ github.event.client_payload.tag || inputs.tag }}" >> $GITHUB_ENV
 
       - name: Generate Release
         uses: ncipollo/release-action@v1
@@ -41,5 +52,5 @@ jobs:
           name: 'TurboNeRF Blender Addon'
           prerelease: true
           replacesArtifacts: true
-          tag: 'pre-release'
+          tag: ${{ env.RELEASE_TAG }}
           token: ${{ secrets.GITHUB_TOKEN }}
