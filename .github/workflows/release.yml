@@ -41,8 +41,12 @@ jobs:
       
       - name: Set PyTurboNeRF URL
         run: |
-          echo 'NAIVE_PYLIB_URL=https://github.com/JamesPerlman/TurboNeRF/releases/tag/${{ env.RELEASE_TAG }}' >> $GITHUB_ENV
-          echo 'PYLIB_URL=${{ github.event.client_payload.release_url || env.NAIVE_PYLIB_URL }}' >> $GITHUB_ENV
+          if [ -n "${{ github.event.client_payload.release_url }}" ]; then
+            echo 'PYLIB_URL=${{ github.event.client_payload.release_url }}' >> $GITHUB_ENV
+          else
+            echo 'PYLIB_URL=https://github.com/JamesPerlman/TurboNeRF/releases/tag/${{ env.RELEASE_TAG }}' >> $GITHUB_ENV
+          fi
+
 
       - name: Generate Release
         id: gen-release
