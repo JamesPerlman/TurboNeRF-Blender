@@ -46,7 +46,7 @@ jobs:
         with:
           allowUpdates: true
           artifacts: '/tmp/TurboNeRF-BlenderAddon.zip'
-          bodyFile: 'docs/release.md'
+          body: 'Please download [PyTurboNeRF ${{ env.RELEASE_TAG }}](https://github.com/JamesPerlman/TurboNeRF/releases/tag/${{ env.RELEASE_TAG }}) along with this addon.'
           commit: ${{ github.sha }}
           makeLatest: true
           name: 'TurboNeRF Blender Addon'
