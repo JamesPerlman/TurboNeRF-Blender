@@ -12,7 +12,7 @@ on:
 
 
 jobs:
-  build:
+  release-addon:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Repo
@@ -65,13 +65,12 @@ jobs:
       
   notify-discord:
     runs-on: ubuntu-20.04
-    needs: build-pylib-binaries
+    needs: release-addon
     steps:
       - name: Dispatch Release Notification
         uses: Ilshidur/action-discord@0.3.2
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          tag: 
           args: 'A new version of the Blender addon is now available. [TurboNeRF-Blender ${{ needs.build-pylib-binaries.outputs.tag }}](${{ needs.build-pylib-binaries.outputs.release_url }})'
 
