@@ -61,7 +61,7 @@ jobs:
     
     outputs:
       tag: ${{ env.RELEASE_TAG }}
-      release_url: ${{ steps.gen-release.outputs.url }}
+      release_url: ${{ steps.gen-release.outputs.html_url }}
       
   notify-discord:
     runs-on: ubuntu-20.04
