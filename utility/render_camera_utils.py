@@ -75,11 +75,6 @@ def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: t
     fl_x = 0.5 * img_dims[0] * projection_matrix[0, 0]
     fl_y = 0.5 * img_dims[1] * projection_matrix[1, 1]
 
-    # ever since the principle point change in TurboNeRF main repo
-    # now we need to multiply the focal length by 10... so weird
-    fl_x *= 10
-    fl_y *= 10
-
     return tn.Camera(
         resolution=img_dims,
         near=0.1,
@@ -98,9 +93,6 @@ def bl2nerf_cam_perspective(blender_camera: bpy.types.Camera, img_dims: tuple[in
     # get focal length
     fl_x = bl2nerf_fl(blender_camera, img_dims)
     fl_y = fl_x
-
-    fl_x *= 10
-    fl_y *= 10
 
     return tn.Camera(
         resolution=img_dims,
