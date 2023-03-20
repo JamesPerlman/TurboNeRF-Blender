@@ -52,19 +52,19 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         weak_self = weakref.ref(self)
 
         # OnTrainingStep
-        def on_training_step():
+        def on_training_step(metrics):
             wself = weak_self()
             if wself is None:
                 return
-            step = wself.bridge.get_training_step()
-            if step % 128 == 0:
+            step = metrics["step"]
+            if step % 16 == 0:
                 wself.rerequest_preview(flags=tn.RenderFlags.Preview)
         
         obid = self.bridge.add_observer(BBE.OnTrainingStep, on_training_step)
         self.event_observers.append(obid)
 
         # OnTrainingStopped
-        def on_training_stopped():
+        def on_training_stopped(args):
             wself = weak_self()
             if wself is None:
                 return
@@ -74,7 +74,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.event_observers.append(obid)
     
         # OnPreviewProgress
-        def on_preview_progress():
+        def on_preview_progress(args):
             wself = weak_self()
             if wself is None:
                 return
@@ -84,7 +84,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.event_observers.append(obid)
         
         # OnPreviewComplete
-        def on_preview_complete():
+        def on_preview_complete(args):
             wself = weak_self()
             if wself is None:
                 return
@@ -94,7 +94,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.event_observers.append(obid)
         
         # OnRenderComplete
-        def on_request_redraw():
+        def on_request_redraw(args):
             wself = weak_self()
             if wself is None:
                 return
@@ -162,7 +162,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         render_events = []
 
         # OnRenderProgress
-        def on_render_progress():
+        def on_render_progress(args):
             # get latest from the render buffer
             rgba_buf = self.bridge.get_render_rgba()
             n_pixels = self.bridge.get_render_n_pixels()
@@ -194,8 +194,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         render_events.append(event_id)
 
         # OnRenderComplete
-        def on_render_complete():
-            on_render_progress()
+        def on_render_complete(args):
+            on_render_progress(None)
 
         # add OnRenderComplete observer
         event_id = self.bridge.add_observer(tn.BlenderBridgeEvent.OnRenderComplete, on_render_complete)
