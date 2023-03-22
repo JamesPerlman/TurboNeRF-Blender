@@ -281,7 +281,7 @@ class NeRFPanel(bpy.types.Panel):
 
         if ui_props.update_preview:
             row = box.row()
-            row.prop(ui_props, "steps_between_preview_updates", text="Steps Between Updates")
+            row.prop(ui_props, "steps_between_preview_updates", text="Every N Steps:")
         
         row = box.row()
         row.operator(PreviewNeRFOperator.bl_idname, text="Preview NeRF")
