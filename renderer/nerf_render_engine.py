@@ -57,7 +57,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             if wself is None:
                 return
             step = metrics["step"]
-            if step % 16 == 0:
+
+            nerf_panel_props = bpy.context.scene.nerf_panel_ui_props
+            if nerf_panel_props.update_preview and step % nerf_panel_props.steps_between_preview_updates == 0:
                 wself.rerequest_preview(flags=tn.RenderFlags.Preview)
         
         obid = self.bridge.add_observer(BBE.OnTrainingStep, on_training_step)
