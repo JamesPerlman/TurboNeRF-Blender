@@ -8,11 +8,29 @@ from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
 TRAINING_TIMER_INTERVAL = 0.5
 
+class NeRFProps:
+    training_step = 0
+    limit_training = True
+    n_steps_max = 10000
+    training_loss = 0.0
+
+nerf_props = NeRFProps()
+
 class NeRFPanelProps(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D View"""
 
     def update_ui(self, context):
         return None
+    
+    def update_nerf_props(prop_name):
+        def update_fn(self, context):
+            setattr(nerf_props, prop_name, getattr(self, prop_name))
+        return update_fn
+    
+    def update_n_steps_max(self, context):
+        nerf_props.n_steps_max = self.n_steps_max
+        self.training_progress = 100.0 * min(1.0, nerf_props.training_step / self.n_steps_max)
+        self.update_training_progress(context)
 
     update_id: bpy.props.IntProperty(
         name="update_id",
@@ -22,19 +40,21 @@ class NeRFPanelProps(bpy.types.PropertyGroup):
         max=1,
         update=update_ui,
     )
-    
+
     limit_training: bpy.props.BoolProperty(
         name="limit_training",
         description="Limit the number of steps to train.",
-        default=True,
+        default=nerf_props.limit_training,
+        update=update_nerf_props("limit_training"),
     )
 
     n_steps_max: bpy.props.IntProperty(
         name="n_steps_max",
         description="Maximum number of steps to train.",
-        default=10000,
+        default=nerf_props.n_steps_max,
         min=1,
         max=100000,
+        update=update_n_steps_max
     )
     
     training_progress: bpy.props.FloatProperty(
@@ -71,8 +91,6 @@ class NeRFPanel(bpy.types.Panel):
     bl_category = "TurboNeRF"
 
     observers = []
-    training_step = 0
-    training_loss = 0.0
     panel_needs_update = False
 
     @classmethod
@@ -87,7 +105,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.register_class(ImportNeRFDatasetOperator)
         bpy.utils.register_class(NeRFPanelProps)
         bpy.utils.register_class(TrainNeRFOperator)
-        bpy.types.Scene.nerf_panel_props = bpy.props.PointerProperty(type=NeRFPanelProps)
+        bpy.types.Scene.nerf_panel_ui_props = bpy.props.PointerProperty(type=NeRFPanelProps)
         # cls.add_observers() won't work here, so we do it in draw()
 
 
@@ -97,7 +115,7 @@ class NeRFPanel(bpy.types.Panel):
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
         bpy.utils.unregister_class(NeRFPanelProps)
         bpy.utils.unregister_class(TrainNeRFOperator)
-        del bpy.types.Scene.nerf_panel_props
+        del bpy.types.Scene.nerf_panel_ui_props
         cls.remove_observers()
         if bpy.app.timers.is_registered(cls.update_timer):
             bpy.app.timers.unregister(cls.update_timer)
@@ -107,8 +125,14 @@ class NeRFPanel(bpy.types.Panel):
     def update_timer(cls):
         context = bpy.context
         if cls.panel_needs_update:
-            props = context.scene.nerf_panel_props
-            props.update_id = 1 - props.update_id
+            ui_props = context.scene.nerf_panel_ui_props
+
+            # update training progress
+            training_progress = 100 * nerf_props.training_step / ui_props.n_steps_max
+            ui_props.training_progress = min(100.0, training_progress)
+            
+            ui_props.update_id = 1 - ui_props.update_id
+
             cls.panel_needs_update = False
 
         return TRAINING_TIMER_INTERVAL
@@ -143,13 +167,20 @@ class NeRFPanel(bpy.types.Panel):
             # unregister the timers added in on_training_started
             if bpy.app.timers.is_registered(timer_fn):
                 bpy.app.timers.unregister(timer_fn)
+            
+            cls.panel_needs_update = True
 
         obid = bridge.add_observer(BBE.OnTrainingStop, on_training_stopped)
         cls.observers.append(obid)   
 
         def on_training_step(metrics):
-            cls.training_step = metrics["step"]
-            cls.training_loss = metrics["loss"]
+            nerf_props.training_step = metrics["step"]
+            nerf_props.training_loss = metrics["loss"]
+
+            # does training need to stop?
+            if nerf_props.limit_training and nerf_props.training_step >= nerf_props.n_steps_max:
+                NeRFManager.stop_training()
+            
             cls.panel_needs_update = True
 
         obid = bridge.add_observer(BBE.OnTrainingStep, on_training_step)
@@ -171,7 +202,7 @@ class NeRFPanel(bpy.types.Panel):
         # TurboNeRF python lib doesn't load in cls.register()
         self.__class__.add_observers()
 
-        props = context.scene.nerf_panel_props
+        ui_props = context.scene.nerf_panel_ui_props
 
         layout = self.layout
         
@@ -184,14 +215,14 @@ class NeRFPanel(bpy.types.Panel):
             
             return
         
-        self.dataset_section(layout, props)
+        self.dataset_section(layout, ui_props)
 
-        self.training_section(layout, props)
+        self.training_section(layout, ui_props)
 
-        self.preview_section(layout, props)
+        self.preview_section(layout, ui_props)
 
 
-    def dataset_section(self, layout, props):
+    def dataset_section(self, layout, ui_props):
         box = layout.box()
         box.label(text="Dataset")
 
@@ -199,7 +230,7 @@ class NeRFPanel(bpy.types.Panel):
         row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")   
 
 
-    def training_section(self, layout, props):
+    def training_section(self, layout, ui_props):
 
         box = layout.box()
         box.label(text="Train")
@@ -210,34 +241,42 @@ class NeRFPanel(bpy.types.Panel):
             text="Start Training" if not NeRFManager.is_training() else "Stop Training"
         )
 
+        # we want to disable the Start Training button if we've already trained the scene up to the max number of steps
+        row.enabled = not (ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max)
+
+        # limit training checkbox
         row = box.row()
-        row.prop(props, "limit_training", text="Limit Training")
+        row.prop(ui_props, "limit_training", text="Limit Training")
         
         # only show the max steps if limit training is checked
-        if props.limit_training:
+        if ui_props.limit_training:
             row = box.row()
-            row.prop(props, "n_steps_max", text="Max Steps")
+            row.prop(ui_props, "n_steps_max", text="Max Steps")
 
             row = box.row()
-            row.prop(props, "training_progress", slider=True, text="")
+            row.prop(ui_props, "training_progress", slider=True, text="")
             row.enabled = False
 
             row = box.row()
-            row.label(text=f"Step: {self.training_step} / {props.n_steps_max}")
+            row.label(text=f"Step: {nerf_props.training_step} / {ui_props.n_steps_max}")
+
+            if nerf_props.training_step >= ui_props.n_steps_max:
+                row = box.row()
+                row.label(text="Training Complete!", icon="INFO")
 
         else:
             row = box.row()
-            row.label(text=f"Step: {self.training_step}")
+            row.label(text=f"Step: {nerf_props.training_step}")
 
 
-    def preview_section(self, layout, props):
+    def preview_section(self, layout, ui_props):
         box = layout.box()
         box.label(text="Preview")
 
         row = box.row()
-        row.prop(props, "update_preview", text="Update Preview")
+        row.prop(ui_props, "update_preview", text="Update Preview")
 
-        if props.update_preview:
+        if ui_props.update_preview:
             row = box.row()
-            row.prop(props, "steps_between_preview_updates", text="Steps Between Updates")
+            row.prop(ui_props, "steps_between_preview_updates", text="Steps Between Updates")
         
