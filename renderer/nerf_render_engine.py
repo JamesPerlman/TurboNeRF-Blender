@@ -123,6 +123,10 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     def rerequest_preview(self, flags):
         if self.latest_camera is None:
             return
+        
+        if len(NeRFManager.items) == 0:
+            return
+        
         self.bridge.request_preview(self.latest_camera, [NeRFManager.items[0].nerf], flags)
 
     # This is the method called by Blender for both final renders (F12) and
