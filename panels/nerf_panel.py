@@ -60,22 +60,6 @@ class NeRFPanelProps(bpy.types.PropertyGroup):
         max=256,
     )
 
-    training_step: bpy.props.IntProperty(
-        name="training_step",
-        description="Current training step.",
-        default=0,
-        min=0,
-        max=1000000,
-    )
-
-    training_loss: bpy.props.FloatProperty(
-        name="training_loss",
-        description="Current training loss.",
-        default=0.0,
-        min=0.0,
-        max=1000000.0,
-        precision=5,
-    )
 
 class NeRFPanel(bpy.types.Panel):
     """Class that defines the NeRF panel in the 3D View"""
