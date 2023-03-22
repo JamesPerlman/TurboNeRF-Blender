@@ -1,6 +1,7 @@
 import bpy
 from datetime import datetime
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
+from turbo_nerf.panels.nerf_panel_operators.preview_nerf_operator import PreviewNeRFOperator
 from turbo_nerf.panels.nerf_panel_operators.train_nerf_operator import TrainNeRFOperator
 from turbo_nerf.utility.layout_utility import add_multiline_label
 from turbo_nerf.utility.nerf_manager import NeRFManager
@@ -104,6 +105,7 @@ class NeRFPanel(bpy.types.Panel):
         """Register properties and operators corresponding to this panel."""
         bpy.utils.register_class(ImportNeRFDatasetOperator)
         bpy.utils.register_class(NeRFPanelProps)
+        bpy.utils.register_class(PreviewNeRFOperator)
         bpy.utils.register_class(TrainNeRFOperator)
         bpy.types.Scene.nerf_panel_ui_props = bpy.props.PointerProperty(type=NeRFPanelProps)
         # cls.add_observers() won't work here, so we do it in draw()
@@ -114,6 +116,7 @@ class NeRFPanel(bpy.types.Panel):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
         bpy.utils.unregister_class(NeRFPanelProps)
+        bpy.utils.unregister_class(PreviewNeRFOperator)
         bpy.utils.unregister_class(TrainNeRFOperator)
         del bpy.types.Scene.nerf_panel_ui_props
         cls.remove_observers()
@@ -280,3 +283,6 @@ class NeRFPanel(bpy.types.Panel):
             row = box.row()
             row.prop(ui_props, "steps_between_preview_updates", text="Steps Between Updates")
         
+        row = box.row()
+        row.operator(PreviewNeRFOperator.bl_idname, text="Preview NeRF")
+
