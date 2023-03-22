@@ -270,6 +270,9 @@ class NeRFPanel(bpy.types.Panel):
         else:
             row = box.row()
             row.label(text=f"Step: {nerf_props.training_step}")
+        
+        row = box.row()
+        row.label(text=f"Loss: {nerf_props.training_loss:.5f}")
 
 
     def preview_section(self, layout, ui_props):
