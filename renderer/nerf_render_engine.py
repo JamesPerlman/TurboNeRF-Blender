@@ -63,14 +63,14 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         obid = self.bridge.add_observer(BBE.OnTrainingStep, on_training_step)
         self.event_observers.append(obid)
 
-        # OnTrainingStopped
-        def on_training_stopped(args):
+        # OnTrainingStop
+        def on_training_stop(args):
             wself = weak_self()
             if wself is None:
                 return
             wself.rerequest_preview(flags=tn.RenderFlags.Final)
         
-        obid = self.bridge.add_observer(BBE.OnTrainingStopped, on_training_stopped)
+        obid = self.bridge.add_observer(BBE.OnTrainingStop, on_training_stop)
         self.event_observers.append(obid)
     
         # OnPreviewProgress
@@ -105,9 +105,10 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
     # Remove bridge event observers
     def remove_event_observers(self):
-        for obs_id in self.event_observers:
-            self.bridge.remove_observer(obs_id)
-        self.event_observers = []
+        if hasattr(self, "event_observers"):
+            for obid in self.event_observers:
+                self.bridge.remove_observer(obid)
+            self.event_observers = []
 
     # When the render engine instance is destroyed, this is called. Clean up any
     # render engine data here, for example stopping running render threads.
@@ -116,9 +117,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.remove_event_observers()
         pass
 
-    # Notification handlers
-    
-    
     # This method re-requests the latest render
     def rerequest_preview(self, flags):
         if self.latest_camera is None:
@@ -215,8 +213,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.end_result(result)
         
         # remove event observers
-        for id in render_events:
-            self.bridge.remove_observer(id)
+        for obid in render_events:
+            self.bridge.remove_observer(obid)
 
     # For viewport renders, this method gets called once at the start and
     # whenever the scene or 3D viewport changes. This method is where data
