@@ -7,7 +7,7 @@ bl_info = {
     # Do not break this line, otherwise the addon can not be activated!
     "description": "An artistic tool for working with NeRFs in Blender",
     "author": "James Perlman",
-    "version": (0, 0, 4),
+    "version": (0, 0, 6),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > TurboNeRF",
     "warning": "",
