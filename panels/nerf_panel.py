@@ -14,6 +14,7 @@ class NeRFProps:
     limit_training = True
     n_steps_max = 10000
     training_loss = 0.0
+    n_rays_per_batch = 0
 
 nerf_props = NeRFProps()
 
@@ -179,6 +180,7 @@ class NeRFPanel(bpy.types.Panel):
         def on_training_step(metrics):
             nerf_props.training_step = metrics["step"]
             nerf_props.training_loss = metrics["loss"]
+            nerf_props.n_rays_per_batch = metrics["n_rays"]
 
             # does training need to stop?
             if nerf_props.limit_training and nerf_props.training_step >= nerf_props.n_steps_max:
@@ -273,6 +275,9 @@ class NeRFPanel(bpy.types.Panel):
         
         row = box.row()
         row.label(text=f"Loss: {nerf_props.training_loss:.5f}")
+
+        row = box.row()
+        row.label(text=f"Rays: {nerf_props.n_rays_per_batch}")
 
 
     def preview_section(self, layout, ui_props):
