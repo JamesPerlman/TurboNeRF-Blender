@@ -297,7 +297,7 @@ class NeRFPanel(bpy.types.Panel):
             row.label(text=f"Loss: {nerf_props.training_loss:.5f}")
 
             row = box.row()
-            row.label(text=f"Rays: {nerf_props.n_rays_per_batch} per batch")
+            row.label(text=f"Rays: {nerf_props.n_rays_per_batch} per step")
 
             row = box.row()
             row.label(text=f"Grid: {nerf_props.grid_percent_occupied:.2f}% occupied")
