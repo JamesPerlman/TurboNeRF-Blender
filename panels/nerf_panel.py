@@ -15,6 +15,7 @@ class NeRFProps:
     n_steps_max = 10000
     training_loss = 0.0
     n_rays_per_batch = 0
+    grid_percent_occupied = 100.0
 
 nerf_props = NeRFProps()
 
@@ -66,6 +67,12 @@ class NeRFPanelProps(bpy.types.PropertyGroup):
         min=0.0,
         max=100.0,
         precision=1,
+    )
+
+    show_training_metrics: bpy.props.BoolProperty(
+        name="show_training_metrics",
+        description="Show the training metrics section.",
+        default=False,
     )
 
     update_preview: bpy.props.BoolProperty(
@@ -191,6 +198,13 @@ class NeRFPanel(bpy.types.Panel):
         obid = bridge.add_observer(BBE.OnTrainingStep, on_training_step)
         cls.observers.append(obid)
 
+        def on_update_occupancy_grid(metrics):
+            nerf_props.grid_percent_occupied = 100.0 * metrics["n_occupied"] / metrics["n_total"]
+            cls.panel_needs_update = True
+
+        obid = bridge.add_observer(BBE.OnUpdateOccupancyGrid, on_update_occupancy_grid)
+        cls.observers.append(obid)
+
 
     @classmethod
     def remove_observers(cls):
@@ -273,11 +287,22 @@ class NeRFPanel(bpy.types.Panel):
             row = box.row()
             row.label(text=f"Step: {nerf_props.training_step}")
         
-        row = box.row()
-        row.label(text=f"Loss: {nerf_props.training_loss:.5f}")
+        # Training metrics
+        
+        row = box.row(align=True)
+        row = row.split(factor=0.1)
+        row.prop(ui_props, "show_training_metrics", icon_only=True, icon="TRIA_DOWN" if ui_props.show_training_metrics else "TRIA_RIGHT")
+        row.label(text="Metrics")
 
-        row = box.row()
-        row.label(text=f"Rays: {nerf_props.n_rays_per_batch}")
+        if ui_props.show_training_metrics:
+            row = box.row()
+            row.label(text=f"Loss: {nerf_props.training_loss:.5f}")
+
+            row = box.row()
+            row.label(text=f"Rays: {nerf_props.n_rays_per_batch} per batch")
+
+            row = box.row()
+            row.label(text=f"Grid: {nerf_props.grid_percent_occupied:.2f}% occupied")
 
 
     def preview_section(self, layout, ui_props):
