@@ -288,11 +288,9 @@ class NeRFPanel(bpy.types.Panel):
             row.label(text=f"Step: {nerf_props.training_step}")
         
         # Training metrics
-        
+
         row = box.row(align=True)
-        row = row.split(factor=0.1)
-        row.prop(ui_props, "show_training_metrics", icon_only=True, icon="TRIA_DOWN" if ui_props.show_training_metrics else "TRIA_RIGHT")
-        row.label(text="Metrics")
+        row.prop(ui_props, "show_training_metrics", text="Metrics")
 
         if ui_props.show_training_metrics:
             row = box.row()
