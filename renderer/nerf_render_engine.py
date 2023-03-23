@@ -132,9 +132,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
-        if self.is_preview:
-            return
-        
         # get properties
         
         scene = depsgraph.scene
