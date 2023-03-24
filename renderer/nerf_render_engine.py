@@ -261,7 +261,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         if user_initiated:
             flags = tn.RenderFlags.Preview
-            if not NeRFManager.is_training() and not context.screen.is_animation_playing:
+            if not NeRFManager.is_training(): # and not context.screen.is_animation_playing:
                 flags = flags | tn.RenderFlags.Final
 
             self.bridge.request_preview(camera, [NeRFManager.items[0].nerf], flags)
