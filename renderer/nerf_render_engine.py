@@ -36,8 +36,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.write_to_surface = None
         self.surface_is_allocated = False
 
-        self.prev_view_dimensions = np.array([0, 0])
-        self.prev_region_camera_matrix = np.eye(4)[:3,:4]
+        self.prev_view_dims = (0, 0)
 
         self.bridge = NeRFManager.bridge()
         self.event_observers = []
@@ -248,20 +247,21 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         if current_region3d is None:
             return
 
-        camera = bl2nerf_cam(current_region3d, dimensions)
+        camera = bl2nerf_cam(current_region3d, dimensions, context)
 
         if camera is None:
             return
         
         # Determine if the user initiated this view_draw call
         
-        new_region_camera_matrix = np.array(camera.transform)
-        user_initiated = np.not_equal(self.prev_region_camera_matrix, camera.transform).any()
-        self.prev_region_camera_matrix = new_region_camera_matrix
+        has_new_camera = True if self.latest_camera is None else camera != self.latest_camera
+        has_new_dims = dimensions != self.prev_view_dims        
+
+        user_initiated = has_new_camera or has_new_dims
 
         if user_initiated:
             flags = tn.RenderFlags.Preview
-            if not NeRFManager.is_training():
+            if not NeRFManager.is_training() and not context.screen.is_animation_playing:
                 flags = flags | tn.RenderFlags.Final
 
             self.bridge.request_preview(camera, [NeRFManager.items[0].nerf], flags)
@@ -277,6 +277,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         bgl.glDisable(bgl.GL_BLEND)
 
         self.latest_camera = camera
+        self.prev_view_dims = dimensions
 
 
 # RenderEngines also need to tell UI Panels that they are compatible with.

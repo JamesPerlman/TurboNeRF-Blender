@@ -58,54 +58,75 @@ def bl2nerf_fl(blender_camera: bpy.types.Object, output_dimensions: tuple[int, i
 def bl2nerf_fstop2size(fstop: float) -> float:
     return 1.0 / (2.0 * fstop)
 
-def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: tuple[int, int]):
+def bl2nerf_cam_regionview3d(
+    region_view_3d: bpy.types.RegionView3D,
+    img_dims: tuple[int, int],
+    context: bpy.types.Context
+) -> tn.Camera:
     # P
     projection_matrix = np.array(region_view_3d.window_matrix)
     # V 
     view_matrix = np.array(region_view_3d.view_matrix.inverted())
     # P * V
-    perspective_matrix = np.array(region_view_3d.perspective_matrix)
+    # perspective_matrix = np.array(region_view_3d.perspective_matrix)
 
     bl_camera_matrix = tn.Transform4f(view_matrix)
 
-    is_perspective = region_view_3d.is_perspective
+    # is_perspective = region_view_3d.is_perspective
 
     # look into region_view_3d.view_persepctive
     # get focal length
     fl_x = 0.5 * img_dims[0] * projection_matrix[0, 0]
     fl_y = 0.5 * img_dims[1] * projection_matrix[1, 1]
 
+    near: float
+    far: float
+
+    if region_view_3d.view_perspective == 'CAMERA':
+        near = context.scene.camera.data.clip_start
+        far = context.scene.camera.data.clip_end
+    else:
+        view = context.space_data
+        near = view.clip_start
+        far = view.clip_end
+
     return tn.Camera(
         resolution=img_dims,
-        near=0.2,
-        far=100.0,
+        near=near,
+        far=far,
         focal_length=(fl_x, fl_y),
         principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
     )
 
-def bl2nerf_cam_perspective(blender_camera: bpy.types.Camera, img_dims: tuple[int, int]):
-    view_matrix = np.array(blender_camera.matrix_world)
+def bl2nerf_cam_perspective(cam_obj: bpy.types.Object, img_dims: tuple[int, int]):
+    view_matrix = np.array(cam_obj.matrix_world)
 
     bl_camera_matrix = tn.Transform4f(view_matrix)
 
     # look into region_view_3d.view_perspective
     # get focal length
-    fl_x = bl2nerf_fl(blender_camera, img_dims)
+    fl_x = bl2nerf_fl(cam_obj, img_dims)
     fl_y = fl_x
+
+    cam_data: bpy.types.Camera = cam_obj.data
 
     return tn.Camera(
         resolution=img_dims,
-        near=blender_camera.clip_start,
-        far=blender_camera.clip_end,
+        near=cam_data.clip_start,
+        far=cam_data.clip_end,
         focal_length=(fl_x, fl_y),
         principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
     )
 
-def bl2nerf_cam(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]) -> tn.Camera:
+def bl2nerf_cam(
+    source: bpy.types.RegionView3D | bpy.types.Object,
+    img_dims: tuple[int, int],
+    context: bpy.types.Context = None
+) -> tn.Camera:
     if isinstance(source, bpy.types.RegionView3D):
-        return bl2nerf_cam_regionview3d(source, img_dims)
+        return bl2nerf_cam_regionview3d(source, img_dims, context)
     elif isinstance(source, bpy.types.Object):
         camera_model = RENDER_CAM_TYPE_PERSPECTIVE
 
