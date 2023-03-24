@@ -77,8 +77,8 @@ def bl2nerf_cam_regionview3d(region_view_3d: bpy.types.RegionView3D, img_dims: t
 
     return tn.Camera(
         resolution=img_dims,
-        near=0.1,
-        far=10.0,
+        near=0.2,
+        far=100.0,
         focal_length=(fl_x, fl_y),
         principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
@@ -89,15 +89,15 @@ def bl2nerf_cam_perspective(blender_camera: bpy.types.Camera, img_dims: tuple[in
 
     bl_camera_matrix = tn.Transform4f(view_matrix)
 
-    # look into region_view_3d.view_persepctive
+    # look into region_view_3d.view_perspective
     # get focal length
     fl_x = bl2nerf_fl(blender_camera, img_dims)
     fl_y = fl_x
 
     return tn.Camera(
         resolution=img_dims,
-        near=0.1,
-        far=10.0,
+        near=blender_camera.clip_start,
+        far=blender_camera.clip_end,
         focal_length=(fl_x, fl_y),
         principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
