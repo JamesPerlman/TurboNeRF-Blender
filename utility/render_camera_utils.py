@@ -16,9 +16,7 @@ from turbo_nerf.constants import (
     RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON
 )
 
-
-def bl2nerf_fl(blender_camera: bpy.types.Object, output_dimensions: tuple[int, int]) -> float:
-    cam_data = blender_camera.data
+def bl2nerf_fl(cam_data: bpy.types.Camera, output_dimensions: tuple[int, int]) -> float:
     (nerf_w, nerf_h) = output_dimensions
     # calculate focal len
     bl_sw = cam_data.sensor_width
@@ -82,9 +80,42 @@ def bl2nerf_cam_regionview3d(
     near: float
     far: float
 
+    shift_x: float = 0.0
+    shift_y: float = 0.0
+
     if region_view_3d.view_perspective == 'CAMERA':
-        near = context.scene.camera.data.clip_start
-        far = context.scene.camera.data.clip_end
+        cam_data: bpy.types.Camera = context.scene.camera.data
+        near = cam_data.clip_start
+        far = cam_data.clip_end
+
+        # this might be refactorable into a function get_passepartout_dims
+        render = context.scene.render
+        out_res_x = render.resolution_x
+        out_res_y = render.resolution_y
+        cam_fl = bl2nerf_fl(cam_data, (out_res_x, out_res_y))
+
+        cam_angle_x = 2.0 * math.atan2(0.5 * out_res_x, cam_fl)
+        
+        cam_res_x = 2.0 * fl_x * math.tan(0.5 * cam_angle_x)
+        cam_res_y = out_res_y / out_res_x * cam_res_x
+
+        print(f"cam_res_x: {cam_res_x}, cam_res_y: {cam_res_y}")
+
+        # this is wild.  fuck blender.  jk.  but srsly tho.
+        if cam_data.sensor_fit == 'AUTO':
+            if cam_res_x > cam_res_y:
+                shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
+                shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
+            else:
+                shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
+                shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
+        elif cam_data.sensor_fit == 'HORIZONTAL':
+            shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
+            shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
+        elif cam_data.sensor_fit == 'VERTICAL':
+            shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
+            shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
+
     else:
         view = context.space_data
         near = view.clip_start
@@ -95,6 +126,7 @@ def bl2nerf_cam_regionview3d(
         near=near,
         far=far,
         focal_length=(fl_x, fl_y),
+        shift=(shift_x, -shift_y),
         principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
     )
@@ -106,16 +138,17 @@ def bl2nerf_cam_perspective(cam_obj: bpy.types.Object, img_dims: tuple[int, int]
 
     # look into region_view_3d.view_perspective
     # get focal length
-    fl_x = bl2nerf_fl(cam_obj, img_dims)
-    fl_y = fl_x
 
     cam_data: bpy.types.Camera = cam_obj.data
+    fl_x = bl2nerf_fl(cam_data, img_dims)
+    fl_y = fl_x
 
     return tn.Camera(
         resolution=img_dims,
         near=cam_data.clip_start,
         far=cam_data.clip_end,
         focal_length=(fl_x, fl_y),
+        shift=(cam_data.shift_x, -cam_data.shift_y),
         principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
     )
@@ -147,12 +180,16 @@ def camera_with_flipped_y(cam: tn.Camera) -> tn.Camera:
     yflip[:, 1] *= -1.0
     transform = tn.Transform4f(yflip)
 
+    shift_x, shift_y = cam.shift
+    shift_y *= -1.0
+
     return tn.Camera(
         resolution=cam.resolution,
         near=cam.near,
         far=cam.far,
         focal_length=cam.focal_length,
         principal_point=cam.principal_point,
+        shift=(shift_x, shift_y),
         transform=transform,
         dist_params=cam.dist_params
     )
