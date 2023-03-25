@@ -101,7 +101,7 @@ def bl2nerf_cam_regionview3d(
 
         print(f"cam_res_x: {cam_res_x}, cam_res_y: {cam_res_y}")
 
-        # this is wild.  fuck blender.  jk.  but srsly tho.
+        # this is wild.
         if cam_data.sensor_fit == 'AUTO':
             if cam_res_x > cam_res_y:
                 shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
