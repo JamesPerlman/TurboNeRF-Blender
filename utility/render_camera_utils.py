@@ -99,8 +99,6 @@ def bl2nerf_cam_regionview3d(
         cam_res_x = 2.0 * fl_x * math.tan(0.5 * cam_angle_x)
         cam_res_y = out_res_y / out_res_x * cam_res_x
 
-        print(f"cam_res_x: {cam_res_x}, cam_res_y: {cam_res_y}")
-
         # this is wild.
         if cam_data.sensor_fit == 'AUTO':
             if cam_res_x > cam_res_y:
