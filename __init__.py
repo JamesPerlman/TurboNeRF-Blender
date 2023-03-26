@@ -19,6 +19,8 @@ bl_info = {
 import bpy
 import importlib
 
+from turbo_nerf.panels.nerf_object_panel import NeRFObjectPanel
+
 
 from .utility import developer_utility
 importlib.reload(developer_utility)
@@ -30,7 +32,7 @@ modules = developer_utility.setup_addon_modules(
 # The root dir is Blenders addon folder.
 # Therefore, we need the "turbo_nerf" specifier for this addon
 from turbo_nerf.blender_utility.logging_utility import log_report
-from turbo_nerf.panels.nerf_panel import NeRFPanel
+from turbo_nerf.panels.nerf_3dview_panel import NeRF3DViewPanel
 from turbo_nerf.registration.registration import Registration
 
 
@@ -50,7 +52,8 @@ def register():
 
     # bpy.utils.register_class(NeRFTrainingPanel)
     # bpy.utils.register_class(NeRFRenderPanel)
-    bpy.utils.register_class(NeRFPanel)
+    bpy.utils.register_class(NeRF3DViewPanel)
+    bpy.utils.register_class(NeRFObjectPanel)
     
     bpy.app.handlers.load_post.append(load_handler)
     Registration.register_misc_components()
@@ -69,7 +72,8 @@ def unregister():
 
     # bpy.utils.unregister_class(NeRFTrainingPanel)
     # bpy.utils.unregister_class(NeRFRenderPanel)
-    bpy.utils.unregister_class(NeRFPanel)
+    bpy.utils.unregister_class(NeRF3DViewPanel)
+    bpy.utils.unregister_class(NeRFObjectPanel)
 
     bpy.app.handlers.load_post.remove(load_handler)
     Registration.unregister_misc_components()

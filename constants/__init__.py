@@ -63,7 +63,7 @@ OBJ_TYPE_RENDER_CAMERA = "render_camera"
 OBJ_TYPE_IMG_PLANE = "image_plane"
 OBJ_TYPE_POINT_CLOUD = "point_cloud"
 OBJ_TYPE_MASK_SHAPE = "mask_shape"
-OBJ_TYPE_NERF = "nerf"
+OBJ_TYPE_NERF = "tn_nerf"
 
 # Render cameras
 
@@ -111,6 +111,7 @@ MASK_SPHERE_RADIUS_ID = "radius"
 # NeRF Properties
 NERF_PATH_ID = "snapshot_path"
 NERF_AABB_SIZE_ID = "aabb_size"
+NERF_AABB_SIZE_LOG2_ID = "aabb_size_log2"
 NERF_AABB_CENTER_ID = "aabb_center"
 NERF_OPACITY_ID = "opacity"
 NERF_DATASET_PATH_ID = "dataset_path"

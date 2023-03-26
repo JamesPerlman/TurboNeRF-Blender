@@ -19,7 +19,7 @@ class NeRFProps:
 
 nerf_props = NeRFProps()
 
-class NeRFPanelProps(bpy.types.PropertyGroup):
+class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D View"""
 
     def update_ui(self, context):
@@ -90,7 +90,7 @@ class NeRFPanelProps(bpy.types.PropertyGroup):
     )
 
 
-class NeRFPanel(bpy.types.Panel):
+class NeRF3DViewPanel(bpy.types.Panel):
     """Class that defines the NeRF panel in the 3D View"""
 
     bl_label = "TurboNeRF Panel"
@@ -112,10 +112,10 @@ class NeRFPanel(bpy.types.Panel):
     def register(cls):
         """Register properties and operators corresponding to this panel."""
         bpy.utils.register_class(ImportNeRFDatasetOperator)
-        bpy.utils.register_class(NeRFPanelProps)
+        bpy.utils.register_class(NeRF3DViewPanelProps)
         bpy.utils.register_class(PreviewNeRFOperator)
         bpy.utils.register_class(TrainNeRFOperator)
-        bpy.types.Scene.nerf_panel_ui_props = bpy.props.PointerProperty(type=NeRFPanelProps)
+        bpy.types.Scene.nerf_panel_ui_props = bpy.props.PointerProperty(type=NeRF3DViewPanelProps)
         # cls.add_observers() won't work here, so we do it in draw()
 
 
@@ -123,7 +123,7 @@ class NeRFPanel(bpy.types.Panel):
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
-        bpy.utils.unregister_class(NeRFPanelProps)
+        bpy.utils.unregister_class(NeRF3DViewPanelProps)
         bpy.utils.unregister_class(PreviewNeRFOperator)
         bpy.utils.unregister_class(TrainNeRFOperator)
         del bpy.types.Scene.nerf_panel_ui_props

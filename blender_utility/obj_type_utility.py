@@ -2,8 +2,6 @@ __reload_order_index__ = -1
 
 from turbo_nerf.constants import (
     OBJ_TYPE_ID,
-    OBJ_TYPE_IMG_PLANE,
-    OBJ_TYPE_TRAIN_CAMERA,
 )
 
 def get_nerf_obj_type(obj):
@@ -11,3 +9,9 @@ def get_nerf_obj_type(obj):
         return obj[OBJ_TYPE_ID]
     else:
         return None
+
+def set_nerf_obj_type(obj, obj_type):
+    obj[OBJ_TYPE_ID] = obj_type
+
+def is_nerf_obj_type(obj, obj_type):
+    return get_nerf_obj_type(obj) == obj_type

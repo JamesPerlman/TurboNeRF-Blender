@@ -3,12 +3,14 @@ import json
 import math
 import mathutils
 from pathlib import Path
+from turbo_nerf.blender_utility.obj_type_utility import set_nerf_obj_type
 
 from turbo_nerf.blender_utility.object_utility import add_cube
 from turbo_nerf.constants import (
-    NERF_AABB_SIZE_ID,
     NERF_AABB_CENTER_ID,
+    NERF_AABB_SIZE_LOG2_ID,
     NERF_DATASET_PATH_ID,
+    OBJ_TYPE_NERF,
 )
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
@@ -33,15 +35,24 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         print(f"Importing NeRF dataset from: {self.filepath}")
 
         nerf_id = NeRFManager.create_trainable(dataset_path=self.filepath)
-        tn_nerf = NeRFManager.items[nerf_id].nerf
-        bbox = tn_nerf.get_bounding_box()
+        item = NeRFManager.items[nerf_id]
+        nerf = item.nerf
+        dataset = item.dataset
+        bbox = nerf.get_bounding_box()
 
+        cams = dataset.cameras
+        
         bl_nerf = add_cube("NeRF", size=bbox.get_size(), collection=scene.collection)
         bl_nerf.display_type = "WIRE"
         context.view_layer.objects.active = bl_nerf
         bpy.ops.object.modifier_add(type='WIREFRAME')
 
-        bl_nerf[NERF_AABB_SIZE_ID] = bbox.get_size()
+        set_nerf_obj_type(bl_nerf, OBJ_TYPE_NERF)
+
+        bl_nerf[NERF_AABB_SIZE_LOG2_ID] = int(round(math.log2(bbox.get_size())))
+        aabb_size_log2 = bl_nerf.id_properties_ui(NERF_AABB_SIZE_LOG2_ID)
+        aabb_size_log2.update(min=0, max=7)
+
         bl_nerf[NERF_AABB_CENTER_ID] = [0, 0, 0]
 
         bl_nerf[NERF_DATASET_PATH_ID] = self.filepath
