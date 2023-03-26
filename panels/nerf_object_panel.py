@@ -1,6 +1,7 @@
 import bpy
 import math
 
+from turbo_nerf.blender_utility.driver_utility import force_update_drivers
 from turbo_nerf.blender_utility.obj_type_utility import is_nerf_obj_type
 from turbo_nerf.constants import (
     NERF_AABB_SIZE_LOG2_ID,
@@ -11,16 +12,12 @@ from turbo_nerf.constants import (
 class NeRFObjectProperties(bpy.types.PropertyGroup):
 
     def get_aabb_size(prop_id):
-        raw_size_log2 = bpy.context.active_object[NERF_AABB_SIZE_LOG2_ID]
-
-        # round to nearest power of 2
-        return raw_size_log2
+        return bpy.context.active_object[NERF_AABB_SIZE_LOG2_ID]
 
     def set_aabb_size(self, value):
         nerf_obj = bpy.context.active_object
-        
-        aabb_size = 2**int(value)
         nerf_obj[NERF_AABB_SIZE_LOG2_ID] = value
+        force_update_drivers(nerf_obj)
 
     aabb_options = [
         (f"OPTION{i}", f"{2**i}", f"Set AABB Size to {2**i}")
@@ -65,6 +62,7 @@ class NeRFObjectPanel(bpy.types.Panel):
     def register(cls):
         bpy.utils.register_class(NeRFObjectProperties)
         bpy.types.Object.tn_nerf_obj_props = bpy.props.PointerProperty(type=NeRFObjectProperties)
+
 
     @classmethod
     def unregister(cls):
