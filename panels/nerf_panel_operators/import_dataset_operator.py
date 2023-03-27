@@ -3,9 +3,12 @@ import json
 import math
 import mathutils
 from pathlib import Path
+
+import numpy as np
+from turbo_nerf.blender_utility.driver_utility import force_update_drivers, lock_prop_with_driver
 from turbo_nerf.blender_utility.obj_type_utility import set_nerf_obj_type
 
-from turbo_nerf.blender_utility.object_utility import add_cube
+from turbo_nerf.blender_utility.object_utility import add_cube, add_empty
 from turbo_nerf.constants import (
     NERF_AABB_CENTER_ID,
     NERF_AABB_SIZE_LOG2_ID,
@@ -42,10 +45,8 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
 
         cams = dataset.cameras
         
-        bl_nerf = add_cube("NeRF", size=bbox.get_size(), collection=scene.collection)
+        bl_nerf = add_cube("NeRF", size=1.0, collection=scene.collection)
         bl_nerf.display_type = "WIRE"
-        context.view_layer.objects.active = bl_nerf
-        bpy.ops.object.modifier_add(type='WIREFRAME')
 
         set_nerf_obj_type(bl_nerf, OBJ_TYPE_NERF)
 
@@ -53,43 +54,53 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         aabb_size_log2 = bl_nerf.id_properties_ui(NERF_AABB_SIZE_LOG2_ID)
         aabb_size_log2.update(min=0, max=7)
 
-        bl_nerf[NERF_AABB_CENTER_ID] = [0, 0, 0]
+        # add AABB
+        aabb = add_cube("AABB", size=1.0, collection=scene.collection)
+        aabb.display_type = "WIRE"
+        aabb.parent = bl_nerf
 
-        bl_nerf[NERF_DATASET_PATH_ID] = self.filepath
+        context.view_layer.objects.active = aabb
+        bpy.ops.object.modifier_add(type='WIREFRAME')
+
+        # drivers for linking scale to aabb_size_log2
+        [sx, sy, sz] = [fc.driver for fc in aabb.driver_add('scale')]
+        for driver in [sx, sy, sz]:
+            var_x = driver.variables.new()
+            var_x.name = 'aabb_size_log2'
+            var_x.targets[0].id = bl_nerf
+            var_x.targets[0].data_path = f'["{NERF_AABB_SIZE_LOG2_ID}"]'
+            driver.expression = '2**aabb_size_log2'
         
-        # Open JSON file and interpret
-        data: dict
-        with open(Path(self.filepath), 'r') as f:
-            data = json.loads(f.read())
+        # lock location to [0,0,0]
+        lock_prop_with_driver(aabb, 'location', 0.0)
 
-        frames = data["frames"]
+        # lock rotation to [0,0,0]
+        lock_prop_with_driver(aabb, 'rotation_euler', 0.0)
 
+        # lock rotation_mode to XYZ
+        lock_prop_with_driver(aabb, 'rotation_mode', 1)
+
+        # Add empty for Cameras
+        cams_empty = add_empty("CAMERAS", collection=scene.collection)
+        cams_empty.parent = bl_nerf
+        
         # Walk through all cameras in json, and create a blender camera
-        for f in frames:
+        for cam in cams:
+            cam_data = bpy.data.cameras.new(name='Camera')
+            cam_obj = bpy.data.objects.new('Camera', cam_data)
+            scene.collection.objects.link(cam_obj)
+            cam_obj.parent = cams_empty
+
+            # set transform
+            cam_obj.matrix_world = mathutils.Matrix(np.array(cam.transform.to_nerf().to_matrix()))
             
-            camera_data = bpy.data.cameras.new(name='Camera')
-            camera_obj = bpy.data.objects.new('Camera', camera_data)
-            scene.collection.objects.link(camera_obj)
-            camera_obj.parent = bl_nerf
+            # set focal length
+            fl_x, fl_y = cam.focal_length
+            cam_w, cam_h = cam.resolution
+            sensor_width = cam_data.sensor_width
+            cam_data.lens = sensor_width / cam_w * fl_x
 
-            # fetch properties from JSON object
-            # rot_mat = mathutils.Matrix(f["orientation"])
-            # t_vec = mathutils.Vector(f["translation"])
-
-            # # rotation
-            # camera_obj.rotation_mode = 'QUATERNION'
-            # camera_obj.rotation_quaternion = rot_mat.to_quaternion()
-
-            # # translation
-            # camera_obj.location = t_vec
-            camera_obj.matrix_world = mathutils.Matrix(f["transform_matrix"])
-
-            # TODO: focal len
-            # sensor_diag = math.sqrt(camera_data.sensor_width ** 2 + camera_data.sensor_height ** 2)
-            # sensor_width = camera_data.sensor_width
-            # camera_data.lens = 0.5 * sensor_width / math.tan(0.5 * float(data["camera_angle_x"]))
-            
-
+        context.view_layer.objects.active = bl_nerf
         return {'FINISHED'}
 
     def invoke(self, context, event):
