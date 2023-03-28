@@ -40,11 +40,10 @@ class NeRFManager():
         dataset = tn.Dataset(file_path=dataset_path)
         json = dataset.to_json()
         print(json)
-        nerf = cls.mgr().create(bbox=dataset.bounding_box)
+        nerf = cls.mgr().create(dataset)
 
         item_id = cls.n_items
         item = dotdict({})
-        item.dataset = dataset
         item.nerf = nerf
 
         cls.items[item_id] = item
@@ -70,10 +69,9 @@ class NeRFManager():
     
     @classmethod
     def start_training(cls):
-        item = cls.items[0]
+        nerf = cls.items[0].nerf
         cls.bridge().prepare_for_training(
-            dataset=item.dataset,
-            proxy=item.nerf,
+            proxy=nerf,
             batch_size=2<<20
         )
         cls.bridge().start_training()

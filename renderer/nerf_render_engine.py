@@ -118,6 +118,13 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.remove_event_observers()
         pass
 
+    def get_render_modifiers(self, context: bpy.types.Context):
+        render_modifiers = tn.RenderModifiers()
+        render_modifiers.properties = tn.RenderProperties()
+        render_modifiers.properties.show_near_planes = True
+        render_modifiers.properties.show_far_planes = True
+        return render_modifiers
+
     # This method re-requests the latest render
     def rerequest_preview(self, flags):
         if self.latest_camera is None:
@@ -126,7 +133,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         if len(NeRFManager.items) == 0:
             return
         
-        self.bridge.request_preview(self.latest_camera, [NeRFManager.items[0].nerf], flags)
+        modifiers = self.get_render_modifiers(bpy.context)
+        self.bridge.request_preview(self.latest_camera, [NeRFManager.items[0].nerf], flags, modifiers)
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
@@ -265,7 +273,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             if not NeRFManager.is_training(): # and not context.screen.is_animation_playing:
                 flags = flags | tn.RenderFlags.Final
 
-            self.bridge.request_preview(camera, [NeRFManager.items[0].nerf], flags)
+            modifiers = self.get_render_modifiers(context)
+
+            self.bridge.request_preview(camera, [NeRFManager.items[0].nerf], flags, modifiers)
                     
         scene = depsgraph.scene
 
