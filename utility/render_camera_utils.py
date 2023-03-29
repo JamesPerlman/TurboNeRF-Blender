@@ -26,6 +26,7 @@ from turbo_nerf.constants import (
     CAMERA_NEAR_ID,
     CAMERA_P1_ID,
     CAMERA_P2_ID,
+    CAMERA_SHOW_IMAGE_PLANES_ID,
     OBJ_TYPE_TRAIN_CAMERA,
     RENDER_CAM_TYPE_ID,
     RENDER_CAM_TYPE_PERSPECTIVE,
@@ -158,7 +159,7 @@ def bl2nerf_cam_train(cam_obj: bpy.types.Object):
         p2=cam_obj[CAMERA_P2_ID]
     )
 
-    return tn.Camera(
+    cam = tn.Camera(
         resolution=(cam_obj[CAMERA_IMAGE_W_ID], cam_obj[CAMERA_IMAGE_H_ID]),
         near=cam_obj[CAMERA_NEAR_ID],
         far=cam_obj[CAMERA_FAR_ID],
@@ -168,6 +169,10 @@ def bl2nerf_cam_train(cam_obj: bpy.types.Object):
         transform=transform,
         dist_params=dist_params
     )
+
+    cam.show_image_planes = cam_obj[CAMERA_SHOW_IMAGE_PLANES_ID]
+
+    return cam
 
 def bl2nerf_cam_perspective(cam_obj: bpy.types.Object, img_dims: tuple[int, int]):
     view_matrix = np.array(cam_obj.matrix_world)

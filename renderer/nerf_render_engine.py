@@ -121,10 +121,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         pass
 
     def get_render_modifiers(self, context: bpy.types.Context):
+        nerf_props = context.scene.nerf_panel_ui_props
         render_modifiers = tn.RenderModifiers()
         render_modifiers.properties = tn.RenderProperties()
-        render_modifiers.properties.show_near_planes = True
-        render_modifiers.properties.show_far_planes = True
+        render_modifiers.properties.show_near_planes = nerf_props.show_near_planes
+        render_modifiers.properties.show_far_planes = nerf_props.show_far_planes
         return render_modifiers
 
     # This method re-requests the latest render
