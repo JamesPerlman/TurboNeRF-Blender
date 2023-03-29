@@ -1,7 +1,9 @@
 import bpy
 from datetime import datetime
+from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.preview_nerf_operator import PreviewNeRFOperator
+from turbo_nerf.panels.nerf_panel_operators.synchronize_dataset_operator import SynchronizeNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.train_nerf_operator import TrainNeRFOperator
 from turbo_nerf.utility.layout_utility import add_multiline_label
 from turbo_nerf.utility.nerf_manager import NeRFManager
@@ -112,8 +114,10 @@ class NeRF3DViewPanel(bpy.types.Panel):
     def register(cls):
         """Register properties and operators corresponding to this panel."""
         bpy.utils.register_class(ImportNeRFDatasetOperator)
+        bpy.utils.register_class(ExportNeRFDatasetOperator)
         bpy.utils.register_class(NeRF3DViewPanelProps)
         bpy.utils.register_class(PreviewNeRFOperator)
+        bpy.utils.register_class(SynchronizeNeRFDatasetOperator)
         bpy.utils.register_class(TrainNeRFOperator)
         bpy.types.Scene.nerf_panel_ui_props = bpy.props.PointerProperty(type=NeRF3DViewPanelProps)
         # cls.add_observers() won't work here, so we do it in draw()
@@ -123,8 +127,10 @@ class NeRF3DViewPanel(bpy.types.Panel):
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
+        bpy.utils.unregister_class(ExportNeRFDatasetOperator)
         bpy.utils.unregister_class(NeRF3DViewPanelProps)
         bpy.utils.unregister_class(PreviewNeRFOperator)
+        bpy.utils.unregister_class(SynchronizeNeRFDatasetOperator)
         bpy.utils.unregister_class(TrainNeRFOperator)
         del bpy.types.Scene.nerf_panel_ui_props
         cls.remove_observers()
@@ -246,7 +252,16 @@ class NeRF3DViewPanel(bpy.types.Panel):
         box.label(text="Dataset")
 
         row = box.row()
-        row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")   
+        row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")
+
+        row = box.row()
+        row.operator(ExportNeRFDatasetOperator.bl_idname, text="Export Dataset")
+
+        # divider
+        box.row().separator()
+
+        row = box.row()
+        row.operator(SynchronizeNeRFDatasetOperator.bl_idname, text="Synchronize Dataset")
 
 
     def training_section(self, layout, ui_props):

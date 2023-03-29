@@ -32,22 +32,27 @@ CAMERA_NEAR_DEFAULT = 1.0
 CAMERA_FAR_ID = "camera_far"
 CAMERA_FAR_DEFAULT = 8.0
 
+CAMERA_INDEX_ID = "camera_idx"
+
 CAMERA_USE_FOR_TRAINING_ID = "use_for_training"
 CAMERA_USE_FOR_TRAINING_DEFAULT = True
 
-CAMERA_FX_ID = "camera_fx"
-CAMERA_FY_ID = "camera_fy"
+CAMERA_FL_X_ID = "camera_fl_x"
+CAMERA_FL_Y_ID = "camera_fl_y"
 CAMERA_CX_ID = "camera_cx"
 CAMERA_CY_ID = "camera_cy"
 
 CAMERA_K1_ID = "distortion_k1"
 CAMERA_K2_ID = "distortion_k2"
+CAMERA_K3_ID = "distortion_k3"
 CAMERA_P1_ID = "distortion_p1"
 CAMERA_P2_ID = "distortion_p2"
 
+CAMERA_SHOW_IMAGE_PLANES_ID = "show_image_planes"
+
 CAMERA_IMAGE_PATH_ID = "image_path"
-CAMERA_IMAGE_WIDTH_ID = "image_width"
-CAMERA_IMAGE_HEIGHT_ID = "image_height"
+CAMERA_IMAGE_W_ID = "image_width"
+CAMERA_IMAGE_H_ID = "image_height"
 
 # Point cloud
 POINT_CLOUD_NAME_DEFAULT = "Point Cloud Scene Representation"
@@ -64,6 +69,11 @@ OBJ_TYPE_IMG_PLANE = "image_plane"
 OBJ_TYPE_POINT_CLOUD = "point_cloud"
 OBJ_TYPE_MASK_SHAPE = "mask_shape"
 OBJ_TYPE_NERF = "tn_nerf"
+OBJ_TYPE_CAMERAS_CONTAINER = "cameras_container"
+
+# Camera Types
+CAM_TYPE_TRAIN_OPENCV = "train_opencv"
+CAM_TYPE_BLENDER_PERSPECTIVE = "blender_perspective"
 
 # Render cameras
 
@@ -113,5 +123,6 @@ NERF_PATH_ID = "snapshot_path"
 NERF_AABB_SIZE_ID = "aabb_size"
 NERF_AABB_SIZE_LOG2_ID = "aabb_size_log2"
 NERF_AABB_CENTER_ID = "aabb_center"
+NERF_ITEM_IDENTIFIER_ID = "item_identifier"
 NERF_OPACITY_ID = "opacity"
 NERF_DATASET_PATH_ID = "dataset_path"

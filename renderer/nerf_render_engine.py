@@ -4,8 +4,10 @@ import weakref
 import bpy
 import bgl
 import numpy as np
+from turbo_nerf.blender_utility.obj_type_utility import get_closest_parent_of_type, get_nerf_obj_type
+from turbo_nerf.constants import CAMERA_INDEX_ID, NERF_ITEM_IDENTIFIER_ID, OBJ_TYPE_NERF, OBJ_TYPE_TRAIN_CAMERA
 
-from turbo_nerf.utility.render_camera_utils import bl2nerf_cam, camera_with_flipped_y
+from turbo_nerf.utility.render_camera_utils import bl2nerf_cam, bl2nerf_cam_train, camera_with_flipped_y
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
@@ -232,14 +234,31 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
-        self.tag_redraw()
+        for update in depsgraph.updates:
+            if update.is_updated_transform:
+                obj = update.id
+                if not isinstance(obj, bpy.types.Object):
+                    continue
 
+                nerf_obj = get_closest_parent_of_type(obj, OBJ_TYPE_NERF)
+                if nerf_obj is None:
+                    continue
+            
+                if get_nerf_obj_type(obj) == OBJ_TYPE_TRAIN_CAMERA:
+                    cam_obj = obj
+                    nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
+                    nerf = NeRFManager.items[nerf_id].nerf
+                    camera_idx = cam_obj[CAMERA_INDEX_ID]
+                    nerf.dataset.set_camera_at(camera_idx, bl2nerf_cam_train(cam_obj))
+                    nerf.is_dataset_dirty = True
+                        
     # For viewport renders, this method is called whenever Blender redraws
     # the 3D viewport. The renderer is expected to quickly draw the render
     # with OpenGL, and not perform other expensive work.
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
+        print("view_draw()")
         # # Get viewport dimensions
         region = context.region
         dimensions = region.width, region.height
@@ -262,11 +281,12 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             return
         
         # Determine if the user initiated this view_draw call
+        nerf = NeRFManager.items[0].nerf
         
         has_new_camera = True if self.latest_camera is None else camera != self.latest_camera
-        has_new_dims = dimensions != self.prev_view_dims        
+        has_new_dims = dimensions != self.prev_view_dims
 
-        user_initiated = has_new_camera or has_new_dims
+        user_initiated = has_new_camera or has_new_dims or nerf.is_dataset_dirty
 
         if user_initiated:
             flags = tn.RenderFlags.Preview
@@ -275,7 +295,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
             modifiers = self.get_render_modifiers(context)
 
-            self.bridge.request_preview(camera, [NeRFManager.items[0].nerf], flags, modifiers)
+            self.bridge.request_preview(camera, [nerf], flags, modifiers)
                     
         scene = depsgraph.scene
 

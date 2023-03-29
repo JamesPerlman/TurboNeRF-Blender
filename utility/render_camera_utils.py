@@ -3,6 +3,7 @@ import math
 import numpy as np
 
 from copy import copy
+from turbo_nerf.blender_utility.obj_type_utility import is_nerf_obj_type
 
 from turbo_nerf.utility.math import bl2nerf_mat
 from turbo_nerf.utility.nerf_manager import NeRFManager
@@ -10,6 +11,22 @@ from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
 from turbo_nerf.constants import (
+    CAM_TYPE_BLENDER_PERSPECTIVE,
+    CAM_TYPE_TRAIN_OPENCV,
+    CAMERA_CX_ID,
+    CAMERA_CY_ID,
+    CAMERA_FAR_ID,
+    CAMERA_FL_X_ID,
+    CAMERA_FL_Y_ID,
+    CAMERA_IMAGE_H_ID,
+    CAMERA_IMAGE_W_ID,
+    CAMERA_K1_ID,
+    CAMERA_K2_ID,
+    CAMERA_K3_ID,
+    CAMERA_NEAR_ID,
+    CAMERA_P1_ID,
+    CAMERA_P2_ID,
+    OBJ_TYPE_TRAIN_CAMERA,
     RENDER_CAM_TYPE_ID,
     RENDER_CAM_TYPE_PERSPECTIVE,
     RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
@@ -129,6 +146,29 @@ def bl2nerf_cam_regionview3d(
         transform=bl_camera_matrix.from_nerf()
     )
 
+def bl2nerf_cam_train(cam_obj: bpy.types.Object):
+    c2w = np.array(cam_obj.matrix_world)
+    transform = tn.Transform4f(c2w).from_nerf()
+
+    dist_params = tn.DistortionParams(
+        k1=cam_obj[CAMERA_K1_ID],
+        k2=cam_obj[CAMERA_K2_ID],
+        k3=cam_obj[CAMERA_K3_ID],
+        p1=cam_obj[CAMERA_P1_ID],
+        p2=cam_obj[CAMERA_P2_ID]
+    )
+
+    return tn.Camera(
+        resolution=(cam_obj[CAMERA_IMAGE_W_ID], cam_obj[CAMERA_IMAGE_H_ID]),
+        near=cam_obj[CAMERA_NEAR_ID],
+        far=cam_obj[CAMERA_FAR_ID],
+        focal_length=(cam_obj[CAMERA_FL_X_ID], cam_obj[CAMERA_FL_Y_ID]),
+        shift=(0, 0),
+        principal_point=(cam_obj[CAMERA_CX_ID], cam_obj[CAMERA_CY_ID]),
+        transform=transform,
+        dist_params=dist_params
+    )
+
 def bl2nerf_cam_perspective(cam_obj: bpy.types.Object, img_dims: tuple[int, int]):
     view_matrix = np.array(cam_obj.matrix_world)
 
@@ -158,16 +198,18 @@ def bl2nerf_cam(
 ) -> tn.Camera:
     if isinstance(source, bpy.types.RegionView3D):
         return bl2nerf_cam_regionview3d(source, img_dims, context)
+    
     elif isinstance(source, bpy.types.Object):
-        camera_model = RENDER_CAM_TYPE_PERSPECTIVE
-
-        if RENDER_CAM_TYPE_ID in source:
-            camera_model = source[RENDER_CAM_TYPE_ID]
+        camera_model = CAM_TYPE_BLENDER_PERSPECTIVE
+        
+        # elif RENDER_CAM_TYPE_ID in source:
+        #     camera_model = source[RENDER_CAM_TYPE_ID]
         
         if camera_model not in CAM_TYPE_DECODERS:
-            camera_model = RENDER_CAM_TYPE_PERSPECTIVE
+            camera_model = CAM_TYPE_BLENDER_PERSPECTIVE
         
         decoder = CAM_TYPE_DECODERS[camera_model]
+
         return decoder(source, img_dims)
     else:
         print(f"INVALID CAMERA SOURCE: {source}")
@@ -193,7 +235,5 @@ def camera_with_flipped_y(cam: tn.Camera) -> tn.Camera:
     )
 
 CAM_TYPE_DECODERS = {
-    RENDER_CAM_TYPE_PERSPECTIVE: bl2nerf_cam_perspective,
-    RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL: None,
-    RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON: None,
+    CAM_TYPE_BLENDER_PERSPECTIVE: bl2nerf_cam_perspective
 }
