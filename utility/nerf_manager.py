@@ -38,8 +38,7 @@ class NeRFManager():
     @classmethod
     def create_trainable(cls, dataset_path):
         dataset = tn.Dataset(file_path=dataset_path)
-        json = dataset.to_json()
-        print(json)
+
         nerf = cls.mgr().create(dataset)
 
         item_id = cls.n_items
