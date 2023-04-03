@@ -167,7 +167,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         # launch render request
         self.bridge.request_render(camera, [NeRFManager.items[0].nerf])
         
-        # begin renter result
+        # begin render result
         result = self.begin_result(0, 0, size_x, size_y)
 
         # register render events
