@@ -2,7 +2,7 @@ import bpy
 import math
 
 from turbo_nerf.blender_utility.driver_utility import force_update_drivers
-from turbo_nerf.blender_utility.obj_type_utility import get_all_training_cam_objs, get_closest_parent_of_type, get_nerf_obj_type, is_nerf_obj_type, is_self_or_some_parent_of_type
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj, get_all_training_cam_objs, get_closest_parent_of_type, get_nerf_obj_type, get_nerf_training_cams, is_nerf_obj_type, is_self_or_some_parent_of_type
 from turbo_nerf.constants import (
     CAMERA_FAR_ID,
     CAMERA_INDEX_ID,
@@ -16,25 +16,9 @@ from turbo_nerf.constants import (
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.render_camera_utils import bl2nerf_cam_train
 
-def get_active_nerf_obj():
-    active_obj = bpy.context.active_object
-    nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
-    return nerf_obj
-
-def get_cams(nerf_obj):
-    cam_objs = [o for o in bpy.context.selected_objects if is_nerf_obj_type(o, OBJ_TYPE_TRAIN_CAMERA)]
-
-    if len(cam_objs) == 0:
-        cam_objs = get_all_training_cam_objs(nerf_obj)
-    
-    if len(cam_objs) == 0:
-        return []
-    
-    return cam_objs
-
 # general camera prop getter
 def get_props_for_cams(nerf_obj, prop_name, default_value):    
-    cam_objs = get_cams(nerf_obj)
+    cam_objs = get_nerf_training_cams(nerf_obj, bpy.context)
 
     if len(cam_objs) == 0:
         return [default_value]
@@ -85,12 +69,12 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
     # near
 
     def get_near(prop_id):
-        nerf_obj = get_active_nerf_obj()
+        nerf_obj = get_active_nerf_obj(bpy.context)
         return min(get_props_for_cams(nerf_obj, CAMERA_NEAR_ID, 0.0))
     
     def set_near(self, value):
-        nerf_obj = get_active_nerf_obj()
-        cams = get_cams(nerf_obj)
+        nerf_obj = get_active_nerf_obj(bpy.context)
+        cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_NEAR_ID] = value
             force_update_drivers(o)
@@ -111,12 +95,12 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
     # far
 
     def get_far(prop_id):
-        nerf_obj = get_active_nerf_obj()
+        nerf_obj = get_active_nerf_obj(bpy.context)
         return min(get_props_for_cams(nerf_obj, CAMERA_FAR_ID, 128.0))
     
     def set_far(self, value):
-        nerf_obj = get_active_nerf_obj()
-        cams = get_cams(nerf_obj)
+        nerf_obj = get_active_nerf_obj(bpy.context)
+        cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_FAR_ID] = value
             force_update_drivers(o)
@@ -137,12 +121,12 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
     # show near/far planes
 
     def get_show_image_planes(prop_id):
-        nerf_obj = get_active_nerf_obj()
+        nerf_obj = get_active_nerf_obj(bpy.context)
         return all(get_props_for_cams(nerf_obj, CAMERA_SHOW_IMAGE_PLANES_ID, False))
     
     def set_show_image_planes(self, value):
-        nerf_obj = get_active_nerf_obj()
-        cams = get_cams(nerf_obj)
+        nerf_obj = get_active_nerf_obj(bpy.context)
+        cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_SHOW_IMAGE_PLANES_ID] = value
             force_update_drivers(o)

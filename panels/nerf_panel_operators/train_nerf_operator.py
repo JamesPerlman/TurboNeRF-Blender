@@ -12,7 +12,7 @@ class TrainNeRFOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         """Return the availability status of the operator."""
-        return NeRFManager.can_train()
+        return NeRFManager.is_ready_to_train()
 
     def execute(self, context):
         """Execute the operator."""

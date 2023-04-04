@@ -56,10 +56,19 @@ class NeRFManager():
         return cls.bridge().is_training()
 
     @classmethod
-    def can_train(cls):
-        # the condition here should be: if a nerf is currently selected
-        # for now we just check if there are any nerfs
-        return cls.n_items > 0
+    def is_ready_to_train(cls):
+        return cls.bridge().is_ready_to_train()
+    
+    @classmethod
+    def is_image_data_loaded(cls):
+        return cls.bridge().is_image_data_loaded()
+    
+    @classmethod
+    def can_load_images(cls):
+        # TODO: need a better way to check if a dataset is loadable
+        # return cls.bridge().can_load_images()
+
+        return cls.n_items > 0 and not cls.is_image_data_loaded()
 
     @classmethod
     def can_import(cls):
@@ -67,12 +76,15 @@ class NeRFManager():
         return cls.n_items == 0
     
     @classmethod
-    def start_training(cls):
-        nerf = cls.items[0].nerf
+    def prepare_for_training(cls, item_id):
+        nerf = cls.items[item_id].nerf
         cls.bridge().prepare_for_training(
             proxy=nerf,
             batch_size=2<<20
         )
+
+    @classmethod
+    def start_training(cls):
         cls.bridge().start_training()
     
     @classmethod

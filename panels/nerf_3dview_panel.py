@@ -1,14 +1,17 @@
 import bpy
 from datetime import datetime
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
+from turbo_nerf.constants import NERF_ITEM_IDENTIFIER_ID
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
+from turbo_nerf.panels.nerf_panel_operators.load_nerf_images_operator import LoadNeRFImagesOperator
 from turbo_nerf.panels.nerf_panel_operators.preview_nerf_operator import PreviewNeRFOperator
 from turbo_nerf.panels.nerf_panel_operators.train_nerf_operator import TrainNeRFOperator
 from turbo_nerf.utility.layout_utility import add_multiline_label
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
-TRAINING_TIMER_INTERVAL = 0.5
+TRAINING_TIMER_INTERVAL = 0.25
 
 class NeRFProps:
     training_step = 0
@@ -17,6 +20,8 @@ class NeRFProps:
     training_loss = 0.0
     n_rays_per_batch = 0
     grid_percent_occupied = 100.0
+    n_images_loaded = 0
+    n_images_total = 0
 
 nerf_props = NeRFProps()
 
@@ -34,7 +39,6 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
     def update_n_steps_max(self, context):
         nerf_props.n_steps_max = self.n_steps_max
         self.training_progress = 100.0 * min(1.0, nerf_props.training_step / self.n_steps_max)
-        self.update_training_progress(context)
 
     update_id: bpy.props.IntProperty(
         name="update_id",
@@ -43,6 +47,16 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         min=0,
         max=1,
         update=update_ui,
+    )
+
+    # TODO: dynamic min/max based on the number of images
+    image_load_progress: bpy.props.FloatProperty(
+        name="image_load_progress",
+        description="Progress of the dataset's image loading.",
+        default=0.0,
+        min=0.0,
+        max=100.0,
+        precision=1,
     )
 
     limit_training: bpy.props.BoolProperty(
@@ -136,6 +150,7 @@ class NeRF3DViewPanel(bpy.types.Panel):
         """Register properties and operators corresponding to this panel."""
         bpy.utils.register_class(ImportNeRFDatasetOperator)
         bpy.utils.register_class(ExportNeRFDatasetOperator)
+        bpy.utils.register_class(LoadNeRFImagesOperator)
         bpy.utils.register_class(NeRF3DViewPanelProps)
         bpy.utils.register_class(PreviewNeRFOperator)
         bpy.utils.register_class(TrainNeRFOperator)
@@ -148,6 +163,7 @@ class NeRF3DViewPanel(bpy.types.Panel):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
         bpy.utils.unregister_class(ExportNeRFDatasetOperator)
+        bpy.utils.unregister_class(LoadNeRFImagesOperator)
         bpy.utils.unregister_class(NeRF3DViewPanelProps)
         bpy.utils.unregister_class(PreviewNeRFOperator)
         bpy.utils.unregister_class(TrainNeRFOperator)
@@ -164,8 +180,10 @@ class NeRF3DViewPanel(bpy.types.Panel):
             ui_props = context.scene.nerf_panel_ui_props
 
             # update training progress
-            training_progress = 100 * nerf_props.training_step / ui_props.n_steps_max
-            ui_props.training_progress = min(100.0, training_progress)
+            ui_props.training_progress = 100 * min(1, nerf_props.training_step / ui_props.n_steps_max)
+
+            # update image load progress
+            ui_props.image_load_progress = 100 * nerf_props.n_images_loaded / nerf_props.n_images_total
             
             ui_props.update_id = 1 - ui_props.update_id
 
@@ -230,6 +248,45 @@ class NeRF3DViewPanel(bpy.types.Panel):
         obid = bridge.add_observer(BBE.OnUpdateOccupancyGrid, on_update_occupancy_grid)
         cls.observers.append(obid)
 
+        def on_images_load_start(args):
+            # register a timer to update the UI
+            if bpy.app.timers.is_registered(timer_fn):
+                bpy.app.timers.unregister(timer_fn)
+            
+            print("hello from on_images_load_start")
+            print(args)
+            nerf_props.n_images_total = args["n_total"]
+            nerf_props.n_images_loaded = 0
+            print("n_images_total = ", nerf_props.n_images_total)
+            
+            bpy.app.timers.register(
+                timer_fn,
+                first_interval=0.1,
+                persistent=True
+            )
+        
+        obid = bridge.add_observer(BBE.OnTrainingImagesLoadStart, on_images_load_start)
+        cls.observers.append(obid)
+
+        def on_images_load_complete(args):
+            # unregister the timers added in on_load_image_start
+            if bpy.app.timers.is_registered(timer_fn):
+                bpy.app.timers.unregister(timer_fn)
+            
+            cls.panel_needs_update = True
+        
+        obid = bridge.add_observer(BBE.OnTrainingImagesLoadComplete, on_images_load_complete)
+        cls.observers.append(obid)
+
+        def on_image_load(args):
+            nerf_props.n_images_loaded = args["n_loaded"]
+            nerf_props.n_images_total = args["n_total"]
+            
+            cls.panel_needs_update = True
+
+        obid = bridge.add_observer(BBE.OnTrainingImageLoaded, on_image_load)
+        cls.observers.append(obid)
+
 
     @classmethod
     def remove_observers(cls):
@@ -259,14 +316,14 @@ class NeRF3DViewPanel(bpy.types.Panel):
             
             return
         
-        self.dataset_section(layout, ui_props)
+        self.dataset_section(context, layout, ui_props)
 
-        self.training_section(layout, ui_props)
+        self.training_section(context, layout, ui_props)
 
-        self.preview_section(layout, ui_props)
+        self.preview_section(context, layout, ui_props)
 
 
-    def dataset_section(self, layout, ui_props):
+    def dataset_section(self, context, layout, ui_props):
         box = layout.box()
         box.label(text="Dataset")
 
@@ -277,19 +334,41 @@ class NeRF3DViewPanel(bpy.types.Panel):
         row.operator(ExportNeRFDatasetOperator.bl_idname, text="Export Dataset")
 
 
-    def training_section(self, layout, ui_props):
+    def training_section(self, context, layout, ui_props):
 
         box = layout.box()
         box.label(text="Train")
 
-        row = box.row()
-        row.operator(
-            TrainNeRFOperator.bl_idname,
-            text="Start Training" if not NeRFManager.is_training() else "Stop Training"
-        )
+        if NeRFManager.is_ready_to_train():
 
-        # we want to disable the Start Training button if we've already trained the scene up to the max number of steps
-        row.enabled = not (ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max)
+            row = box.row()
+            row.operator(
+                TrainNeRFOperator.bl_idname,
+                text="Start Training" if not NeRFManager.is_training() else "Stop Training"
+            )
+
+            # we want to disable the Start Training button if we've already trained the scene up to the max number of steps
+            row.enabled = not (ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max)
+
+
+        else:
+            # if no images have been loaded yet, we show the Load Images button
+            if nerf_props.n_images_total == 0:
+                row = box.row()
+                row.operator(
+                    LoadNeRFImagesOperator.bl_idname,
+                    text="Load Images"
+                )
+                row.enabled = NeRFManager.can_load_images()
+
+            else:
+                # otherwise assume images are currently loading
+                row = box.row()
+                row.label(text=f"Loaded {nerf_props.n_images_loaded} / {nerf_props.n_images_total} images")
+
+                row = box.row()
+                row.prop(ui_props, "image_load_progress", slider=True, text=f"% Done:")
+                row.enabled = False
 
         # limit training checkbox
         row = box.row()
@@ -301,7 +380,7 @@ class NeRF3DViewPanel(bpy.types.Panel):
             row.prop(ui_props, "n_steps_max", text="Max Steps")
 
             row = box.row()
-            row.prop(ui_props, "training_progress", slider=True, text="")
+            row.prop(ui_props, "training_progress", slider=True, text="% Done:")
             row.enabled = False
 
             row = box.row()
@@ -331,7 +410,7 @@ class NeRF3DViewPanel(bpy.types.Panel):
             row.label(text=f"Grid: {nerf_props.grid_percent_occupied:.2f}% occupied")
 
 
-    def preview_section(self, layout, ui_props):
+    def preview_section(self, context, layout, ui_props):
         box = layout.box()
         box.label(text="Preview")
 
