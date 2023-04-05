@@ -11,7 +11,9 @@ class LoadNeRFImagesOperator(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        return NeRFManager.can_load_images()
+        nerf_obj = get_active_nerf_obj(context)
+        has_nerf = nerf_obj is not None
+        return has_nerf and NeRFManager.can_load_images()
     
     def execute(self, context):
         nerf_obj = get_active_nerf_obj(context)
