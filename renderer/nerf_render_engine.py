@@ -96,7 +96,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         obid = self.bridge.add_observer(BBE.OnPreviewComplete, on_preview_complete)
         self.event_observers.append(obid)
         
-        # OnRenderComplete
+        # OnRequestRedraw
         def on_request_redraw(args):
             wself = weak_self()
             if wself is None:
@@ -105,6 +105,17 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         obid = self.bridge.add_observer(BBE.OnRequestRedraw, on_request_redraw)
         self.event_observers.append(obid)
+
+        # OnTrainingReset
+        def on_training_reset(args):
+            wself = weak_self()
+            if wself is None:
+                return
+            wself.rerequest_preview(flags=tn.RenderFlags.Preview)
+        
+        obid = self.bridge.add_observer(BBE.OnTrainingReset, on_training_reset)
+        self.event_observers.append(obid)
+
 
     # Remove bridge event observers
     def remove_event_observers(self):
@@ -259,7 +270,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
-        print("view_draw()")
         # # Get viewport dimensions
         region = context.region
         dimensions = region.width, region.height

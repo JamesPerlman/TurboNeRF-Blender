@@ -55,6 +55,11 @@ class NeRFManager():
     def is_training(cls):
         return cls.bridge().is_training()
 
+
+    @classmethod
+    def get_training_step(cls):
+        return cls.bridge().get_training_step()
+
     @classmethod
     def is_ready_to_train(cls):
         return cls.bridge().is_ready_to_train()
@@ -97,3 +102,7 @@ class NeRFManager():
             cls.stop_training()
         else:
             cls.start_training()
+    
+    @classmethod
+    def reset_training(cls):
+        cls.bridge().reset_training()
