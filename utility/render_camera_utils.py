@@ -70,6 +70,34 @@ def bl2nerf_fl(cam_data: bpy.types.Camera, output_dimensions: tuple[int, int]) -
 
     return px_f
 
+def bl2nerf_shift(context: bpy.types.Context, cam_data: bpy.types.Camera, fl_x: float, img_dims: tuple[int, int]):
+    render = context.scene.render
+    out_res_x = render.resolution_x
+    out_res_y = render.resolution_y
+    cam_fl = bl2nerf_fl(cam_data, (out_res_x, out_res_y))
+
+    cam_angle_x = 2.0 * math.atan2(0.5 * out_res_x, cam_fl)
+    
+    cam_res_x = 2.0 * fl_x * math.tan(0.5 * cam_angle_x)
+    cam_res_y = out_res_y / out_res_x * cam_res_x
+
+    # this is wild.
+    if cam_data.sensor_fit == 'AUTO':
+        if cam_res_x > cam_res_y:
+            shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
+            shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
+        else:
+            shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
+            shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
+    elif cam_data.sensor_fit == 'HORIZONTAL':
+        shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
+        shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
+    elif cam_data.sensor_fit == 'VERTICAL':
+        shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
+        shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
+    
+    return shift_x, shift_y
+
 # converts aperture fstop to aperture size
 def bl2nerf_fstop2size(fstop: float) -> float:
     return 1.0 / (2.0 * fstop)
@@ -105,32 +133,7 @@ def bl2nerf_cam_regionview3d(
         cam_data: bpy.types.Camera = context.scene.camera.data
         near = cam_data.clip_start
         far = cam_data.clip_end
-
-        # this might be refactorable into a function get_passepartout_dims
-        render = context.scene.render
-        out_res_x = render.resolution_x
-        out_res_y = render.resolution_y
-        cam_fl = bl2nerf_fl(cam_data, (out_res_x, out_res_y))
-
-        cam_angle_x = 2.0 * math.atan2(0.5 * out_res_x, cam_fl)
-        
-        cam_res_x = 2.0 * fl_x * math.tan(0.5 * cam_angle_x)
-        cam_res_y = out_res_y / out_res_x * cam_res_x
-
-        # this is wild.
-        if cam_data.sensor_fit == 'AUTO':
-            if cam_res_x > cam_res_y:
-                shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
-                shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
-            else:
-                shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
-                shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
-        elif cam_data.sensor_fit == 'HORIZONTAL':
-            shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
-            shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
-        elif cam_data.sensor_fit == 'VERTICAL':
-            shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
-            shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
+        shift_x, shift_y = bl2nerf_shift(context, cam_data, fl_x, img_dims)
 
     else:
         view = context.space_data
@@ -174,7 +177,7 @@ def bl2nerf_cam_train(cam_obj: bpy.types.Object):
 
     return cam
 
-def bl2nerf_cam_perspective(cam_obj: bpy.types.Object, img_dims: tuple[int, int]):
+def bl2nerf_cam_perspective(context: bpy.types.Context, cam_obj: bpy.types.Object, img_dims: tuple[int, int]):
     view_matrix = np.array(cam_obj.matrix_world)
 
     bl_camera_matrix = tn.Transform4f(view_matrix)
@@ -186,12 +189,14 @@ def bl2nerf_cam_perspective(cam_obj: bpy.types.Object, img_dims: tuple[int, int]
     fl_x = bl2nerf_fl(cam_data, img_dims)
     fl_y = fl_x
 
+    shift_x, shift_y = bl2nerf_shift(context, cam_data, fl_x, img_dims)
+
     return tn.Camera(
         resolution=img_dims,
         near=cam_data.clip_start,
         far=cam_data.clip_end,
         focal_length=(fl_x, fl_y),
-        shift=(cam_data.shift_x, -cam_data.shift_y),
+        shift=(shift_x, shift_y),
         principal_point=(0.5 * img_dims[0], 0.5 * img_dims[1]),
         transform=bl_camera_matrix.from_nerf()
     )
@@ -201,6 +206,10 @@ def bl2nerf_cam(
     img_dims: tuple[int, int],
     context: bpy.types.Context = None
 ) -> tn.Camera:
+    
+    if context is None:
+        context = bpy.context
+    
     if isinstance(source, bpy.types.RegionView3D):
         return bl2nerf_cam_regionview3d(source, img_dims, context)
     
@@ -215,7 +224,7 @@ def bl2nerf_cam(
         
         decoder = CAM_TYPE_DECODERS[camera_model]
 
-        return decoder(source, img_dims)
+        return decoder(context, source, img_dims)
     else:
         print(f"INVALID CAMERA SOURCE: {source}")
         return None
