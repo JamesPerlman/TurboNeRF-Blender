@@ -81,22 +81,16 @@ def bl2nerf_shift(context: bpy.types.Context, cam_data: bpy.types.Camera, fl_x: 
     cam_res_x = 2.0 * fl_x * math.tan(0.5 * cam_angle_x)
     cam_res_y = out_res_y / out_res_x * cam_res_x
 
-    # this is wild.
-    if cam_data.sensor_fit == 'AUTO':
-        if cam_res_x > cam_res_y:
-            shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
-            shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
-        else:
-            shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
-            shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
-    elif cam_data.sensor_fit == 'HORIZONTAL':
-        shift_x = cam_data.shift_x * cam_res_x / img_dims[0]
-        shift_y = cam_data.shift_y * cam_res_x / img_dims[1]
-    elif cam_data.sensor_fit == 'VERTICAL':
-        shift_x = cam_data.shift_x * cam_res_y / img_dims[0]
-        shift_y = cam_data.shift_y * cam_res_y / img_dims[1]
+    horizontal_fit = cam_data.sensor_fit == 'HORIZONTAL' or (cam_data.sensor_fit == 'AUTO' and cam_res_x > cam_res_y)
+
+    if horizontal_fit:
+        u = cam_res_x / img_dims[0]
+        v = cam_res_x / img_dims[1]
+    else:
+        u = cam_res_y / img_dims[0]
+        v = cam_res_y / img_dims[1]
     
-    return shift_x, shift_y
+    return u * cam_data.shift_x, v * cam_data.shift_y
 
 # converts aperture fstop to aperture size
 def bl2nerf_fstop2size(fstop: float) -> float:
