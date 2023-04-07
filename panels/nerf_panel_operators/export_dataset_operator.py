@@ -19,7 +19,7 @@ from turbo_nerf.constants import (
 )
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
-from turbo_nerf.utility.render_camera_utils import bl2nerf_cam
+from turbo_nerf.utility.render_camera_utils import bl2nerf_cam_train
 
 class ExportNeRFDatasetOperator(bpy.types.Operator):
     """An Operator to export a NeRF dataset from a directory."""
@@ -52,7 +52,7 @@ class ExportNeRFDatasetOperator(bpy.types.Operator):
 
         nerf_cams = []
         for cam_obj in cam_objs:
-            nerf_cam = bl2nerf_cam(cam_obj, img_dims=dataset.image_dimensions)
+            nerf_cam = bl2nerf_cam_train(cam_obj)
             nerf_cams.append(nerf_cam)
     
         dataset.cameras = nerf_cams
