@@ -152,11 +152,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
-    def render(self, depsgraph):
-        
+    def render(self, depsgraph: bpy.types.Depsgraph):
+
         # get properties
-        scene = depsgraph.scene
-        scene.frame_set(scene.frame_current) # found this in povray, said it was necessary
+        scene = depsgraph.scene_eval
+
         scale = scene.render.resolution_percentage / 100.0
         size_x = int(scene.render.resolution_x * scale)
         size_y = int(scene.render.resolution_y * scale)
