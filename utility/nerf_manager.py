@@ -38,14 +38,16 @@ class NeRFManager():
     @classmethod
     def create_trainable(cls, dataset_path):
         dataset = tn.Dataset(file_path=dataset_path)
+        dataset.load_transforms()
 
-        nerf = cls.mgr().create(dataset)
+        nerf_id = cls.mgr().create(dataset)
+        nerf = cls.mgr().get_proxy_ptr(nerf_id)
 
         item_id = cls.n_items
         item = dotdict({})
         item.nerf = nerf
 
-        cls.items[item_id] = item
+        cls.items[nerf_id] = item
 
         cls.n_items += 1
 
