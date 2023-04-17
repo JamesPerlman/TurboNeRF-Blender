@@ -56,7 +56,7 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         nerf_id = NeRFManager.create_trainable(dataset_path=self.filepath)
         nerf = NeRFManager.items[nerf_id].nerf
         dataset = nerf.dataset
-        bbox = nerf.get_bounding_box()
+        bbox = nerf.bounding_box
 
         cams = dataset.cameras
         
@@ -66,7 +66,7 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         set_nerf_obj_type(nerf_obj, OBJ_TYPE_NERF)
 
         nerf_obj[NERF_ITEM_IDENTIFIER_ID] = nerf_id
-        nerf_obj[NERF_AABB_SIZE_LOG2_ID] = int(round(math.log2(bbox.get_size())))
+        nerf_obj[NERF_AABB_SIZE_LOG2_ID] = int(round(math.log2(bbox.size())))
         aabb_size_log2 = nerf_obj.id_properties_ui(NERF_AABB_SIZE_LOG2_ID)
         aabb_size_log2.update(min=0, max=7)
 

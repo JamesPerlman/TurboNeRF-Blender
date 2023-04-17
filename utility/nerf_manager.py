@@ -40,14 +40,13 @@ class NeRFManager():
         dataset = tn.Dataset(file_path=dataset_path)
         dataset.load_transforms()
 
-        nerf_id = cls.mgr().create(dataset)
-        nerf = cls.mgr().get_proxy_ptr(nerf_id)
+        nerf = cls.mgr().create(dataset)
 
         item_id = cls.n_items
         item = dotdict({})
         item.nerf = nerf
 
-        cls.items[nerf_id] = item
+        cls.items[item_id] = item
 
         cls.n_items += 1
 
