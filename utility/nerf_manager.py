@@ -66,10 +66,15 @@ class NeRFManager():
         cls.n_items += 1
 
         return item_id
+
+    @classmethod
+    def get_all_nerfs(cls):
+        nerfs =  [item.nerf for item in cls.items.values()]
+        return nerfs
+    
     @classmethod
     def is_training(cls):
         return cls.bridge().is_training()
-
 
     @classmethod
     def get_training_step(cls):

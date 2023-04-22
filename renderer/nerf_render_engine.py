@@ -148,7 +148,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             return
         
         modifiers = self.get_render_modifiers(bpy.context)
-        self.bridge.request_preview(self.latest_camera, [NeRFManager.items[0].nerf], flags, modifiers)
+        self.bridge.request_preview(self.latest_camera, NeRFManager.get_all_nerfs(), flags, modifiers)
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
@@ -176,7 +176,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         camera = camera_with_flipped_y(camera)
 
         # launch render request
-        self.bridge.request_render(camera, [NeRFManager.items[0].nerf])
+        self.bridge.request_render(camera, NeRFManager.get_all_nerfs())
         
         # begin render result
         result = self.begin_result(0, 0, size_x, size_y)
@@ -276,12 +276,12 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             return
         
         # Determine if the user initiated this view_draw call
-        nerf = NeRFManager.items[0].nerf
         
         has_new_camera = True if self.latest_camera is None else camera != self.latest_camera
         has_new_dims = dimensions != self.prev_view_dims
 
-        user_initiated = has_new_camera or has_new_dims or nerf.is_dataset_dirty
+        all_nerfs = NeRFManager.get_all_nerfs()
+        user_initiated = has_new_camera or has_new_dims or np.any([nerf.is_dataset_dirty for nerf in all_nerfs])
 
         if user_initiated:
             flags = tn.RenderFlags.Preview
@@ -290,8 +290,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
             modifiers = self.get_render_modifiers(context)
 
-            self.bridge.request_preview(camera, [nerf], flags, modifiers)
-                    
+            self.bridge.request_preview(camera, all_nerfs, flags, modifiers)
+
         scene = depsgraph.scene
 
         bgl.glEnable(bgl.GL_BLEND)
