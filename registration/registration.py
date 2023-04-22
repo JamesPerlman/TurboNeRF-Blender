@@ -1,5 +1,6 @@
 import importlib
 import bpy
+from turbo_nerf.blender_utility.nerf_scene_update_handler import register_depsgraph_updates, unregister_depsgraph_updates
 
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
@@ -139,9 +140,11 @@ class Registration:
     def register_misc_components(cls):
         register_nerf_render_engine()
         register_addon_preferences()
+        register_depsgraph_updates()
 
     @classmethod
     def unregister_misc_components(cls):
         unregister_nerf_render_engine()
         unregister_addon_preferences()
+        unregister_depsgraph_updates()
 

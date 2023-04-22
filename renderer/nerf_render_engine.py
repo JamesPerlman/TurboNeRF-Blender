@@ -246,23 +246,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
-        for update in depsgraph.updates:
-            if update.is_updated_transform:
-                obj = update.id
-                if not isinstance(obj, bpy.types.Object):
-                    continue
-
-                nerf_obj = get_closest_parent_of_type(obj, OBJ_TYPE_NERF)
-                if nerf_obj is None:
-                    continue
-            
-                if get_nerf_obj_type(obj) == OBJ_TYPE_TRAIN_CAMERA:
-                    cam_obj = obj
-                    nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
-                    nerf = NeRFManager.items[nerf_id].nerf
-                    camera_idx = cam_obj[CAMERA_INDEX_ID]
-                    nerf.dataset.set_camera_at(camera_idx, bl2nerf_cam_train(cam_obj))
-                    nerf.is_dataset_dirty = True
+        pass
                         
     # For viewport renders, this method is called whenever Blender redraws
     # the 3D viewport. The renderer is expected to quickly draw the render

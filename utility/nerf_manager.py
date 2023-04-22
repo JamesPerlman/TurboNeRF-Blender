@@ -51,7 +51,21 @@ class NeRFManager():
         cls.n_items += 1
 
         return item_id
-    
+
+    @classmethod
+    def clone(cls, nerf):
+        cloned_nerf = cls.mgr().clone(nerf)
+
+        item_id = cls.n_items
+        item = dotdict({
+            "nerf": cloned_nerf
+        })
+
+        cls.items[item_id] = item
+
+        cls.n_items += 1
+
+        return item_id
     @classmethod
     def is_training(cls):
         return cls.bridge().is_training()
