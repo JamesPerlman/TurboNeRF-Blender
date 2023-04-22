@@ -45,11 +45,11 @@ def get_first_child_of_type(obj, obj_type):
 
 def get_all_training_cam_objs(nerf_obj):
     cams_container = get_first_child_of_type(nerf_obj, OBJ_TYPE_CAMERAS_CONTAINER)
-    cams = []
-    for cam_obj in cams_container.children:
-        if is_nerf_obj_type(cam_obj, OBJ_TYPE_TRAIN_CAMERA):
-            cams.append(cam_obj)
-    return cams
+    
+    if cams_container is None:
+        return []
+    
+    return [c for c in cams_container.children if is_nerf_obj_type(c, OBJ_TYPE_TRAIN_CAMERA)]
 
 
 def get_active_nerf_obj(context):
