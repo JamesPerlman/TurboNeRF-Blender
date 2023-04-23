@@ -15,7 +15,7 @@ class NeRFManager():
     
     @classmethod
     def required_pylib_version(cls):
-        return "0.0.9"
+        return "0.0.10"
 
     @classmethod
     def is_pylib_compatible(cls):
