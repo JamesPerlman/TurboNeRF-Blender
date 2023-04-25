@@ -72,7 +72,9 @@ def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
             if nerf_obj_type == OBJ_TYPE_NERF:
                 nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
                 nerf = NeRFManager.items[nerf_id].nerf
-                nerf.transform = tn.Transform4f(np.array(obj.matrix_world)).from_nerf()
+                # something is wrong here
+                mat = np.array(obj.matrix_world)
+                nerf.transform = tn.Transform4f(mat).from_nerf()
                 continue
 
             # From here on, we check if the object is some child of a NeRF
