@@ -3,6 +3,7 @@ import numpy as np
 
 from turbo_nerf.blender_utility.obj_type_utility import get_closest_parent_of_type, get_nerf_obj_type
 from turbo_nerf.constants import CAMERA_INDEX_ID, NERF_ITEM_IDENTIFIER_ID, OBJ_TYPE_NERF, OBJ_TYPE_TRAIN_CAMERA
+from turbo_nerf.constants.math import NERF_ADJUSTMENT_MATRIX
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 from turbo_nerf.utility.render_camera_utils import bl2nerf_cam_train
@@ -73,7 +74,7 @@ def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
                 nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
                 nerf = NeRFManager.items[nerf_id].nerf
                 # something is wrong here
-                mat = np.array(obj.matrix_world)
+                mat = np.array(obj.matrix_world @ NERF_ADJUSTMENT_MATRIX)
                 nerf.transform = tn.Transform4f(mat).from_nerf()
                 continue
 
