@@ -216,7 +216,6 @@ class NeRF3DViewPanel(bpy.types.Panel):
 
         def on_training_start(args):
             # When training starts, we register a timer to update the UI
-            print("REGISTER??")
             register_global_timer()
             
 
@@ -257,7 +256,6 @@ class NeRF3DViewPanel(bpy.types.Panel):
             nerf_props.n_images_total = args["n_total"]
             nerf_props.n_images_loaded = 0
             
-            print("REGISTER??")
             register_global_timer()
         
         obid = bridge.add_observer(BBE.OnTrainingImagesLoadStart, on_images_load_start)

@@ -18,20 +18,14 @@ def get_duplicated_nerf_objs(prev_objs: set, cur_objs: set) -> list:
     if len(added_objs) == 0:
         return []
     
-    print(f"Added objects: {len(added_objs)}")
-    
     prev_nerfs = filter_nerf_objs(prev_objs)
     added_nerfs = filter_nerf_objs(added_objs)
-
-    print(f"Prev nerfs: {len(prev_nerfs)}")
-    print(f"Added nerfs: {len(added_nerfs)}")
     
     # there is probably a more efficient or pythonic way to do this, but this works for now.
     prev_nerf_ids = [o[NERF_ITEM_IDENTIFIER_ID] for o in prev_nerfs]
     added_nerf_ids = [o[NERF_ITEM_IDENTIFIER_ID] for o in added_nerfs]
 
     duplicate_nerf_ids = set(prev_nerf_ids).intersection(set(added_nerf_ids))
-    print(f"Duplicate nerf ids: {len(duplicate_nerf_ids)}")
 
     return [o for o in added_nerfs if o[NERF_ITEM_IDENTIFIER_ID] in duplicate_nerf_ids]
 
@@ -46,8 +40,6 @@ def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
         prev_objs=scene_objects.get(scene.name, set()),
         cur_objs=cur_scene_objs
     )
-
-    print(f"Scene: {scene.name} - {len(duplicated_nerf_objs)} duplicated objects")
 
     # if we have any duplicated objects, we need to create new nerfs for them.
     # each nerf obj must have a unique nerf associated with it.
