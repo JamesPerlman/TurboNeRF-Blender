@@ -6,6 +6,7 @@ import bgl
 import numpy as np
 from turbo_nerf.blender_utility.obj_type_utility import get_closest_parent_of_type, get_nerf_obj_type
 from turbo_nerf.constants import CAMERA_INDEX_ID, NERF_ITEM_IDENTIFIER_ID, OBJ_TYPE_NERF, OBJ_TYPE_TRAIN_CAMERA
+from turbo_nerf.constants.math import NERF_ADJUSTMENT_MATRIX
 
 from turbo_nerf.utility.render_camera_utils import bl2nerf_cam, bl2nerf_cam_train, camera_with_flipped_y
 from turbo_nerf.utility.nerf_manager import NeRFManager
@@ -37,6 +38,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.render_thread = None
         self.write_to_surface = None
         self.surface_is_allocated = False
+        self.has_depsgraph_updates = True
 
         self.prev_view_dims = (0, 0)
 
@@ -246,7 +248,26 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
-        pass
+        for update in depsgraph.updates:
+            if update.is_updated_transform:
+                obj = update.id
+
+                if not isinstance(obj, bpy.types.Object):
+                    continue
+
+                nerf_obj_type = get_nerf_obj_type(obj)
+                if nerf_obj_type is None:
+                    continue
+
+                # Base NeRF object
+                if nerf_obj_type == OBJ_TYPE_NERF:
+                    nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
+                    nerf = NeRFManager.items[nerf_id].nerf
+                    # why do we need to multiply by NERF_ADJUSTMENT_MATRIX? idk, but it works.
+                    mat = np.array(obj.matrix_world @ NERF_ADJUSTMENT_MATRIX)
+                    nerf.transform = tn.Transform4f(mat).from_nerf()
+
+                    self.has_depsgraph_updates = True
                         
     # For viewport renders, this method is called whenever Blender redraws
     # the 3D viewport. The renderer is expected to quickly draw the render
@@ -283,7 +304,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         all_nerfs = NeRFManager.get_all_nerfs()
         user_initiated = has_new_camera or has_new_dims or np.any([nerf.is_dataset_dirty for nerf in all_nerfs])
 
-        if user_initiated:
+        if user_initiated or self.has_depsgraph_updates:
+            self.has_depsgraph_updates = False
             flags = tn.RenderFlags.Preview
             if not NeRFManager.is_training(): # and not context.screen.is_animation_playing:
                 flags = flags | tn.RenderFlags.Final
