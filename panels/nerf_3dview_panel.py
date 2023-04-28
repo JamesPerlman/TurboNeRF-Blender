@@ -87,6 +87,44 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         precision=1,
     )
 
+    show_training_settings: bpy.props.BoolProperty(
+        name="show_training_settings",
+        description="Show the training settings section.",
+        default=False,
+    )
+
+    def update_training_alpha_selection_threshold(self, context):
+        trainer = NeRFManager.bridge().get_trainer()
+        if trainer == None:
+            return
+
+        trainer.set_alpha_selection_threshold(self.training_alpha_selection_threshold)
+
+    training_alpha_selection_threshold: bpy.props.FloatProperty(
+        name="training_alpha_selection_threshold",
+        description="Alpha threshold for selecting training pixels.",
+        default=1.0,
+        min=0.0,
+        max=1.0,
+        update=update_training_alpha_selection_threshold,
+    )
+
+    def update_training_alpha_selection_probability(self, context):
+        trainer = NeRFManager.bridge().get_trainer()
+        if trainer == None:
+            return
+
+        trainer.set_alpha_selection_probability(self.training_alpha_selection_probability)
+
+    training_alpha_selection_probability: bpy.props.FloatProperty(
+        name="training_alpha_selection_probability",
+        description="Probability of selecting a training pixel less than the alpha threshold.",
+        default=1.0,
+        min=0.0,
+        max=1.0,
+        update=update_training_alpha_selection_probability,
+    )
+
     show_training_metrics: bpy.props.BoolProperty(
         name="show_training_metrics",
         description="Show the training metrics section.",
@@ -400,6 +438,24 @@ class NeRF3DViewPanel(bpy.types.Panel):
         else:
             row = box.row()
             row.label(text=f"Step: {nerf_props.training_step}")
+        
+        # Training Settings
+        row = box.row()
+        row.prop(ui_props, "show_training_settings", text="Settings")
+
+        if ui_props.show_training_settings:
+            row = box.row()
+            row.label(text="Training Pixel Selection")
+
+            is_trainer_available = NeRFManager.bridge().get_trainer() is not None
+
+            row = box.row()
+            row.prop(ui_props, "training_alpha_selection_threshold", text="Alpha Threshold")
+            row.enabled = is_trainer_available
+
+            row = box.row()
+            row.prop(ui_props, "training_alpha_selection_probability", text="Selection Probability")
+            row.enabled = is_trainer_available
         
         # Training metrics
 
