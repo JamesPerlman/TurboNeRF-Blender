@@ -127,3 +127,8 @@ class NeRFManager():
     @classmethod
     def reset_training(cls):
         cls.bridge().reset_training()
+
+    @classmethod
+    def get_nerf_for_obj(cls, nerf_obj):
+        nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
+        return cls.items[nerf_id].nerf
