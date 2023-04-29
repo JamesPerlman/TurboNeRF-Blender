@@ -140,7 +140,6 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
             cam_obj[CAMERA_P1_ID] = cam.dist_params.p1
             cam_obj[CAMERA_P2_ID] = cam.dist_params.p2
 
-
             # set transform
             cam_obj.matrix_world = mathutils.Matrix(np.array(cam.transform.to_nerf().to_matrix()))
             
