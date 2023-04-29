@@ -34,6 +34,19 @@ class NeRFManager():
             cls._bridge = tn.BlenderBridge()
 
         return cls._bridge
+    
+    @classmethod
+    def add_nerf(cls, nerf: tn.NeRF):
+        item_id = cls.n_items
+        item = dotdict({
+            "nerf": nerf
+        })
+
+        cls.items[item_id] = item
+
+        cls.n_items += 1
+
+        return item_id
 
     @classmethod
     def create_trainable(cls, dataset_path):
@@ -42,30 +55,12 @@ class NeRFManager():
 
         nerf = cls.mgr().create(dataset)
 
-        item_id = cls.n_items
-        item = dotdict({})
-        item.nerf = nerf
-
-        cls.items[item_id] = item
-
-        cls.n_items += 1
-
-        return item_id
+        return cls.add_nerf(nerf)
 
     @classmethod
     def clone(cls, nerf):
         cloned_nerf = cls.mgr().clone(nerf)
-
-        item_id = cls.n_items
-        item = dotdict({
-            "nerf": cloned_nerf
-        })
-
-        cls.items[item_id] = item
-
-        cls.n_items += 1
-
-        return item_id
+        return cls.add_nerf(cloned_nerf)
     
     @classmethod
     def destroy(cls, item_id):
