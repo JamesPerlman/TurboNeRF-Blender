@@ -156,6 +156,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # small preview for materials, world and lights.
     def render(self, depsgraph: bpy.types.Depsgraph):
 
+        all_nerfs = NeRFManager.get_all_nerfs()
+
+        if len(all_nerfs) == 0:
+            return
+
         # get properties
         scene = depsgraph.scene_eval
 
@@ -178,7 +183,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         camera = camera_with_flipped_y(camera)
 
         # launch render request
-        self.bridge.request_render(camera, NeRFManager.get_all_nerfs())
+        self.bridge.request_render(camera, all_nerfs)
         
         # begin render result
         result = self.begin_result(0, 0, size_x, size_y)
@@ -275,6 +280,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
+        all_nerfs = NeRFManager.get_all_nerfs()
+
+        if len(all_nerfs) == 0:
+            return
+        
         # # Get viewport dimensions
         region = context.region
         dimensions = region.width, region.height
@@ -301,7 +311,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         has_new_camera = True if self.latest_camera is None else camera != self.latest_camera
         has_new_dims = dimensions != self.prev_view_dims
 
-        all_nerfs = NeRFManager.get_all_nerfs()
         user_initiated = has_new_camera or has_new_dims or np.any([nerf.is_dataset_dirty for nerf in all_nerfs])
 
         if user_initiated or self.has_depsgraph_updates:

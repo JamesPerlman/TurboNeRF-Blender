@@ -149,8 +149,8 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
 
     def force_redraw(self, context):
         # TODO: we don't need to do this for all items
-        for idx in NeRFManager.items:
-            nerf = NeRFManager.items[idx].nerf
+        for nerf_id in NeRFManager.items:
+            nerf = NeRFManager.items[nerf_id].nerf
             nerf.is_dataset_dirty = True
 
     show_near_planes: bpy.props.BoolProperty(

@@ -66,10 +66,16 @@ class NeRFManager():
         cls.n_items += 1
 
         return item_id
+    
+    @classmethod
+    def destroy(cls, item_id):
+        cls.mgr().destroy(cls.items[item_id].nerf)
+        del cls.items[item_id]
 
     @classmethod
     def get_all_nerfs(cls):
         nerfs =  [item.nerf for item in cls.items.values()]
+        print("all nerfs: ", nerfs)
         return nerfs
     
     @classmethod

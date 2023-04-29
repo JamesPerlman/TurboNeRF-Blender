@@ -29,9 +29,21 @@ def get_duplicated_nerf_objs(prev_objs: set, cur_objs: set) -> list:
 
     return [o for o in added_nerfs if o[NERF_ITEM_IDENTIFIER_ID] in duplicate_nerf_ids]
 
+def get_deleted_nerf_ids(prev_objs: set, cur_objs: set) -> list:
+    removed_objs = prev_objs - cur_objs
+    
+    if (len(removed_objs) == 0):
+        return []
+
+    nerf_ids = [id for (id, _) in NeRFManager.items.items()]
+
+    cur_nerf_ids = [o[NERF_ITEM_IDENTIFIER_ID] for o in filter_nerf_objs(cur_objs)]
+
+    return [id for id in nerf_ids if id not in cur_nerf_ids]
 
 @bpy.app.handlers.persistent
 def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
+    
     # check if we have new objects
     global scene_objects
 
@@ -48,6 +60,15 @@ def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
         nerf = NeRFManager.items[nerf_id].nerf
         new_nerf_id = NeRFManager.clone(nerf)
         obj[NERF_ITEM_IDENTIFIER_ID] = new_nerf_id
+
+    # check if we have deleted objects
+    deleted_nerf_ids = get_deleted_nerf_ids(
+        prev_objs=scene_objects.get(scene.name, set()),
+        cur_objs=cur_scene_objs
+    )
+
+    for nerf_id in deleted_nerf_ids:
+        NeRFManager.destroy(nerf_id)
     
     # update object transforms, etc
     for update in depsgraph.updates:
