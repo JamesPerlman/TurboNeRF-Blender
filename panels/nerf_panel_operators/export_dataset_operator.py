@@ -5,7 +5,6 @@ from pathlib import Path
 from turbo_nerf.blender_utility.obj_type_utility import (
     get_active_nerf_obj,
     get_all_training_cam_objs,
-    get_nerf_for_obj,
     is_self_or_some_parent_of_type,
 )
 
@@ -34,7 +33,7 @@ class ExportNeRFDatasetOperator(bpy.types.Operator):
     def execute(self, context):
         # Get some scene references
         nerf_obj = get_active_nerf_obj(context)
-        nerf = get_nerf_for_obj(nerf_obj)
+        nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
 
         dataset = nerf.dataset.copy()
         dataset.file_path = Path(self.filepath)
