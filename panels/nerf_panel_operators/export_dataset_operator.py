@@ -3,18 +3,14 @@ import json
 from pathlib import Path
 
 from turbo_nerf.blender_utility.obj_type_utility import (
+    get_active_nerf_obj,
     get_all_training_cam_objs,
-    get_closest_parent_of_type,
-    get_first_child_of_type,
-    is_nerf_obj_type,
+    get_nerf_for_obj,
     is_self_or_some_parent_of_type,
 )
 
 from turbo_nerf.constants import (
-    CAMERA_FAR_ID,
-    CAMERA_NEAR_ID,
     NERF_AABB_SIZE_LOG2_ID,
-    NERF_ITEM_IDENTIFIER_ID,
     OBJ_TYPE_NERF,
 )
 from turbo_nerf.utility.nerf_manager import NeRFManager
@@ -37,12 +33,9 @@ class ExportNeRFDatasetOperator(bpy.types.Operator):
 
     def execute(self, context):
         # Get some scene references
-        scene = context.scene
+        nerf_obj = get_active_nerf_obj(context)
+        nerf = get_nerf_for_obj(nerf_obj)
 
-        nerf_obj = get_closest_parent_of_type(context.active_object, OBJ_TYPE_NERF)
-        nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
-
-        nerf = NeRFManager.items[nerf_id].nerf
         dataset = nerf.dataset.copy()
         dataset.file_path = Path(self.filepath)
 
