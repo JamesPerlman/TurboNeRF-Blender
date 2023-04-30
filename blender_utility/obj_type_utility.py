@@ -51,7 +51,6 @@ def get_all_training_cam_objs(nerf_obj):
     
     return [c for c in cams_container.children if is_nerf_obj_type(c, OBJ_TYPE_TRAIN_CAMERA)]
 
-
 def get_active_nerf_obj(context):
     active_obj = context.active_object
     nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
