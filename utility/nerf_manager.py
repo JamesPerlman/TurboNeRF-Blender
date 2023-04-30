@@ -68,6 +68,16 @@ class NeRFManager():
         del cls.items[item_id]
 
     @classmethod
+    def load(cls, path: Path):
+        nerf = cls.mgr.load(str(path.absolute()))
+        return cls.add_nerf(nerf)
+
+    @classmethod
+    def save(cls, item_id, path: Path):
+        nerf = cls.items[item_id].nerf
+        cls.mgr().save(nerf, str(path.absolute()))
+
+    @classmethod
     def get_all_nerfs(cls):
         nerfs =  [item.nerf for item in cls.items.values()]
         print("all nerfs: ", nerfs)
