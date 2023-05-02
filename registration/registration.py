@@ -5,6 +5,7 @@ from turbo_nerf.blender_utility.nerf_scene_update_handler import register_depsgr
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
 from turbo_nerf.operators.operator_export_nerfies_cameras import ExportNerfiesCameras
+from turbo_nerf.operators.operator_export_render_cam_json import ExportRenderCamJSON
 from turbo_nerf.operators.operator_export_world_matrix import ExportObjectWorldMatrix
 from turbo_nerf.operators.operator_import_hypernerf_cams import ImportHyperNeRFCams
 from turbo_nerf.operators.operator_import_nerf_transforms import ImportNeRFTransforms
@@ -45,6 +46,12 @@ def _hypernerf_cams_import_operator_function(topbar_file_import, context):
     topbar_file_import.layout.operator(
         ImportHyperNeRFCams.bl_idname,
         text="HyperNeRF Cameras.json"
+    )
+
+def _render_cam_json_export_operator_function(topbar_file_export, context):
+    topbar_file_export.layout.operator(
+        ExportRenderCamJSON.bl_idname,
+        text="TurboNeRF Render JSON"
     )
 
 class Registration:
@@ -111,6 +118,10 @@ class Registration:
             ExportNerfiesCameras,
             _nerfies_cameras_export_operator_function,
         )
+        cls._register_exporter(
+            ExportRenderCamJSON,
+            _render_cam_json_export_operator_function,
+        )
 
     @classmethod
     def unregister_exporters(cls):
@@ -122,6 +133,10 @@ class Registration:
         cls._unregister_exporter(
             ExportNerfiesCameras,
             _nerfies_cameras_export_operator_function,
+        )
+        cls._unregister_exporter(
+            ExportRenderCamJSON,
+            _render_cam_json_export_operator_function,
         )
     
     @classmethod
