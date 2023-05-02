@@ -87,18 +87,25 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         precision=1,
     )
 
+    # Trainer Settings
+
     show_training_settings: bpy.props.BoolProperty(
         name="show_training_settings",
         description="Show the training settings section.",
         default=False,
     )
 
-    def update_training_alpha_selection_threshold(self, context):
-        trainer = NeRFManager.bridge().get_trainer()
-        if trainer == None:
-            return
-
-        trainer.set_alpha_selection_threshold(self.training_alpha_selection_threshold)
+    def bridge_mgr_obj_prop_setter(obj_name, prop_name):
+        def setter(self, value):
+            NeRFManager.set_bridge_object_property(obj_name, prop_name, value)
+        
+        return setter
+    
+    def bridge_mgr_obj_prop_getter(obj_name, prop_name, default):
+        def getter(self):
+            return NeRFManager.get_bridge_object_property(obj_name, prop_name, default)
+        
+        return getter
 
     training_alpha_selection_threshold: bpy.props.FloatProperty(
         name="training_alpha_selection_threshold",
@@ -106,23 +113,27 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         default=1.0,
         min=0.0,
         max=1.0,
-        update=update_training_alpha_selection_threshold,
+        get=bridge_mgr_obj_prop_getter("trainer", "alpha_selection_threshold", 1.0),
+        set=bridge_mgr_obj_prop_setter("trainer", "alpha_selection_threshold"),
     )
-
-    def update_training_alpha_selection_probability(self, context):
-        trainer = NeRFManager.bridge().get_trainer()
-        if trainer == None:
-            return
-
-        trainer.set_alpha_selection_probability(self.training_alpha_selection_probability)
 
     training_alpha_selection_probability: bpy.props.FloatProperty(
         name="training_alpha_selection_probability",
         description="Probability of selecting a training pixel less than the alpha threshold.",
-        default=1.0,
         min=0.0,
         max=1.0,
-        update=update_training_alpha_selection_probability,
+        get=bridge_mgr_obj_prop_getter("trainer", "alpha_selection_probability", 1.0),
+        set=bridge_mgr_obj_prop_setter("trainer", "alpha_selection_probability"),
+    )
+
+    training_min_step_size: bpy.props.FloatProperty(
+        name="training_min_step_size",
+        description="Minimum step size for training.",
+        min=0.00169145586,
+        max=0.1,
+        precision=6,
+        get=bridge_mgr_obj_prop_getter("trainer", "min_step_size", 0.00169145586),
+        set=bridge_mgr_obj_prop_setter("trainer", "min_step_size"),
     )
 
     show_training_metrics: bpy.props.BoolProperty(
@@ -447,7 +458,7 @@ class NeRF3DViewPanel(bpy.types.Panel):
             row = box.row()
             row.label(text="Training Pixel Selection")
 
-            is_trainer_available = NeRFManager.bridge().get_trainer() is not None
+            is_trainer_available = NeRFManager.bridge().trainer is not None
 
             row = box.row()
             row.prop(ui_props, "training_alpha_selection_threshold", text="Alpha Threshold")
@@ -455,6 +466,10 @@ class NeRF3DViewPanel(bpy.types.Panel):
 
             row = box.row()
             row.prop(ui_props, "training_alpha_selection_probability", text="Selection Probability")
+            row.enabled = is_trainer_available
+
+            row = box.row()
+            row.prop(ui_props, "training_min_step_size", text="Min Step Size")
             row.enabled = is_trainer_available
         
         # Training metrics
