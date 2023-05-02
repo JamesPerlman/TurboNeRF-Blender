@@ -1,7 +1,7 @@
 import bpy
 from datetime import datetime
 from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
-from turbo_nerf.constants import NERF_ITEM_IDENTIFIER_ID
+from turbo_nerf.constants.raymarching import RAYMARCHING_MAX_STEP_SIZE, RAYMARCHING_MIN_STEP_SIZE
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.load_nerf_images_operator import LoadNeRFImagesOperator
@@ -95,26 +95,14 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         default=False,
     )
 
-    def bridge_mgr_obj_prop_setter(obj_name, prop_name):
-        def setter(self, value):
-            NeRFManager.set_bridge_object_property(obj_name, prop_name, value)
-        
-        return setter
-    
-    def bridge_mgr_obj_prop_getter(obj_name, prop_name, default):
-        def getter(self):
-            return NeRFManager.get_bridge_object_property(obj_name, prop_name, default)
-        
-        return getter
-
     training_alpha_selection_threshold: bpy.props.FloatProperty(
         name="training_alpha_selection_threshold",
         description="Alpha threshold for selecting training pixels.",
         default=1.0,
         min=0.0,
         max=1.0,
-        get=bridge_mgr_obj_prop_getter("trainer", "alpha_selection_threshold", 1.0),
-        set=bridge_mgr_obj_prop_setter("trainer", "alpha_selection_threshold"),
+        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_threshold", 1.0),
+        set=NeRFManager.bridge_obj_prop_setter("trainer", "alpha_selection_threshold"),
     )
 
     training_alpha_selection_probability: bpy.props.FloatProperty(
@@ -122,18 +110,18 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         description="Probability of selecting a training pixel less than the alpha threshold.",
         min=0.0,
         max=1.0,
-        get=bridge_mgr_obj_prop_getter("trainer", "alpha_selection_probability", 1.0),
-        set=bridge_mgr_obj_prop_setter("trainer", "alpha_selection_probability"),
+        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_probability", 1.0),
+        set=NeRFManager.bridge_obj_prop_setter("trainer", "alpha_selection_probability"),
     )
 
     training_min_step_size: bpy.props.FloatProperty(
         name="training_min_step_size",
         description="Minimum step size for training.",
-        min=0.00169145586,
-        max=0.1,
+        min=RAYMARCHING_MIN_STEP_SIZE,
+        max=RAYMARCHING_MAX_STEP_SIZE,
         precision=6,
-        get=bridge_mgr_obj_prop_getter("trainer", "min_step_size", 0.00169145586),
-        set=bridge_mgr_obj_prop_setter("trainer", "min_step_size"),
+        get=NeRFManager.bridge_obj_prop_getter("trainer", "min_step_size", RAYMARCHING_MIN_STEP_SIZE),
+        set=NeRFManager.bridge_obj_prop_setter("trainer", "min_step_size"),
     )
 
     show_training_metrics: bpy.props.BoolProperty(
