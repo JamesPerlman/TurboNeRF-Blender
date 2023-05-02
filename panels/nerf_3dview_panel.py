@@ -101,7 +101,7 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         default=1.0,
         min=0.0,
         max=1.0,
-        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_threshold", 1.0),
+        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_threshold", default=1.0),
         set=NeRFManager.bridge_obj_prop_setter("trainer", "alpha_selection_threshold"),
     )
 
@@ -110,7 +110,7 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         description="Probability of selecting a training pixel less than the alpha threshold.",
         min=0.0,
         max=1.0,
-        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_probability", 1.0),
+        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_probability", default=1.0),
         set=NeRFManager.bridge_obj_prop_setter("trainer", "alpha_selection_probability"),
     )
 
@@ -120,7 +120,7 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         min=RAYMARCHING_MIN_STEP_SIZE,
         max=RAYMARCHING_MAX_STEP_SIZE,
         precision=6,
-        get=NeRFManager.bridge_obj_prop_getter("trainer", "min_step_size", RAYMARCHING_MIN_STEP_SIZE),
+        get=NeRFManager.bridge_obj_prop_getter("trainer", "min_step_size", default=RAYMARCHING_MIN_STEP_SIZE),
         set=NeRFManager.bridge_obj_prop_setter("trainer", "min_step_size"),
     )
 
@@ -458,7 +458,7 @@ class NeRF3DViewPanel(bpy.types.Panel):
 
             row = box.row()
             row.label(text="Raymarching")
-            
+
             row = box.row()
             row.prop(ui_props, "training_min_step_size", text="Min Step Size")
             row.enabled = is_trainer_available
