@@ -457,6 +457,9 @@ class NeRF3DViewPanel(bpy.types.Panel):
             row.enabled = is_trainer_available
 
             row = box.row()
+            row.label(text="Raymarching")
+            
+            row = box.row()
             row.prop(ui_props, "training_min_step_size", text="Min Step Size")
             row.enabled = is_trainer_available
         
