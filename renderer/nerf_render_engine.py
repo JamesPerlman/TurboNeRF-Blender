@@ -5,8 +5,9 @@ import bpy
 import bgl
 import numpy as np
 from turbo_nerf.blender_utility.obj_type_utility import get_closest_parent_of_type, get_nerf_obj_type
-from turbo_nerf.constants import CAMERA_INDEX_ID, NERF_ITEM_IDENTIFIER_ID, OBJ_TYPE_NERF, OBJ_TYPE_TRAIN_CAMERA
+from turbo_nerf.constants import NERF_ITEM_IDENTIFIER_ID, OBJ_TYPE_NERF
 from turbo_nerf.constants.math import NERF_ADJUSTMENT_MATRIX
+from turbo_nerf.renderer.panels.render_engine_raymarching_panel import TurboNeRFRenderEngineRaymarchingPanel
 
 from turbo_nerf.utility.render_camera_utils import bl2nerf_cam, bl2nerf_cam_train, camera_with_flipped_y
 from turbo_nerf.utility.nerf_manager import NeRFManager
@@ -359,6 +360,7 @@ def get_panels():
 def register_nerf_render_engine():
     # Register the RenderEngine
     bpy.utils.register_class(TurboNeRFRenderEngine)
+    bpy.utils.register_class(TurboNeRFRenderEngineRaymarchingPanel)
 
     for panel in get_panels():
         panel.COMPAT_ENGINES.add('TURBO_NERF_RENDERER')
@@ -366,6 +368,7 @@ def register_nerf_render_engine():
 
 def unregister_nerf_render_engine():
     bpy.utils.unregister_class(TurboNeRFRenderEngine)
+    bpy.utils.unregister_class(TurboNeRFRenderEngineRaymarchingPanel)
 
     for panel in get_panels():
         if 'CUSTOM' in panel.COMPAT_ENGINES:
