@@ -161,4 +161,18 @@ class NeRFManager():
             return default
 
         return getattr(obj, property_name, default)
+    
+    @classmethod
+    def bridge_obj_prop_setter(cls, obj_name, prop_name):
+        def setter(self, value):
+            cls.set_bridge_object_property(obj_name, prop_name, value)
+        
+        return setter
+    
+    @classmethod
+    def bridge_obj_prop_getter(cls, obj_name, prop_name, default):
+        def getter(self):
+            return cls.get_bridge_object_property(obj_name, prop_name, default)
+        
+        return getter
 
