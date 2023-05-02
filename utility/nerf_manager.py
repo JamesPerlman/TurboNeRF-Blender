@@ -145,3 +145,20 @@ class NeRFManager():
     def get_nerf_for_obj(cls, nerf_obj):
         nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
         return cls.items[nerf_id].nerf
+    
+    @classmethod
+    def set_bridge_object_property(cls, object_name, property_name, value):
+        obj = getattr(cls.bridge(), object_name, None)
+        if obj is None:
+            return
+
+        setattr(obj, property_name, value)
+    
+    @classmethod
+    def get_bridge_object_property(cls, object_name, property_name, default=None):
+        obj = getattr(cls.bridge(), object_name, None)
+        if obj is None:
+            return default
+
+        return getattr(obj, property_name, default)
+
