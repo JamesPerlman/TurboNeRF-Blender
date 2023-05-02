@@ -119,9 +119,9 @@ class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
         description="Minimum step size for training.",
         min=RAYMARCHING_MIN_STEP_SIZE,
         max=RAYMARCHING_MAX_STEP_SIZE,
-        precision=6,
         get=NeRFManager.bridge_obj_prop_getter("trainer", "min_step_size", default=RAYMARCHING_MIN_STEP_SIZE),
         set=NeRFManager.bridge_obj_prop_setter("trainer", "min_step_size"),
+        precision=6,
     )
 
     show_training_metrics: bpy.props.BoolProperty(
