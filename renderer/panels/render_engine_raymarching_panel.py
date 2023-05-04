@@ -37,8 +37,6 @@ class TurboNeRFRenderEngineRaymarchingPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        print(context.scene.render.engine)
-        print('render engine?')
         return context.scene.render.engine == "TURBO_NERF_RENDERER"
 
     def draw(self, context):
