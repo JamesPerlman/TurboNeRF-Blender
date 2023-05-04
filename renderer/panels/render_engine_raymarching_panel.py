@@ -54,7 +54,6 @@ class TurboNeRFRenderEngineRaymarchingPanel(bpy.types.Panel):
     
     @classmethod
     def register(cls):
-        print("registeriterig")
         bpy.utils.register_class(TurboNeRFRenderEngineRaymarchingSettings)
         bpy.types.Scene.tn_render_engine_raymarching_settings = bpy.props.PointerProperty(type=TurboNeRFRenderEngineRaymarchingSettings)
     
