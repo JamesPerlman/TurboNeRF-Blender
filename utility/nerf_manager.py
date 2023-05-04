@@ -11,6 +11,7 @@ class NeRFManager():
 
     _bridge = None
     _manager = None
+    _did_check_runtime = False
 
     @classmethod
     def pylib_version(cls):
@@ -23,6 +24,15 @@ class NeRFManager():
     @classmethod
     def is_pylib_compatible(cls):
         return cls.pylib_version() == cls.required_pylib_version()
+    
+    @classmethod
+    def check_runtime(cls):
+        if cls._did_check_runtime:
+            return
+        
+        cls._did_check_runtime = True      
+        rm = tn.RuntimeManager()
+        rm.check_runtime()
 
     @classmethod
     def mgr(cls):

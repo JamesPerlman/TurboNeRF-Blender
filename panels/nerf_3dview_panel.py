@@ -340,6 +340,8 @@ class NeRF3DViewPanel(bpy.types.Panel):
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""
 
+        NeRFManager.check_runtime()
+
         # kinda messy to call add_observers here but I'm not sure how else to do this.
         # TurboNeRF python lib doesn't load in cls.register()
         self.__class__.add_observers()
