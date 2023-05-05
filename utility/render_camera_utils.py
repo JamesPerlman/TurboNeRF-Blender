@@ -2,17 +2,10 @@ import bpy
 import math
 import numpy as np
 
-from copy import copy
-from turbo_nerf.blender_utility.obj_type_utility import is_nerf_obj_type
-
-from turbo_nerf.utility.math import bl2nerf_mat
-from turbo_nerf.utility.nerf_manager import NeRFManager
-
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
 from turbo_nerf.constants import (
     CAM_TYPE_BLENDER_PERSPECTIVE,
-    CAM_TYPE_TRAIN_OPENCV,
     CAMERA_CX_ID,
     CAMERA_CY_ID,
     CAMERA_FAR_ID,
@@ -27,11 +20,6 @@ from turbo_nerf.constants import (
     CAMERA_P1_ID,
     CAMERA_P2_ID,
     CAMERA_SHOW_IMAGE_PLANES_ID,
-    OBJ_TYPE_TRAIN_CAMERA,
-    RENDER_CAM_TYPE_ID,
-    RENDER_CAM_TYPE_PERSPECTIVE,
-    RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL,
-    RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON
 )
 
 def bl2nerf_fl(cam_data: bpy.types.Camera, output_dimensions: tuple[int, int]) -> float:
@@ -144,8 +132,13 @@ def bl2nerf_cam_regionview3d(
         transform=bl_camera_matrix.from_nerf()
     )
 
-def bl2nerf_cam_train(cam_obj: bpy.types.Object):
-    c2w = np.array(cam_obj.matrix_world)
+def bl2nerf_cam_train(cam_obj: bpy.types.Object, relative_to: bpy.types.Object = None):
+    c2w: np.ndarray
+    if relative_to is None:
+        c2w = np.array(cam_obj.matrix_world)
+    else:
+        c2w = np.array(relative_to.matrix_world.inverted() @ cam_obj.matrix_world)
+
     transform = tn.Transform4f(c2w).from_nerf()
 
     dist_params = tn.DistortionParams(

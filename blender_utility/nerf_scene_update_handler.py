@@ -92,7 +92,7 @@ def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
                 nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
                 nerf = NeRFManager.items[nerf_id].nerf
                 camera_idx = cam_obj[CAMERA_INDEX_ID]
-                nerf.dataset.set_camera_at(camera_idx, bl2nerf_cam_train(cam_obj))
+                nerf.dataset.set_camera_at(camera_idx, bl2nerf_cam_train(cam_obj, relative_to=nerf_obj))
                 nerf.is_dataset_dirty = True
     
     scene_objects[scene.name] = cur_scene_objs

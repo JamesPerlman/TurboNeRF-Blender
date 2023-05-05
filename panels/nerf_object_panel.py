@@ -33,7 +33,7 @@ def update_dataset_cams(nerf_obj):
     cam_objs = get_all_training_cam_objs(nerf_obj)
 
     # todo: only update the cameras that have changed
-    nerf.dataset.cameras = [bl2nerf_cam_train(cam_obj) for cam_obj in cam_objs]
+    nerf.dataset.cameras = [bl2nerf_cam_train(cam_obj, relative_to=nerf_obj) for cam_obj in cam_objs]
     nerf.is_dataset_dirty = True
     
 

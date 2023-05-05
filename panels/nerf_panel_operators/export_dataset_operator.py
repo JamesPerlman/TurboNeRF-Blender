@@ -44,7 +44,7 @@ class ExportNeRFDatasetOperator(bpy.types.Operator):
 
         nerf_cams = []
         for cam_obj in cam_objs:
-            nerf_cam = bl2nerf_cam_train(cam_obj)
+            nerf_cam = bl2nerf_cam_train(cam_obj, relative_to=nerf_obj)
             nerf_cams.append(nerf_cam)
     
         dataset.cameras = nerf_cams
