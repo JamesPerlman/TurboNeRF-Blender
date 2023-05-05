@@ -53,7 +53,7 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
 
         print(f"Importing NeRF dataset from: {self.filepath}")
 
-        nerf_id = NeRFManager.create_trainable(dataset_path=self.filepath)
+        nerf_id = NeRFManager.import_dataset(dataset_path=self.filepath)
         nerf = NeRFManager.items[nerf_id].nerf
         dataset = nerf.dataset
         bbox = nerf.bounding_box

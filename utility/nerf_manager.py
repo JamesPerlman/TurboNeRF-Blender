@@ -62,7 +62,7 @@ class NeRFManager():
         return item_id
 
     @classmethod
-    def create_trainable(cls, dataset_path):
+    def import_dataset(cls, dataset_path):
         dataset = tn.Dataset(file_path=dataset_path)
         dataset.load_transforms()
 
