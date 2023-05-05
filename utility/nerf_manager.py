@@ -81,12 +81,12 @@ class NeRFManager():
         del cls.items[item_id]
 
     @classmethod
-    def load(cls, path: Path):
+    def load_snapshot(cls, path: Path):
         nerf = cls.mgr.load(str(path.absolute()))
         return cls.add_nerf(nerf)
 
     @classmethod
-    def save(cls, item_id, path: Path):
+    def save_snapshot(cls, item_id, path: Path):
         nerf = cls.items[item_id].nerf
         cls.mgr().save(nerf, str(path.absolute()))
 
