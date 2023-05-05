@@ -51,8 +51,6 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         # Get some scene references
         scene = context.scene
 
-        print(f"Importing NeRF dataset from: {self.filepath}")
-
         nerf_id = NeRFManager.import_dataset(dataset_path=self.filepath)
         nerf = NeRFManager.items[nerf_id].nerf
         dataset = nerf.dataset
