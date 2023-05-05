@@ -1,5 +1,6 @@
 import bpy
 import bmesh
+import mathutils
 
 from turbo_nerf.blender_utility.logging_utility import log_report
 
@@ -129,7 +130,23 @@ def get_collection(collection_name):
 
     return None
 
+
 def select_object(obj):
     """Select an object."""
     obj.select_set(state=True)
     bpy.context.view_layer.objects.active = obj
+
+
+# Returns the relative transform matrix of obj with respect to target (thanks ChatGPT!)
+def get_transform_relative_to(obj: bpy.types.Object, target: bpy.types.Object) -> mathutils.Matrix:
+    # Get the world transform matrices of obj and target
+    obj_matrix: mathutils.Matrix = obj.matrix_world
+    target_matrix: mathutils.Matrix = target.matrix_world
+
+    # Calculate the inverse of the target's world transform matrix
+    target_matrix_inv = target_matrix.inverted()
+
+    # Calculate the relative transform matrix of obj with respect to target
+    relative_transform = target_matrix_inv @ obj_matrix
+
+    return relative_transform
