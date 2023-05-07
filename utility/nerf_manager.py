@@ -32,7 +32,7 @@ class NeRFManager():
         
         cls._did_check_runtime = True      
         rm = tn.RuntimeManager()
-        rm.check_runtime()
+        return rm.check_runtime()
 
     @classmethod
     def mgr(cls):
