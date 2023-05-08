@@ -32,7 +32,7 @@ modules = developer_utility.setup_addon_modules(
 # The root dir is Blenders addon folder.
 # Therefore, we need the "turbo_nerf" specifier for this addon
 from turbo_nerf.blender_utility.logging_utility import log_report
-from turbo_nerf.panels.nerf_3dview_panel import NeRF3DViewPanel
+from turbo_nerf.panels.nerf_3dview_panels.index import register_nerf_3dview_panels, unregister_nerf_3dview_panels
 from turbo_nerf.registration.registration import Registration
 
 
@@ -49,12 +49,9 @@ def register():
 
     Registration.register_importers()
     Registration.register_exporters()
-
-    # bpy.utils.register_class(NeRFTrainingPanel)
-    # bpy.utils.register_class(NeRFRenderPanel)
-    bpy.utils.register_class(NeRF3DViewPanel)
     bpy.utils.register_class(NeRFObjectPanel)
-    
+    register_nerf_3dview_panels()
+
     bpy.app.handlers.load_post.append(load_handler)
     Registration.register_misc_components()
     log_report("INFO", "Registered {} with {} modules".format(bl_info["name"], len(modules)))
@@ -69,10 +66,11 @@ def unregister():
 
     Registration.unregister_importers()
     Registration.unregister_exporters()
+    unregister_nerf_3dview_panels()
 
     # bpy.utils.unregister_class(NeRFTrainingPanel)
     # bpy.utils.unregister_class(NeRFRenderPanel)
-    bpy.utils.unregister_class(NeRF3DViewPanel)
+    
     bpy.utils.unregister_class(NeRFObjectPanel)
 
     bpy.app.handlers.load_post.remove(load_handler)

@@ -62,8 +62,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
                 return
             step = metrics["step"]
 
-            nerf_panel_props = bpy.context.scene.nerf_panel_ui_props
-            if nerf_panel_props.update_preview and step % nerf_panel_props.steps_between_preview_updates == 0:
+            preview_props = bpy.context.scene.nerf_preview_panel_props
+            if preview_props.update_preview and step % preview_props.steps_between_preview_updates == 0:
                 wself.rerequest_preview(flags=tn.RenderFlags.Preview)
         
         obid = self.bridge.add_observer(BBE.OnTrainingStep, on_training_step)
@@ -135,11 +135,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         pass
 
     def get_render_modifiers(self, context: bpy.types.Context):
-        nerf_props = context.scene.nerf_panel_ui_props
+        preview_props = context.scene.nerf_preview_panel_props
         render_modifiers = tn.RenderModifiers()
         render_modifiers.properties = tn.RenderProperties()
-        render_modifiers.properties.show_near_planes = nerf_props.show_near_planes
-        render_modifiers.properties.show_far_planes = nerf_props.show_far_planes
+        render_modifiers.properties.show_near_planes = preview_props.show_near_planes
+        render_modifiers.properties.show_far_planes = preview_props.show_far_planes
         return render_modifiers
 
     # This method re-requests the latest render

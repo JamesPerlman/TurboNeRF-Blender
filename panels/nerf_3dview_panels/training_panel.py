@@ -1,14 +1,8 @@
 import bpy
-from datetime import datetime
-from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
 from turbo_nerf.constants.raymarching import RAYMARCHING_MAX_STEP_SIZE, RAYMARCHING_MIN_STEP_SIZE
-from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
-from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.load_nerf_images_operator import LoadNeRFImagesOperator
-from turbo_nerf.panels.nerf_panel_operators.preview_nerf_operator import PreviewNeRFOperator
 from turbo_nerf.panels.nerf_panel_operators.reset_nerf_training_operator import ResetNeRFTrainingOperator
 from turbo_nerf.panels.nerf_panel_operators.train_nerf_operator import TrainNeRFOperator
-from turbo_nerf.utility.layout_utility import add_multiline_label
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
@@ -28,7 +22,7 @@ class NeRFProps:
 
 nerf_props = NeRFProps()
 
-class NeRF3DViewPanelProps(bpy.types.PropertyGroup):
+class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D View"""
 
     def update_ui(self, context):
@@ -172,7 +166,7 @@ unregister_global_timer = None
 def global_update_timer():
     context = bpy.context
     if nerf_props.needs_panel_update:
-        ui_props = context.scene.nerf_panel_ui_props
+        ui_props = context.scene.nerf_training_panel_props
 
         # update training progress
         ui_props.training_progress = 100 * min(1, nerf_props.training_step / ui_props.n_steps_max)
@@ -194,11 +188,11 @@ is_global_timer_registered = lambda: bpy.app.timers.is_registered(global_update_
 register_global_timer = lambda: bpy.app.timers.register(global_update_timer, first_interval=0.1, persistent=True) if not is_global_timer_registered() else None
 unregister_global_timer = lambda: bpy.app.timers.unregister(global_update_timer) if is_global_timer_registered() else None
 
-class NeRF3DViewPanel(bpy.types.Panel):
-    """Class that defines the NeRF panel in the 3D View"""
+class NeRF3DViewTrainingPanel(bpy.types.Panel):
+    """Class that defines the NeRF Training panel in the 3D View"""
 
-    bl_label = "TurboNeRF Panel"
-    bl_idname = "VIEW3D_PT_blender_NeRF_render_panel"
+    bl_label = "Training"
+    bl_idname = "VIEW3D_PT_blender_NeRF_training_panel"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "TurboNeRF"
@@ -214,31 +208,28 @@ class NeRF3DViewPanel(bpy.types.Panel):
     @classmethod
     def register(cls):
         """Register properties and operators corresponding to this panel."""
-        bpy.utils.register_class(ImportNeRFDatasetOperator)
-        bpy.utils.register_class(ExportNeRFDatasetOperator)
         bpy.utils.register_class(LoadNeRFImagesOperator)
-        bpy.utils.register_class(NeRF3DViewPanelProps)
-        bpy.utils.register_class(PreviewNeRFOperator)
+        bpy.utils.register_class(NeRF3DViewTrainingPanelProps)
         bpy.utils.register_class(ResetNeRFTrainingOperator)
         bpy.utils.register_class(TrainNeRFOperator)
-        bpy.types.Scene.nerf_panel_ui_props = bpy.props.PointerProperty(type=NeRF3DViewPanelProps)
+        bpy.types.Scene.nerf_training_panel_props = bpy.props.PointerProperty(type=NeRF3DViewTrainingPanelProps)
         # cls.add_observers() won't work here, so we do it in draw()
 
 
     @classmethod
     def unregister(cls):
         """Unregister properties and operators corresponding to this panel."""
-        bpy.utils.unregister_class(ImportNeRFDatasetOperator)
-        bpy.utils.unregister_class(ExportNeRFDatasetOperator)
         bpy.utils.unregister_class(LoadNeRFImagesOperator)
-        bpy.utils.unregister_class(NeRF3DViewPanelProps)
-        bpy.utils.unregister_class(PreviewNeRFOperator)
+        bpy.utils.unregister_class(NeRF3DViewTrainingPanelProps)
         bpy.utils.unregister_class(ResetNeRFTrainingOperator)
         bpy.utils.unregister_class(TrainNeRFOperator)
-        del bpy.types.Scene.nerf_panel_ui_props
+            
+        del bpy.types.Scene.nerf_training_panel_props
+
         cls.remove_observers()
         if bpy.app.timers.is_registered(global_update_timer):
             bpy.app.timers.unregister(global_update_timer)
+
 
 
     @classmethod
@@ -250,11 +241,9 @@ class NeRF3DViewPanel(bpy.types.Panel):
         bridge = NeRFManager.bridge()
         BBE = tn.BlenderBridgeEvent
         
-
         def on_training_start(args):
             # When training starts, we register a timer to update the UI
             register_global_timer()
-            
 
         obid = bridge.add_observer(BBE.OnTrainingStart, on_training_start)
         cls.observers.append(obid)
@@ -346,39 +335,10 @@ class NeRF3DViewPanel(bpy.types.Panel):
         # TurboNeRF python lib doesn't load in cls.register()
         self.__class__.add_observers()
 
-        ui_props = context.scene.nerf_panel_ui_props
+        ui_props = context.scene.nerf_training_panel_props
 
         layout = self.layout
         
-        if not NeRFManager.is_pylib_compatible():
-            add_multiline_label(
-                context=context,
-                text=f"You have PyTurboNeRF version {NeRFManager.pylib_version()}, which is not compatible with this version of the TurboNeRF addon.  Please upgrade PyTurboNeRF to version {NeRFManager.required_pylib_version()}.",
-                parent=layout
-            )
-            
-            return
-        
-        self.dataset_section(context, layout, ui_props)
-
-        self.training_section(context, layout, ui_props)
-
-        self.preview_section(context, layout, ui_props)
-
-
-    def dataset_section(self, context, layout, ui_props):
-        box = layout.box()
-        box.label(text="Dataset")
-
-        row = box.row()
-        row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")
-
-        row = box.row()
-        row.operator(ExportNeRFDatasetOperator.bl_idname, text="Export Dataset")
-
-
-    def training_section(self, context, layout, ui_props):
-
         box = layout.box()
         box.label(text="Train")
 
@@ -479,26 +439,3 @@ class NeRF3DViewPanel(bpy.types.Panel):
 
             row = box.row()
             row.label(text=f"Grid: {nerf_props.grid_percent_occupied:.2f}% occupied")
-
-
-    def preview_section(self, context, layout, ui_props):
-        box = layout.box()
-        box.label(text="Preview")
-
-        row = box.row()
-        row.operator(PreviewNeRFOperator.bl_idname, text="Preview NeRF")
-
-        row = box.row()
-        row.prop(ui_props, "update_preview", text="Update Preview")
-
-        if ui_props.update_preview:
-            row = box.row()
-            row.prop(ui_props, "steps_between_preview_updates", text="Every N Steps:")
-        
-        row = box.row()
-        row.prop(ui_props, "show_near_planes", text="Show Near Planes")
-
-        row = box.row()
-        row.prop(ui_props, "show_far_planes", text="Show Far Planes")
-
-
