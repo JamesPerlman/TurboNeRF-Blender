@@ -37,7 +37,7 @@ class NeRFManager():
     @classmethod
     def mgr(cls):
         if cls._manager is None:
-            cls._manager = tn.Manager()
+            cls._manager = tn.NeRFManager()
 
         return cls._manager
     
@@ -66,7 +66,8 @@ class NeRFManager():
         dataset = tn.Dataset(file_path=dataset_path)
         dataset.load_transforms()
 
-        nerf = cls.mgr().create(dataset)
+        nerf = cls.mgr().create()
+        nerf.attach_dataset(dataset)
 
         return cls.add_nerf(nerf)
 
