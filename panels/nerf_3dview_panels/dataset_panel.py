@@ -1,6 +1,9 @@
 import bpy
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
+from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import RemoveNeRFDatasetOperator
+from turbo_nerf.panels.nerf_panel_operators import import_dataset_operator 
+
 
 
 class NeRF3DViewDatasetPanel(bpy.types.Panel):
@@ -25,6 +28,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         """Register properties and operators corresponding to this panel."""
         bpy.utils.register_class(ImportNeRFDatasetOperator)
         bpy.utils.register_class(ExportNeRFDatasetOperator)
+        bpy.utils.register_class(RemoveNeRFDatasetOperator)
         # cls.add_observers() won't work here, so we do it in draw()
 
 
@@ -33,15 +37,20 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
         bpy.utils.unregister_class(ExportNeRFDatasetOperator)
+        bpy.utils.unregister_class(RemoveNeRFDatasetOperator)
         cls.remove_observers()
 
 
 
-    def draw(self, context):
-        """Draw the panel with corresponding properties and operators."""
-
-        layout = self.layout
+    def dataset_section(self, context, layout, ui_props):
         box = layout.box()
+        box.label(text="Dataset")
+
+        # Display the imported dataset's file path
+        if ui_props.imported_dataset_path:
+            row = box.row()
+            row.label(text=f"Dataset: {ui_props.imported_dataset_path}")
+            row.operator(RemoveNeRFDatasetOperator.bl_idname, text="", icon="X")
 
         row = box.row()
         row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")

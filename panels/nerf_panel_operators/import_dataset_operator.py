@@ -33,6 +33,11 @@ from turbo_nerf.constants import (
 )
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
+   
+def update_imported_dataset_path(context, filepath):
+    context.scene["imported_dataset_path"] = filepath
+
+
 class ImportNeRFDatasetOperator(bpy.types.Operator):
     """An Operator to import a NeRF dataset from a directory."""
     bl_idname = "turbo_nerf.import_dataset"
@@ -45,13 +50,18 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return NeRFManager.can_import()
+        return NeRFManager.can_import
+
 
     def execute(self, context):
         # Get some scene references
         scene = context.scene
 
-        nerf_id = NeRFManager.import_dataset(dataset_path=self.filepath)
+        print(f"Importing NeRF dataset from: {self.filepath}")
+        context.scene.nerf_panel_ui_props.imported_dataset_path = self.filepath
+
+
+        nerf_id = NeRFManager.create_trainable(dataset_path=self.filepath)
         nerf = NeRFManager.items[nerf_id].nerf
         dataset = nerf.dataset
         bbox = nerf.bounding_box
@@ -147,7 +157,8 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
             sensor_width = cam_data.sensor_width
             cam_data.lens = sensor_width / cam_w * fl_x
 
-        context.view_layer.objects.active = nerf_obj
+        context.scene.nerf_panel_ui_props.imported_dataset_path = self.filepath
+        NeRFManager.can_import = False
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -158,13 +169,44 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         # Tells Blender to hang on for the slow user input
         return {'RUNNING_MODAL'}
 
+class RemoveNeRFDatasetOperator(bpy.types.Operator):
+    bl_idname = "nerf.remove_dataset"
+    bl_label = "Remove NeRF Dataset"
+    bl_description = "Remove the currently imported NeRF dataset"
+    
+    def execute(self, context):
+        context.scene.nerf_panel_ui_props.imported_dataset_path = ""
+        NeRFManager.can_import = True
+        
+        # Select and delete all objects in the scene
+        bpy.ops.object.select_all(action='SELECT')
+        bpy.ops.object.delete(use_global=False)
+
+        #Clear Recursive Datablocks 
+        #This is so the file doesnt have unnecessary data attached to it. 
+        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+
+        NeRFManager.items.clear()
+
+        context.scene.nerf_panel_ui_props.dataset_imported = False
+
+        if NeRFManager.is_image_data_loaded():
+            # James is working on the cuda code to unload nerf images. He'll put the needed commands here -CK
+            print("Unloaded Images")
+
+
+        bpy.context.area.tag_redraw()
+
+        return {'FINISHED'}
+
+
+
 def menu_func_import(self, context):
     self.layout.operator(ImportNeRFDatasetOperator.bl_idname, text="NeRF Dataset")
 
 def register():
     bpy.utils.register_class(ImportNeRFDatasetOperator)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
-
 
 def unregister():
     bpy.utils.unregister_class(ImportNeRFDatasetOperator)
