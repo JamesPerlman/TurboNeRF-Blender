@@ -2,9 +2,15 @@ import bpy
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import RemoveNeRFDatasetOperator
-from turbo_nerf.panels.nerf_panel_operators import import_dataset_operator 
 
 
+class NeRF3DViewDatasetPanelProps(bpy.types.PropertyGroup):
+    """Class that defines the properties of the NeRF panel in the 3D View"""
+
+    imported_dataset_path: bpy.props.StringProperty(
+        name="Imported Dataset Path",
+        default=""
+    )
 
 class NeRF3DViewDatasetPanel(bpy.types.Panel):
     """Class that defines the NeRF panel in the 3D View"""
@@ -29,8 +35,9 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         bpy.utils.register_class(ImportNeRFDatasetOperator)
         bpy.utils.register_class(ExportNeRFDatasetOperator)
         bpy.utils.register_class(RemoveNeRFDatasetOperator)
-        # cls.add_observers() won't work here, so we do it in draw()
-
+        bpy.utils.register_class(NeRF3DViewDatasetPanelProps)
+        bpy.types.Scene.nerf_dataset_panel_props = bpy.props.PointerProperty(type=NeRF3DViewDatasetPanelProps)
+    
 
     @classmethod
     def unregister(cls):
@@ -38,13 +45,18 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
         bpy.utils.unregister_class(ExportNeRFDatasetOperator)
         bpy.utils.unregister_class(RemoveNeRFDatasetOperator)
-        cls.remove_observers()
+        bpy.utils.unregister_class(NeRF3DViewDatasetPanelProps)
+        del bpy.types.Scene.nerf_dataset_panel_props
 
 
+    def draw(self, context):
+        """Draw the panel with corresponding properties and operators."""
 
-    def dataset_section(self, context, layout, ui_props):
+        layout = self.layout
         box = layout.box()
         box.label(text="Dataset")
+
+        ui_props = context.scene.nerf_dataset_panel_props
 
         # Display the imported dataset's file path
         if ui_props.imported_dataset_path:

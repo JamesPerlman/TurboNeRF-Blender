@@ -33,10 +33,6 @@ from turbo_nerf.constants import (
 )
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
-   
-def update_imported_dataset_path(context, filepath):
-    context.scene["imported_dataset_path"] = filepath
-
 
 class ImportNeRFDatasetOperator(bpy.types.Operator):
     """An Operator to import a NeRF dataset from a directory."""
@@ -58,11 +54,11 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         scene = context.scene
 
         print(f"Importing NeRF dataset from: {self.filepath}")
-        context.scene.nerf_panel_ui_props.imported_dataset_path = self.filepath
+        context.scene.nerf_dataset_panel_props.imported_dataset_path = self.filepath
 
-
-        nerf_id = NeRFManager.create_trainable(dataset_path=self.filepath)
+        nerf_id = NeRFManager.import_dataset(self.filepath)
         nerf = NeRFManager.items[nerf_id].nerf
+
         dataset = nerf.dataset
         bbox = nerf.bounding_box
 
@@ -157,7 +153,7 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
             sensor_width = cam_data.sensor_width
             cam_data.lens = sensor_width / cam_w * fl_x
 
-        context.scene.nerf_panel_ui_props.imported_dataset_path = self.filepath
+        context.scene.nerf_dataset_panel_props.imported_dataset_path = self.filepath
         NeRFManager.can_import = False
         return {'FINISHED'}
 
@@ -175,7 +171,7 @@ class RemoveNeRFDatasetOperator(bpy.types.Operator):
     bl_description = "Remove the currently imported NeRF dataset"
     
     def execute(self, context):
-        context.scene.nerf_panel_ui_props.imported_dataset_path = ""
+        context.scene.nerf_dataset_panel_props.imported_dataset_path = ""
         NeRFManager.can_import = True
         
         # Select and delete all objects in the scene
@@ -188,7 +184,7 @@ class RemoveNeRFDatasetOperator(bpy.types.Operator):
 
         NeRFManager.items.clear()
 
-        context.scene.nerf_panel_ui_props.dataset_imported = False
+        context.scene.nerf_dataset_panel_props.dataset_imported = False
 
         if NeRFManager.is_image_data_loaded():
             # James is working on the cuda code to unload nerf images. He'll put the needed commands here -CK
