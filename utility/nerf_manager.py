@@ -126,12 +126,16 @@ class NeRFManager():
         return cls.n_items == 0
     
     @classmethod
-    def prepare_for_training(cls, item_id):
+    def load_training_images(cls, item_id):
         nerf = cls.items[item_id].nerf
-        cls.bridge().prepare_for_training(
+        cls.bridge().load_training_images(
             proxy=nerf,
             batch_size=2<<20
         )
+    
+    @classmethod
+    def unload_training_images(cls):
+        cls.bridge().unload_training_images()
 
     @classmethod
     def start_training(cls):

@@ -19,7 +19,7 @@ class LoadNeRFImagesOperator(bpy.types.Operator):
         nerf_obj = get_active_nerf_obj(context)
         nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
 
-        NeRFManager.prepare_for_training(nerf_id)
+        NeRFManager.load_training_images(nerf_id)
 
         switch_to_turbo_nerf_renderer(context)
         return {'FINISHED'}
