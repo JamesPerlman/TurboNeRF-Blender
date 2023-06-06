@@ -1,7 +1,7 @@
 import bpy
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
-from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import RemoveNeRFDatasetOperator
+from turbo_nerf.panels.nerf_panel_operators.remove_dataset_operator import RemoveNeRFDatasetOperator
 
 
 class NeRF3DViewDatasetPanelProps(bpy.types.PropertyGroup):
@@ -61,11 +61,13 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         # Display the imported dataset's file path
         if ui_props.imported_dataset_path:
             row = box.row()
-            row.label(text=f"Dataset: {ui_props.imported_dataset_path}")
-            row.operator(RemoveNeRFDatasetOperator.bl_idname, text="", icon="X")
+            row.label(text=f"{ui_props.imported_dataset_path}")
 
-        row = box.row()
-        row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")
+            row = box.row()
+            row.operator(RemoveNeRFDatasetOperator.bl_idname, text="Remove Dataset")
+        else:
+            row = box.row()
+            row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")
 
         row = box.row()
         row.operator(ExportNeRFDatasetOperator.bl_idname, text="Export Dataset")
