@@ -135,3 +135,13 @@ def select_object(obj):
     """Select an object."""
     obj.select_set(state=True)
     bpy.context.view_layer.objects.active = obj
+
+def delete_object(obj):
+    """Delete an object recursively."""
+    if obj is None:
+        return
+    
+    for child in obj.children:
+        delete_object(child)
+    
+    bpy.data.objects.remove(obj)
