@@ -1,6 +1,9 @@
 import bpy
 
 def switch_to_turbo_nerf_renderer(context: bpy.types.Context):
+    if is_turbo_nerf_renderer_active(context):
+        return
+    
     context.space_data.shading.type = 'RENDERED'
     context.scene.render.engine = 'TURBO_NERF_RENDERER'
     context.scene.display_settings.display_device = 'None'
