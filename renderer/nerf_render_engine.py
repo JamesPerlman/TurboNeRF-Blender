@@ -279,7 +279,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
-        print("shit")
         all_nerfs = NeRFManager.get_all_nerfs()
 
         if len(all_nerfs) == 0:
