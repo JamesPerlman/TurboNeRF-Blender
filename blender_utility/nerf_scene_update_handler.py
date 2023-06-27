@@ -57,7 +57,7 @@ def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
     # each nerf obj must have a unique nerf associated with it.
     for obj in duplicated_nerf_objs:
         nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
-        nerf = NeRFManager.items[nerf_id].nerf
+        nerf = NeRFManager.get_nerf_by_id(nerf_id)
         new_nerf_id = NeRFManager.clone(nerf)
         obj[NERF_ITEM_IDENTIFIER_ID] = new_nerf_id
 
@@ -90,7 +90,7 @@ def depsgraph_update(scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
             if nerf_obj_type == OBJ_TYPE_TRAIN_CAMERA:
                 cam_obj = obj
                 nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
-                nerf = NeRFManager.items[nerf_id].nerf
+                nerf = NeRFManager.get_nerf_by_id(nerf_id)
                 camera_idx = cam_obj[CAMERA_INDEX_ID]
                 nerf.dataset.set_camera_at(camera_idx, bl2nerf_cam_train(cam_obj, relative_to=nerf_obj))
                 nerf.is_dataset_dirty = True

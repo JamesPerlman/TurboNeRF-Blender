@@ -46,7 +46,7 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return NeRFManager.can_import
+        return True
 
 
     def execute(self, context):
@@ -57,7 +57,7 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         context.scene.nerf_dataset_panel_props.imported_dataset_path = self.filepath
 
         nerf_id = NeRFManager.import_dataset(self.filepath)
-        nerf = NeRFManager.items[nerf_id].nerf
+        nerf = NeRFManager.get_nerf_by_id(nerf_id)
 
         dataset = nerf.dataset
         bbox = nerf.bounding_box

@@ -1,4 +1,7 @@
 import bpy
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
+from turbo_nerf.blender_utility.object_utility import delete_object
+from turbo_nerf.constants import NERF_ITEM_IDENTIFIER_ID
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
 
@@ -7,22 +10,23 @@ class RemoveNeRFDatasetOperator(bpy.types.Operator):
     bl_label = "Remove NeRF Dataset"
     bl_description = "Remove the currently imported NeRF dataset"
     
+    @classmethod
+    def poll(cls, context):
+        has_active_nerf = get_active_nerf_obj(context) is not None
+        is_training = NeRFManager.is_training()
+        return has_active_nerf and not is_training
+
     def execute(self, context):
-        context.scene.nerf_dataset_panel_props.imported_dataset_path = ""
-        
-        # Select and delete all objects in the scene
-        bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.delete(use_global=False)
+        nerf_obj = get_active_nerf_obj(context)
+        nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
 
-        # Clear Recursive Datablocks 
-        # This is so the file doesnt have unnecessary data attached to it. 
-        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
-
-        NeRFManager.items.clear()
+        delete_object(nerf_obj)
 
         if NeRFManager.is_image_data_loaded():
             NeRFManager.unload_training_images()
+        
+        NeRFManager.destroy(nerf_id)
 
-        # bpy.context.area.tag_redraw()
+        context.scene.nerf_dataset_panel_props.imported_dataset_path = ""
 
         return {'FINISHED'}

@@ -59,15 +59,16 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         ui_props = context.scene.nerf_dataset_panel_props
 
         # Display the imported dataset's file path
-        if ui_props.imported_dataset_path:
+        if ui_props.imported_dataset_path == "":
+            row = box.row()
+            row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")
+
+        else:
             row = box.row()
             row.label(text=f"{ui_props.imported_dataset_path}")
 
             row = box.row()
             row.operator(RemoveNeRFDatasetOperator.bl_idname, text="Remove Dataset")
-        else:
-            row = box.row()
-            row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")
-
+        
         row = box.row()
         row.operator(ExportNeRFDatasetOperator.bl_idname, text="Export Dataset")

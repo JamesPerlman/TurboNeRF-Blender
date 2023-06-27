@@ -142,8 +142,7 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
 
     def force_redraw(self, context):
         # TODO: we don't need to do this for all items
-        for nerf_id in NeRFManager.items:
-            nerf = NeRFManager.items[nerf_id].nerf
+        for nerf in NeRFManager.get_all_nerfs():
             nerf.is_dataset_dirty = True
 
     show_near_planes: bpy.props.BoolProperty(
@@ -172,7 +171,10 @@ def global_update_timer():
         ui_props.training_progress = 100 * min(1, nerf_props.training_step / ui_props.n_steps_max)
 
         # update image load progress
-        ui_props.image_load_progress = 100 * nerf_props.n_images_loaded / nerf_props.n_images_total
+        if nerf_props.n_images_total == 0:
+            ui_props.image_load_progress = 0
+        else:
+            ui_props.image_load_progress = 100 * nerf_props.n_images_loaded / nerf_props.n_images_total
         
         ui_props.update_id = 1 - ui_props.update_id
 
@@ -229,7 +231,6 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         cls.remove_observers()
         if bpy.app.timers.is_registered(global_update_timer):
             bpy.app.timers.unregister(global_update_timer)
-
 
 
     @classmethod
@@ -303,16 +304,34 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         obid = bridge.add_observer(BBE.OnTrainingImageLoaded, on_image_load)
         cls.observers.append(obid)
 
+        def on_images_unload(args):
+            nerf_props.n_images_loaded = 0
+            nerf_props.n_images_total = 0
+            nerf_props.training_step = 0
+            nerf_props.training_loss = 0
+            nerf_props.n_rays_per_batch = 0
+            nerf_props.n_steps_max = 10000
+            nerf_props.grid_percent_occupied = 100
+            nerf_props.needs_panel_update = True
+            nerf_props.needs_timer_to_end = True
+
+            if not is_global_timer_registered():
+                register_global_timer()
+
+        obid = bridge.add_observer(BBE.OnTrainingImagesUnloaded, on_images_unload)
+        cls.observers.append(obid)
+
         def on_training_reset(args):
             nerf_props.training_step = 0
             nerf_props.training_loss = 0
             nerf_props.n_rays_per_batch = 0
             nerf_props.grid_percent_occupied = 100
+            nerf_props.needs_timer_to_end = True
+            nerf_props.needs_panel_update = True
 
             if not is_global_timer_registered():
                 register_global_timer()
-                nerf_props.needs_timer_to_end = True
-                nerf_props.needs_panel_update = True
+                
 
         obid = bridge.add_observer(BBE.OnTrainingReset, on_training_reset)
         cls.observers.append(obid)

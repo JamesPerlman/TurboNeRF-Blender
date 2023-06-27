@@ -29,7 +29,7 @@ def get_props_for_cams(nerf_obj, prop_name, default_value):
 # i also don't like that it's just a global method in this file
 def update_dataset_cams(nerf_obj):
     nerf_id = nerf_obj[NERF_ITEM_IDENTIFIER_ID]
-    nerf = NeRFManager.items[nerf_id].nerf
+    nerf = NeRFManager.get_nerf_by_id(nerf_id)
     cam_objs = get_all_training_cam_objs(nerf_obj)
 
     # todo: only update the cameras that have changed

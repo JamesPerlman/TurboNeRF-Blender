@@ -36,9 +36,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.cancel_current_render = False
         self.current_region3d: bpy.types.RegionView3D = None
         self.latest_camera = None
-        self.render_thread = None
-        self.write_to_surface = None
-        self.surface_is_allocated = False
         self.has_depsgraph_updates = True
 
         self.prev_view_dims = (0, 0)
@@ -122,6 +119,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
     # Remove bridge event observers
     def remove_event_observers(self):
+        print("called remove_event_observers")
         if hasattr(self, "event_observers"):
             for obid in self.event_observers:
                 self.bridge.remove_observer(obid)
@@ -147,9 +145,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         if self.latest_camera is None:
             return
         
-        if len(NeRFManager.items) == 0:
+        if len(NeRFManager.get_all_nerfs()) == 0:
             return
-        
+
         modifiers = self.get_render_modifiers(bpy.context)
         self.bridge.request_preview(self.latest_camera, NeRFManager.get_all_nerfs(), flags, modifiers)
 
@@ -268,7 +266,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
                 # Base NeRF object
                 if nerf_obj_type == OBJ_TYPE_NERF:
                     nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
-                    nerf = NeRFManager.items[nerf_id].nerf
+                    nerf = NeRFManager.get_nerf_by_id(nerf_id)
                     # why do we need to multiply by NERF_ADJUSTMENT_MATRIX? idk, but it works.
                     mat = np.array(obj.matrix_world @ NERF_ADJUSTMENT_MATRIX)
                     nerf.transform = tn.Transform4f(mat).from_nerf()
@@ -281,6 +279,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
+        print("shit")
         all_nerfs = NeRFManager.get_all_nerfs()
 
         if len(all_nerfs) == 0:
@@ -311,8 +310,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         has_new_camera = True if self.latest_camera is None else camera != self.latest_camera
         has_new_dims = dimensions != self.prev_view_dims
+        is_any_dataset_dirty =  np.any([nerf.is_dataset_dirty and nerf.can_render for nerf in all_nerfs])
 
-        user_initiated = has_new_camera or has_new_dims or np.any([nerf.is_dataset_dirty for nerf in all_nerfs])
+        user_initiated = has_new_camera or has_new_dims or is_any_dataset_dirty
 
         if user_initiated or self.has_depsgraph_updates:
             self.has_depsgraph_updates = False
