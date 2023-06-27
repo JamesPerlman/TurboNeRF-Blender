@@ -60,7 +60,7 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         nerf = NeRFManager.get_nerf_by_id(nerf_id)
 
         dataset = nerf.dataset
-        bbox = nerf.bounding_box
+        bbox = nerf.training_bbox
 
         cams = dataset.cameras
         
