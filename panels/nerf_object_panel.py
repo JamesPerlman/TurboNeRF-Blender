@@ -2,7 +2,16 @@ import bpy
 import math
 
 from turbo_nerf.blender_utility.driver_utility import force_update_drivers
-from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj, get_all_training_cam_objs, get_closest_parent_of_type, get_nerf_obj_type, get_nerf_training_cams, is_nerf_obj_type, is_self_or_some_parent_of_type
+
+from turbo_nerf.blender_utility.obj_type_utility import (
+    get_active_nerf_obj,
+    get_all_training_cam_objs,
+    get_closest_parent_of_type,
+    get_nerf_training_cams,
+    is_nerf_obj_type,
+    is_self_or_some_parent_of_type
+)
+
 from turbo_nerf.constants import (
     CAMERA_FAR_ID,
     CAMERA_INDEX_ID,
@@ -13,10 +22,13 @@ from turbo_nerf.constants import (
     OBJ_TYPE_NERF,
     OBJ_TYPE_TRAIN_CAMERA
 )
+from turbo_nerf.utility.math import clamp
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.render_camera_utils import bl2nerf_cam_train
 
-# general camera prop getter
+# helper methods
+# kinda dirty to put these in the global scope for this file
+
 def get_props_for_cams(nerf_obj, prop_name, default_value):    
     cam_objs = get_nerf_training_cams(nerf_obj, bpy.context)
 
@@ -25,16 +37,13 @@ def get_props_for_cams(nerf_obj, prop_name, default_value):
     
     return [o[prop_name] for o in cam_objs]
 
-# kindof a hack for now, need to figure out if there is a cleaner way to do this
-# i also don't like that it's just a global method in this file
-def update_dataset_cams(nerf_obj):
-    nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+# updates the dataset cameras for a nerf object
+def set_props_for_cams(nerf_obj, nerf):
     cam_objs = get_all_training_cam_objs(nerf_obj)
 
     # todo: only update the cameras that have changed
     nerf.dataset.cameras = [bl2nerf_cam_train(cam_obj, relative_to=nerf_obj) for cam_obj in cam_objs]
     nerf.is_dataset_dirty = True
-    
 
 # Custom property group
 class NeRFObjectProperties(bpy.types.PropertyGroup):
@@ -78,7 +87,7 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
             o[CAMERA_NEAR_ID] = value
             force_update_drivers(o)
         
-        update_dataset_cams(nerf_obj)
+        set_props_for_cams(nerf_obj, NeRFManager.get_nerf_for_obj(nerf_obj))
 
     near: bpy.props.FloatProperty(
         name="Near Plane",
@@ -104,7 +113,7 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
             o[CAMERA_FAR_ID] = value
             force_update_drivers(o)
 
-        update_dataset_cams(nerf_obj)
+        set_props_for_cams(nerf_obj, NeRFManager.get_nerf_for_obj(nerf_obj))
 
     far: bpy.props.FloatProperty(
         name="Far Plane",
@@ -125,12 +134,13 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
     
     def set_show_image_planes(self, value):
         nerf_obj = get_active_nerf_obj(bpy.context)
+
         cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_SHOW_IMAGE_PLANES_ID] = value
             force_update_drivers(o)
         
-        update_dataset_cams(nerf_obj)
+        set_props_for_cams(nerf_obj, NeRFManager.get_nerf_for_obj(nerf_obj))
 
     show_image_planes: bpy.props.BoolProperty(
         name="Is Visible",
@@ -139,6 +149,84 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         get=get_show_image_planes,
         set=set_show_image_planes,
     )
+
+    # cropping (render bbox)
+
+    def get_crop(dim: str):
+        if dim not in ("x", "y", "z"):
+            raise ValueError(f"Invalid dimension {dim} for crop")
+        
+        def crop_getter(prop_id):
+            nerf_obj = get_active_nerf_obj(bpy.context)
+            nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+            min_dim = getattr(nerf.render_bbox, f"min_{dim}")
+            max_dim = getattr(nerf.render_bbox, f"max_{dim}")
+            return (min_dim, max_dim)
+
+        return crop_getter
+    
+    def set_crop(dim):
+        if dim not in ("x", "y", "z"):
+            raise ValueError(f"Invalid dimension {dim} for crop")
+        
+        def crop_setter(self, value):
+            nerf_obj = get_active_nerf_obj(bpy.context)
+            nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+
+            tbbox_min = getattr(nerf.training_bbox, f"min_{dim}")
+            tbbox_max = getattr(nerf.training_bbox, f"max_{dim}")
+
+            rbbox_min = getattr(nerf.render_bbox, f"min_{dim}")
+            rbbox_max = getattr(nerf.render_bbox, f"max_{dim}")
+
+            new_min = clamp(value[0], tbbox_min, rbbox_max)
+            new_max = clamp(value[1], rbbox_min, tbbox_max)
+            
+            new_bbox = nerf.render_bbox
+            setattr(new_bbox, f"min_{dim}", new_min)
+            setattr(new_bbox, f"max_{dim}", new_max)
+            nerf.render_bbox = new_bbox
+
+            force_update_drivers(nerf_obj)
+        
+        return crop_setter
+    
+    crop_x: bpy.props.FloatVectorProperty(
+        name="Crop X",
+        description="Crop X",
+        min=-128.0,
+        max=128.0,
+        size=2,
+        step=0.01,
+        precision=5,
+        get=get_crop("x"),
+        set=set_crop("x"),
+    )
+
+    crop_y: bpy.props.FloatVectorProperty(
+        name="Crop Y",
+        description="Crop Y",
+        min=-128.0,
+        max=128.0,
+        size=2,
+        step=0.01,
+        precision=5,
+        get=get_crop("y"),
+        set=set_crop("y"),
+    )
+
+    crop_z: bpy.props.FloatVectorProperty(
+        name="Crop Z",
+        description="Crop Z",
+        min=-128.0,
+        max=128.0,
+        size=2,
+        step=0.01,
+        precision=5,
+        get=get_crop("z"),
+        set=set_crop("z"),
+    )
+        
 
 # Custom panel for the dropdown
 class NeRFObjectPanel(bpy.types.Panel):
@@ -197,12 +285,19 @@ class NeRFObjectPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(ui_props, "show_image_planes")
 
-        # row = layout.row()
-        # row.prop(ui_props, "use_for_training")
+        # crop section
+        
+        row = layout.row()
+        row.label(text="Crop")
 
-        # row = layout.row()
-        # row.prop(ui_props, "focal_length")
+        row = layout.row()
+        row.prop(ui_props, "crop_x")
 
+        row = layout.row()
+        row.prop(ui_props, "crop_y")
+
+        row = layout.row()
+        row.prop(ui_props, "crop_z")
 
     # Register the custom property group and panel
     @classmethod

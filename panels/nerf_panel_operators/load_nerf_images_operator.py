@@ -2,7 +2,6 @@ import bpy
 
 from turbo_nerf.blender_utility.blender_ui_utility import switch_to_turbo_nerf_renderer
 from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
-from turbo_nerf.constants import NERF_ITEM_IDENTIFIER_ID
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
 class LoadNeRFImagesOperator(bpy.types.Operator):

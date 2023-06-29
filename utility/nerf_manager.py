@@ -197,4 +197,3 @@ class NeRFManager():
             return cls.get_bridge_object_property(obj_name, prop_name, default)
         
         return getter
-

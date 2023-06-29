@@ -31,3 +31,11 @@ def bl2nerf_pos(
     ) -> np.array:
     xyz_cycled = np.array([xyz[1], xyz[2], xyz[0]])
     return scale * xyz_cycled + origin
+
+def clamp(x, min, max):
+    if x < min:
+        return min
+    elif x > max:
+        return max
+    else:
+        return x

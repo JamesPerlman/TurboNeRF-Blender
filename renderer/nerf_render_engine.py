@@ -36,7 +36,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.cancel_current_render = False
         self.current_region3d: bpy.types.RegionView3D = None
         self.latest_camera = None
-        self.has_depsgraph_updates = True
 
         self.prev_view_dims = (0, 0)
 
@@ -263,15 +262,13 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
                 if nerf_obj_type is None:
                     continue
 
-                # Base NeRF object
+                # Update the NeRF representation's transform on the CUDA side
                 if nerf_obj_type == OBJ_TYPE_NERF:
                     nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
                     nerf = NeRFManager.get_nerf_by_id(nerf_id)
                     # why do we need to multiply by NERF_ADJUSTMENT_MATRIX? idk, but it works.
                     mat = np.array(obj.matrix_world @ NERF_ADJUSTMENT_MATRIX)
                     nerf.transform = tn.Transform4f(mat).from_nerf()
-
-                    self.has_depsgraph_updates = True
                         
     # For viewport renders, this method is called whenever Blender redraws
     # the 3D viewport. The renderer is expected to quickly draw the render
@@ -309,12 +306,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         has_new_camera = True if self.latest_camera is None else camera != self.latest_camera
         has_new_dims = dimensions != self.prev_view_dims
-        is_any_dataset_dirty =  np.any([nerf.is_dataset_dirty and nerf.can_render for nerf in all_nerfs])
+        is_any_nerf_dirty =  np.any([nerf.is_dirty() and nerf.can_render for nerf in all_nerfs])
 
-        user_initiated = has_new_camera or has_new_dims or is_any_dataset_dirty
+        user_initiated = has_new_camera or has_new_dims or is_any_nerf_dirty
 
-        if user_initiated or self.has_depsgraph_updates:
-            self.has_depsgraph_updates = False
+        if user_initiated:
             flags = tn.RenderFlags.Preview
             if not NeRFManager.is_training(): # and not context.screen.is_animation_playing:
                 flags = flags | tn.RenderFlags.Final
