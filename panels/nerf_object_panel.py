@@ -14,16 +14,17 @@ from turbo_nerf.blender_utility.obj_type_utility import (
 
 from turbo_nerf.constants import (
     CAMERA_FAR_ID,
-    CAMERA_INDEX_ID,
     CAMERA_NEAR_ID,
     CAMERA_SHOW_IMAGE_PLANES_ID,
     NERF_AABB_SIZE_LOG2_ID,
-    NERF_ITEM_IDENTIFIER_ID,
+    NERF_CROP_MAX_ID,
+    NERF_CROP_MIN_ID,
     OBJ_TYPE_NERF,
     OBJ_TYPE_TRAIN_CAMERA
 )
 from turbo_nerf.utility.math import clamp
 from turbo_nerf.utility.nerf_manager import NeRFManager
+from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 from turbo_nerf.utility.render_camera_utils import bl2nerf_cam_train
 
 # helper methods
@@ -58,6 +59,17 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         active_obj = bpy.context.active_object
         nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
         nerf_obj[NERF_AABB_SIZE_LOG2_ID] = value
+
+        # TODO: update nerf's training bbox on the CUDA side
+
+        # update the nerf's render bbox
+        size = 2 ** value
+        nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+        nerf.render_bbox = tn.BoundingBox(size)
+
+        nerf_obj[NERF_CROP_MIN_ID] = [-size / 2, -size / 2, -size / 2]
+        nerf_obj[NERF_CROP_MAX_ID] = [size / 2, size / 2, size / 2]
+
         force_update_drivers(nerf_obj)
 
     aabb_options = [
@@ -173,6 +185,9 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
             nerf_obj = get_active_nerf_obj(bpy.context)
             nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
 
+            # defensively clamp the values to the training bbox
+            # also ensure that min <= max
+
             tbbox_min = getattr(nerf.training_bbox, f"min_{dim}")
             tbbox_max = getattr(nerf.training_bbox, f"max_{dim}")
 
@@ -185,11 +200,20 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
             new_bbox = nerf.render_bbox
             setattr(new_bbox, f"min_{dim}", new_min)
             setattr(new_bbox, f"max_{dim}", new_max)
+            
+            # this sets the props on the CUDA side and sets is_dirty to True so the new updates get rendered
             nerf.render_bbox = new_bbox
+
+            # in addition to updating the props on the CUDA side we also need to update the custom props on the blender side
+            # this is because these custom props are used to drive the visual representation of the bounding box which is just a cube
+            nerf_obj[NERF_CROP_MIN_ID] = [new_bbox.min_x, new_bbox.min_y, new_bbox.min_z]
+            nerf_obj[NERF_CROP_MAX_ID] = [new_bbox.max_x, new_bbox.max_y, new_bbox.max_z]
 
             force_update_drivers(nerf_obj)
         
         return crop_setter
+    
+    # we need to switch the axes here from xyz to zxy
     
     crop_x: bpy.props.FloatVectorProperty(
         name="Crop X",
@@ -199,8 +223,8 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         size=2,
         step=0.01,
         precision=5,
-        get=get_crop("x"),
-        set=set_crop("x"),
+        get=get_crop("z"),
+        set=set_crop("z"),
     )
 
     crop_y: bpy.props.FloatVectorProperty(
@@ -211,8 +235,8 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         size=2,
         step=0.01,
         precision=5,
-        get=get_crop("y"),
-        set=set_crop("y"),
+        get=get_crop("x"),
+        set=set_crop("x"),
     )
 
     crop_z: bpy.props.FloatVectorProperty(
@@ -223,8 +247,8 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         size=2,
         step=0.01,
         precision=5,
-        get=get_crop("z"),
-        set=set_crop("z"),
+        get=get_crop("y"),
+        set=set_crop("y"),
     )
         
 
