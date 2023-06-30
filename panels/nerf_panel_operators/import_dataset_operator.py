@@ -27,8 +27,6 @@ from turbo_nerf.constants import (
     CAMERA_P2_ID,
     CAMERA_SHOW_IMAGE_PLANES_ID,
     NERF_AABB_SIZE_LOG2_ID,
-    NERF_CROP_MAX_ID,
-    NERF_CROP_MIN_ID,
     NERF_ITEM_IDENTIFIER_ID,
     OBJ_TYPE_CAMERAS_CONTAINER,
     OBJ_TYPE_NERF,
@@ -77,9 +75,6 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         nerf_obj[NERF_AABB_SIZE_LOG2_ID] = int(round(math.log2(training_bbox.size())))
         aabb_size_log2 = nerf_obj.id_properties_ui(NERF_AABB_SIZE_LOG2_ID)
         aabb_size_log2.update(min=0, max=7)
-
-        nerf_obj[NERF_CROP_MIN_ID] = (render_bbox.min_x, render_bbox.min_y, render_bbox.min_z)
-        nerf_obj[NERF_CROP_MAX_ID] = (render_bbox.max_x, render_bbox.max_y, render_bbox.max_z)
 
         # add bounding boxes
         add_training_bbox(context, nerf_obj)
