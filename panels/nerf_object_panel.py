@@ -47,16 +47,16 @@ def set_props_for_cams(nerf_obj, nerf):
     nerf.is_dataset_dirty = True
 
 # Custom property group
+# self.id_data below is shorthand for the active object, and more robust than bpy.context.active_object
 class NeRFObjectProperties(bpy.types.PropertyGroup):
 
     # aabb size
-    def get_aabb_size(prop_id):
-        active_obj = bpy.context.active_object
-        nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
+    def get_aabb_size(self: bpy.types.PropertyGroup):
+        nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
         return nerf_obj[NERF_AABB_SIZE_LOG2_ID]
 
     def set_aabb_size(self, value):
-        active_obj = bpy.context.active_object
+        active_obj = self.id_data
         nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
         nerf_obj[NERF_AABB_SIZE_LOG2_ID] = value
 
@@ -88,12 +88,12 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
     
     # near
 
-    def get_near(prop_id):
-        nerf_obj = get_active_nerf_obj(bpy.context)
+    def get_near(self):
+        nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
         return min(get_props_for_cams(nerf_obj, CAMERA_NEAR_ID, 0.0))
     
     def set_near(self, value):
-        nerf_obj = get_active_nerf_obj(bpy.context)
+        nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
         cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_NEAR_ID] = value
@@ -114,12 +114,12 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
 
     # far
 
-    def get_far(prop_id):
-        nerf_obj = get_active_nerf_obj(bpy.context)
+    def get_far(self):
+        nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
         return min(get_props_for_cams(nerf_obj, CAMERA_FAR_ID, 128.0))
     
     def set_far(self, value):
-        nerf_obj = get_active_nerf_obj(bpy.context)
+        nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
         cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_FAR_ID] = value
@@ -140,13 +140,14 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
 
     # show near/far planes
 
-    def get_show_image_planes(prop_id):
-        nerf_obj = get_active_nerf_obj(bpy.context)
+    def get_show_image_planes(self):
+        nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
         return all(get_props_for_cams(nerf_obj, CAMERA_SHOW_IMAGE_PLANES_ID, False))
     
     def set_show_image_planes(self, value):
-        nerf_obj = get_active_nerf_obj(bpy.context)
+        nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
 
+        # it is not great to use bpy.context here, but it is the only way.
         cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_SHOW_IMAGE_PLANES_ID] = value
@@ -168,8 +169,8 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         if dim not in ("x", "y", "z"):
             raise ValueError(f"Invalid dimension {dim} for crop")
         
-        def crop_getter(prop_id):
-            nerf_obj = get_active_nerf_obj(bpy.context)
+        def crop_getter(self):
+            nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
             nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
             min_dim = getattr(nerf.render_bbox, f"min_{dim}")
             max_dim = getattr(nerf.render_bbox, f"max_{dim}")
@@ -182,7 +183,7 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
             raise ValueError(f"Invalid dimension {dim} for crop")
         
         def crop_setter(self, value):
-            nerf_obj = get_active_nerf_obj(bpy.context)
+            nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
             nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
 
             # defensively clamp the values to the training bbox
