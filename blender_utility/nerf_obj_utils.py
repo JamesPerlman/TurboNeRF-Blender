@@ -38,7 +38,7 @@ def add_training_bbox(context, nerf_obj):
 # Render bbox is similar, except it gets its size from tn_nerf_props.crop_{dim}
 def add_render_bbox(context, nerf_obj):
     scene = context.scene
-    bbox_obj = add_cube("AABB", size=1.0, collection=scene.collection)
+    bbox_obj = add_cube("CROP BOX", size=1.0, collection=scene.collection)
     bbox_obj.display_type = "WIRE"
     bbox_obj.parent = nerf_obj
 
