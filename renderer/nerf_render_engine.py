@@ -44,6 +44,13 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         self.add_event_observers()
 
+    # When the render engine instance is destroyed, this is called. Clean up any
+    # render engine data here, for example stopping running render threads.
+
+    def __del__(self):
+        self.remove_event_observers()
+        pass
+
     # Add bridge event observers
     def add_event_observers(self):
         BBE = tn.BlenderBridgeEvent
@@ -123,13 +130,26 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             for obid in self.event_observers:
                 self.bridge.remove_observer(obid)
             self.event_observers = []
+    
+    def update_renderables(self, depsgraph: bpy.types.Depsgraph):
+        for update in depsgraph.updates:
+            if update.is_updated_transform:
+                obj = update.id
 
-    # When the render engine instance is destroyed, this is called. Clean up any
-    # render engine data here, for example stopping running render threads.
+                if not isinstance(obj, bpy.types.Object):
+                    continue
 
-    def __del__(self):
-        self.remove_event_observers()
-        pass
+                nerf_obj_type = get_nerf_obj_type(obj)
+                if nerf_obj_type is None:
+                    continue
+
+                # Update the NeRF representation's transform on the CUDA side
+                if nerf_obj_type == OBJ_TYPE_NERF:
+                    nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
+                    nerf = NeRFManager.get_nerf_by_id(nerf_id)
+                    # why do we need to multiply by NERF_ADJUSTMENT_MATRIX? idk, but it works.
+                    mat = np.array(obj.matrix_world @ NERF_ADJUSTMENT_MATRIX)
+                    nerf.transform = tn.Transform4f(mat).from_nerf()
 
     def get_render_modifiers(self, context: bpy.types.Context):
         preview_props = context.scene.nerf_preview_panel_props
@@ -167,6 +187,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         size_y = int(scene.render.resolution_y * scale)
 
         dims = (size_x, size_y)
+
+        # according to povray, this needs to be called
+        scene.frame_set(scene.frame_current)
+
+        self.update_renderables(depsgraph)
 
         # get camera
         active_cam = scene.camera
@@ -251,24 +276,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # should be read from Blender in the same thread. Typically a render
     # thread will be started to do the work while keeping Blender responsive.
     def view_update(self, context, depsgraph: bpy.types.Depsgraph):
-        for update in depsgraph.updates:
-            if update.is_updated_transform:
-                obj = update.id
-
-                if not isinstance(obj, bpy.types.Object):
-                    continue
-
-                nerf_obj_type = get_nerf_obj_type(obj)
-                if nerf_obj_type is None:
-                    continue
-
-                # Update the NeRF representation's transform on the CUDA side
-                if nerf_obj_type == OBJ_TYPE_NERF:
-                    nerf_id = obj[NERF_ITEM_IDENTIFIER_ID]
-                    nerf = NeRFManager.get_nerf_by_id(nerf_id)
-                    # why do we need to multiply by NERF_ADJUSTMENT_MATRIX? idk, but it works.
-                    mat = np.array(obj.matrix_world @ NERF_ADJUSTMENT_MATRIX)
-                    nerf.transform = tn.Transform4f(mat).from_nerf()
+        self.update_renderables(depsgraph)
                         
     # For viewport renders, this method is called whenever Blender redraws
     # the 3D viewport. The renderer is expected to quickly draw the render
