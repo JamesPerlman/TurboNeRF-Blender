@@ -309,7 +309,12 @@ class NeRFObjectPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(ui_props, "show_image_planes")
 
-        # crop section
+        # only NeRF object properties beyond this point
+
+        if not is_nerf_obj_type(context.object, OBJ_TYPE_NERF):
+            return
+
+        # crop section (only for NeRF objects)
         
         row = layout.row()
         row.label(text="Crop")
