@@ -35,7 +35,7 @@ def add_training_bbox(context, nerf_obj):
     lock_prop_with_driver(bbox_obj, 'rotation_mode', 1)
 
 
-# Render bbox is similar, except it gets its size from tn_nerf_obj_props.crop_{dim}
+# Render bbox is similar, except it gets its size from tn_nerf_props.crop_{dim}
 def add_render_bbox(context, nerf_obj):
     scene = context.scene
     bbox_obj = add_cube("AABB", size=1.0, collection=scene.collection)
@@ -58,12 +58,12 @@ def add_render_bbox(context, nerf_obj):
             var_min = driver.variables.new()
             var_min.name = f'crop_min'
             var_min.targets[0].id = nerf_obj
-            var_min.targets[0].data_path = f'tn_nerf_obj_props.crop_{dim}[0]'
+            var_min.targets[0].data_path = f'tn_nerf_props.crop_{dim}[0]'
 
             var_max = driver.variables.new()
             var_max.name = f'crop_max'
             var_max.targets[0].id = nerf_obj
-            var_max.targets[0].data_path = f'tn_nerf_obj_props.crop_{dim}[1]'
+            var_max.targets[0].data_path = f'tn_nerf_props.crop_{dim}[1]'
         
         loc.expression = '(crop_max + crop_min) / 2'
         scale.expression = 'crop_max - crop_min'

@@ -265,7 +265,7 @@ class NeRFObjectPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = context.object
-        ui_props = obj.tn_nerf_obj_props
+        ui_props = obj.tn_nerf_props
 
         self.draw_dataset_section(context, ui_props)
 
@@ -327,10 +327,10 @@ class NeRFObjectPanel(bpy.types.Panel):
     @classmethod
     def register(cls):
         bpy.utils.register_class(NeRFObjectProperties)
-        bpy.types.Object.tn_nerf_obj_props = bpy.props.PointerProperty(type=NeRFObjectProperties)
+        bpy.types.Object.tn_nerf_props = bpy.props.PointerProperty(type=NeRFObjectProperties)
 
 
     @classmethod
     def unregister(cls):
         bpy.utils.unregister_class(NeRFObjectProperties)
-        del bpy.types.Object.tn_nerf_obj_props
+        del bpy.types.Object.tn_nerf_props
