@@ -29,19 +29,13 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # instances may exist at the same time, for example for a viewport and final
     # render.
     def __init__(self):
-        self.render_lock = threading.Lock()
-        self.scene_data = None
         self.is_rendering = False
-        self.redraw_from_render_result = False
-        self.cancel_current_render = False
         self.current_region3d: bpy.types.RegionView3D = None
         self.latest_camera = None
-
         self.prev_view_dims = (0, 0)
 
         self.bridge = NeRFManager.bridge()
         self.event_observers = []
-        
         self.add_event_observers()
 
     # When the render engine instance is destroyed, this is called. Clean up any
