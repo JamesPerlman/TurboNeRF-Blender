@@ -4,6 +4,7 @@ from turbo_nerf.constants.raymarching import RAYMARCHING_MAX_STEP_SIZE, RAYMARCH
 from turbo_nerf.panels.nerf_panel_operators.load_nerf_images_operator import LoadNeRFImagesOperator
 from turbo_nerf.panels.nerf_panel_operators.reset_nerf_training_operator import ResetNeRFTrainingOperator
 from turbo_nerf.panels.nerf_panel_operators.train_nerf_operator import TrainNeRFOperator
+from turbo_nerf.panels.nerf_panel_operators.unload_nerf_training_data_operator import UnloadNeRFTrainingDataOperator
 from turbo_nerf.utility.nerf_manager import NeRFManager
 from turbo_nerf.utility.pylib import PyTurboNeRF as tn
 
@@ -158,6 +159,13 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         description="Show the far planes in the preview.",
         default=False,
         update=force_redraw,
+    )
+
+    # Danger Zone
+    show_danger_zone: bpy.props.BoolProperty(
+        name="show_danger_zone",
+        description="Show the danger zone section.",
+        default=False,
     )
 
 register_global_timer = None
@@ -376,9 +384,6 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
             # we want to disable the Start Training button if we've already trained the scene up to the max number of steps
             row.enabled = not (ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max)
 
-            row = box.row()
-            row.operator(ResetNeRFTrainingOperator.bl_idname)
-            row.enabled = nerf_props.training_step > 0
 
         else:
             # if no images have been loaded yet, we show the Load Images button
@@ -464,3 +469,15 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
 
             row = box.row()
             row.label(text=f"Grid: {nerf_props.grid_percent_occupied:.2f}% occupied")
+        
+        # Danger Zone
+
+        row = box.row(align=True)
+        row.prop(ui_props, "show_danger_zone", text="Danger Zone")
+
+        if ui_props.show_danger_zone:
+            row = box.row()
+            row.operator(ResetNeRFTrainingOperator.bl_idname)
+
+            row = box.row()
+            row.operator(UnloadNeRFTrainingDataOperator.bl_idname)
