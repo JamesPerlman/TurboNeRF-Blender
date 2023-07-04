@@ -1,16 +1,14 @@
 import bpy
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.unload_nerf_training_data_operator import UnloadNeRFTrainingDataOperator
+from turbo_nerf.utility.nerf_manager import NeRFManager
 
 
 class NeRF3DViewDatasetPanelProps(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D View"""
 
-    imported_dataset_path: bpy.props.StringProperty(
-        name="Imported Dataset Path",
-        default=""
-    )
 
 class NeRF3DViewDatasetPanel(bpy.types.Panel):
     """Class that defines the NeRF panel in the 3D View"""
@@ -52,23 +50,21 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""
 
+        nerf_obj = get_active_nerf_obj(context)
+
         layout = self.layout
         box = layout.box()
         box.label(text="Dataset")
 
-        ui_props = context.scene.nerf_dataset_panel_props
+        row = box.row()
+        row.operator(ImportNeRFDatasetOperator.bl_idname)
 
-        # Display the imported dataset's file path
-        if ui_props.imported_dataset_path == "":
-            row = box.row()
-            row.operator(ImportNeRFDatasetOperator.bl_idname, text="Import Dataset")
-
-        else:
-            row = box.row()
-            row.label(text=f"{ui_props.imported_dataset_path}")
-
-            row = box.row()
-            row.operator(UnloadNeRFTrainingDataOperator.bl_idname, text="Remove Dataset")
-        
         row = box.row()
         row.operator(ExportNeRFDatasetOperator.bl_idname, text="Export Dataset")
+        
+        if nerf_obj is not None:
+            nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+            
+            row = box.row()
+            row.label(text=f"{nerf.dataset.file_path}")
+
