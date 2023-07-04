@@ -1,4 +1,5 @@
 import bpy
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
 from turbo_nerf.constants.raymarching import RAYMARCHING_MAX_STEP_SIZE, RAYMARCHING_MIN_STEP_SIZE
 from turbo_nerf.panels.nerf_panel_operators.load_nerf_images_operator import LoadNeRFImagesOperator
 from turbo_nerf.panels.nerf_panel_operators.reset_nerf_training_operator import ResetNeRFTrainingOperator
@@ -204,7 +205,8 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         """Return the availability status of the panel."""
-        return True
+        nerf_obj = get_active_nerf_obj(context)
+        return nerf_obj is not None
 
 
     @classmethod
@@ -356,12 +358,14 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
 
         ui_props = context.scene.nerf_training_panel_props
 
+        nerf_obj = get_active_nerf_obj(context)
+
         layout = self.layout
         
         box = layout.box()
         box.label(text="Train")
 
-        if NeRFManager.is_ready_to_train():
+        if NeRFManager.can_any_nerf_train():
 
             row = box.row()
             row.operator(
@@ -384,7 +388,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
                     LoadNeRFImagesOperator.bl_idname,
                     text="Load Images"
                 )
-                row.enabled = NeRFManager.can_load_images()
+                row.enabled = NeRFManager.can_load_images(nerf_obj)
 
             else:
                 # otherwise assume images are currently loading
@@ -426,6 +430,8 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         if ui_props.show_training_settings:
             row = box.row()
             row.label(text="Training Pixel Selection")
+            return
+            nerf_obj = get_active_nerf_obj(context)
 
             is_trainer_available = NeRFManager.bridge().trainer is not None
 

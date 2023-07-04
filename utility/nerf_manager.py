@@ -7,9 +7,6 @@ from .dotdict import dotdict
 from .pylib import PyTurboNeRF as tn
 
 class NeRFManager():
-    n_items = 0
-
-    items = {}
 
     _bridge = None
     _manager = None
@@ -37,51 +34,31 @@ class NeRFManager():
         return cls._runtime_check_result
 
     @classmethod
-    def mgr(cls):
-        if cls._manager is None:
-            cls._manager = tn.NeRFManager()
-
-        return cls._manager
-    
-    @classmethod
     def bridge(cls):
         if cls._bridge is None:
             cls._bridge = tn.BlenderBridge()
 
         return cls._bridge
-    
-    @classmethod
-    def add_nerf(cls, nerf: tn.NeRF):
-        item_id = cls.n_items
-        item = dotdict({
-            "nerf": nerf
-        })
-
-        cls.items[item_id] = item
-
-        cls.n_items += 1
-
-        return item_id
 
     @classmethod
     def import_dataset(cls, dataset_path):
         dataset = tn.Dataset(file_path=dataset_path)
         dataset.load_transforms()
 
-        nerf = cls.mgr().create()
-        nerf.attach_dataset(dataset)
+        nerf = cls.bridge().create_nerf(dataset)
 
-        return cls.add_nerf(nerf)
+        return nerf.id
 
     @classmethod
-    def clone(cls, nerf):
-        cloned_nerf = cls.mgr().clone(nerf)
-        return cls.add_nerf(cloned_nerf)
+    def clone(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        cloned_nerf = cls.bridge().clone_nerf(nerf)
+        return cloned_nerf.id
     
     @classmethod
-    def destroy(cls, item_id):
-        cls.mgr().destroy(cls.items[item_id].nerf)
-        del cls.items[item_id]
+    def destroy(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        cls.bridge().destroy_nerf(nerf)
 
     @classmethod
     def load_snapshot(cls, path: Path):
@@ -89,14 +66,13 @@ class NeRFManager():
         return cls.add_nerf(nerf)
 
     @classmethod
-    def save_snapshot(cls, item_id, path: Path):
-        nerf = cls.items[item_id].nerf
+    def save_snapshot(cls, nerf_obj: bpy.types.Object, path: Path):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
         cls.mgr().save(nerf, str(path.absolute()))
 
     @classmethod
     def get_all_nerfs(cls):
-        nerfs =  [item.nerf for item in cls.items.values()]
-        return nerfs
+        return cls.bridge().get_nerfs()
     
     @classmethod
     def is_training(cls):
@@ -107,39 +83,26 @@ class NeRFManager():
         return cls.bridge().get_training_step()
 
     @classmethod
-    def is_ready_to_train(cls):
-        return cls.bridge().is_ready_to_train()
+    def can_any_nerf_train(cls):
+        return cls.bridge().can_any_nerf_train()
     
     @classmethod
-    def is_image_data_loaded(cls):
-        return cls.bridge().is_image_data_loaded()
-    
+    def is_image_data_loaded(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        return nerf.is_image_data_loaded()
+
     @classmethod
-    def can_load_images(cls):
+    def can_load_images(cls, nerf_obj: bpy.types.Object):
         # TODO: need a better way to check if a dataset is loadable
         # return cls.bridge().can_load_images()
 
-        return cls.n_items > 0 and not cls.is_image_data_loaded()
+        return not cls.is_image_data_loaded(nerf_obj)
     
     @classmethod
-    def load_training_images(cls, item: int|tn.NeRF):
-        nerf: tn.NeRF
-        if isinstance(item, int):
-            nerf = cls.get_nerf_by_id(item)
-        elif isinstance(item, bpy.types.Object):
-            nerf = cls.get_nerf_for_obj(item)
-        else:
-            nerf = item
-        
-        cls.bridge().load_training_images(
-            proxy=nerf,
-            batch_size=2<<20
-        )
+    def load_training_images(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)        
+        cls.bridge().load_training_images(nerf)
     
-    @classmethod
-    def unload_training_images(cls):
-        cls.bridge().unload_training_images()
-
     @classmethod
     def start_training(cls):
         cls.bridge().start_training()
@@ -149,19 +112,34 @@ class NeRFManager():
         cls.bridge().stop_training()
 
     @classmethod
+    def unload_training_images(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        cls.bridge().unload_training_images(nerf)
+
+    @classmethod
+    def enable_training(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        cls.bridge().enable_training(nerf)
+    
+    @classmethod
+    def disable_training(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        cls.bridge().disable_training(nerf)
+    
+    @classmethod
+    def reset_training(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        cls.bridge().reset_training(nerf)
+
+    @classmethod
     def toggle_training(cls):
         if cls.is_training():
             cls.stop_training()
         else:
             cls.start_training()
-    
-    @classmethod
-    def reset_training(cls):
-        cls.bridge().reset_training()
-
     @classmethod
     def get_nerf_by_id(cls, nerf_id: int) -> tn.NeRF:
-        return cls.items[nerf_id].nerf
+        return cls.bridge().get_nerf(nerf_id)
     
     @classmethod
     def get_nerf_for_obj(cls, nerf_obj: bpy.types.Object) -> tn.NeRF:

@@ -5,7 +5,7 @@ from turbo_nerf.constants import NERF_ITEM_IDENTIFIER_ID
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
 
-class RemoveNeRFDatasetOperator(bpy.types.Operator):
+class UnloadNeRFTrainingDataOperator(bpy.types.Operator):
     bl_idname = "nerf.remove_dataset"
     bl_label = "Remove NeRF Dataset"
     bl_description = "Remove the currently imported NeRF dataset"

@@ -1,7 +1,7 @@
 import bpy
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
-from turbo_nerf.panels.nerf_panel_operators.remove_dataset_operator import RemoveNeRFDatasetOperator
+from turbo_nerf.panels.nerf_panel_operators.unload_nerf_training_data_operator import UnloadNeRFTrainingDataOperator
 
 
 class NeRF3DViewDatasetPanelProps(bpy.types.PropertyGroup):
@@ -34,7 +34,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         """Register properties and operators corresponding to this panel."""
         bpy.utils.register_class(ImportNeRFDatasetOperator)
         bpy.utils.register_class(ExportNeRFDatasetOperator)
-        bpy.utils.register_class(RemoveNeRFDatasetOperator)
+        bpy.utils.register_class(UnloadNeRFTrainingDataOperator)
         bpy.utils.register_class(NeRF3DViewDatasetPanelProps)
         bpy.types.Scene.nerf_dataset_panel_props = bpy.props.PointerProperty(type=NeRF3DViewDatasetPanelProps)
     
@@ -44,7 +44,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         """Unregister properties and operators corresponding to this panel."""
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
         bpy.utils.unregister_class(ExportNeRFDatasetOperator)
-        bpy.utils.unregister_class(RemoveNeRFDatasetOperator)
+        bpy.utils.unregister_class(UnloadNeRFTrainingDataOperator)
         bpy.utils.unregister_class(NeRF3DViewDatasetPanelProps)
         del bpy.types.Scene.nerf_dataset_panel_props
 
@@ -68,7 +68,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
             row.label(text=f"{ui_props.imported_dataset_path}")
 
             row = box.row()
-            row.operator(RemoveNeRFDatasetOperator.bl_idname, text="Remove Dataset")
+            row.operator(UnloadNeRFTrainingDataOperator.bl_idname, text="Remove Dataset")
         
         row = box.row()
         row.operator(ExportNeRFDatasetOperator.bl_idname, text="Export Dataset")
