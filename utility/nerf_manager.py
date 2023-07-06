@@ -164,14 +164,14 @@ class NeRFManager():
     
     @classmethod
     def bridge_obj_prop_setter(cls, obj_name, prop_name):
-        def setter(self, value):
+        def setter(self: bpy.types.PropertyGroup, value):
             cls.set_bridge_object_property(obj_name, prop_name, value)
         
         return setter
     
     @classmethod
     def bridge_obj_prop_getter(cls, obj_name, prop_name, default):
-        def getter(self):
+        def getter(self: bpy.types.PropertyGroup):
             return cls.get_bridge_object_property(obj_name, prop_name, default)
         
         return getter
