@@ -1,5 +1,6 @@
 import bpy
-from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj, get_closest_parent_of_type, is_nerf_obj_type
+from turbo_nerf.constants import OBJ_TYPE_NERF
 from turbo_nerf.constants.raymarching import RAYMARCHING_MAX_STEP_SIZE, RAYMARCHING_MIN_STEP_SIZE
 from turbo_nerf.panels.nerf_panel_operators.load_nerf_images_operator import LoadNeRFImagesOperator
 from turbo_nerf.panels.nerf_panel_operators.reset_nerf_training_operator import ResetNeRFTrainingOperator
@@ -19,23 +20,51 @@ class NeRFProps:
     grid_percent_occupied = 100.0
     n_images_loaded = 0
     n_images_total = 0
+
+class GlobalProps:
     needs_panel_update = False
     needs_timer_to_end = False
+    active_nerf_id = None
 
-nerf_props = NeRFProps()
+DEFAULT_NERF_PROPS = NeRFProps()
 
 class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
     """Class that defines the properties of the NeRF panel in the 3D View"""
+
+    nerf_props = {}
+    global_props = GlobalProps()
+
+    def props_for_nerf_id(self, id: int) -> NeRFProps:
+        if id not in self.nerf_props:
+            self.nerf_props[id] = NeRFProps()
+        
+        return self.nerf_props[id]
+
+    def props_for_nerf_obj(self, nerf_obj: bpy.types.Object) -> NeRFProps:
+        if nerf_obj is None:
+            return DEFAULT_NERF_PROPS
+
+        nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+        return self.props_for_nerf_id(nerf.id)
+
+    def props_for_active_nerf(self, context) -> NeRFProps:
+        return self.props_for_nerf_obj(get_active_nerf_obj(context))
+    
+    def clear_props_for_nerf_id(self, id):
+        if id in self.nerf_props:
+            del self.nerf_props[id]
 
     def update_ui(self, context):
         return None
     
     def update_nerf_props(prop_name):
         def update_fn(self, context):
+            nerf_props = self.props_for_active_nerf(context)
             setattr(nerf_props, prop_name, getattr(self, prop_name))
         return update_fn
     
     def update_n_steps_max(self, context):
+        nerf_props = self.props_for_active_nerf(context)
         nerf_props.n_steps_max = self.n_steps_max
         self.training_progress = 100.0 * min(1.0, nerf_props.training_step / self.n_steps_max)
 
@@ -61,14 +90,14 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
     limit_training: bpy.props.BoolProperty(
         name="limit_training",
         description="Limit the number of steps to train.",
-        default=nerf_props.limit_training,
+        default=DEFAULT_NERF_PROPS.limit_training,
         update=update_nerf_props("limit_training"),
     )
 
     n_steps_max: bpy.props.IntProperty(
         name="n_steps_max",
         description="Maximum number of steps to train.",
-        default=nerf_props.n_steps_max,
+        default=DEFAULT_NERF_PROPS.n_steps_max,
         min=1,
         max=100000,
         update=update_n_steps_max
@@ -85,6 +114,30 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
 
     # Trainer Settings
 
+    def training_prop_getter(prop_name, default):
+        def get_fn(self: bpy.types.PropertyGroup):
+            nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
+
+            if nerf_obj is None:
+                return default
+            
+            trainer = NeRFManager.get_trainer_for_nerf_obj(nerf_obj)
+            return getattr(trainer, prop_name, default)
+    
+        return get_fn
+
+    def training_prop_setter(prop_name):
+        def set_fn(self: bpy.types.PropertyGroup, value):
+            nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
+
+            if nerf_obj is None:
+                return
+            
+            trainer = NeRFManager.get_trainer_for_nerf_obj(nerf_obj)
+            setattr(trainer, prop_name, value)
+        
+        return set_fn
+
     show_training_settings: bpy.props.BoolProperty(
         name="show_training_settings",
         description="Show the training settings section.",
@@ -97,8 +150,8 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         default=1.0,
         min=0.0,
         max=1.0,
-        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_threshold", default=1.0),
-        set=NeRFManager.bridge_obj_prop_setter("trainer", "alpha_selection_threshold"),
+        get=training_prop_getter("alpha_selection_threshold", default=1.0),
+        set=training_prop_setter("alpha_selection_threshold"),
     )
 
     training_alpha_selection_probability: bpy.props.FloatProperty(
@@ -106,8 +159,8 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         description="Probability of selecting a training pixel less than the alpha threshold.",
         min=0.0,
         max=1.0,
-        get=NeRFManager.bridge_obj_prop_getter("trainer", "alpha_selection_probability", default=1.0),
-        set=NeRFManager.bridge_obj_prop_setter("trainer", "alpha_selection_probability"),
+        get=training_prop_getter("alpha_selection_probability", default=1.0),
+        set=training_prop_setter("alpha_selection_probability"),
     )
 
     training_min_step_size: bpy.props.FloatProperty(
@@ -115,8 +168,8 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         description="Minimum step size for training.",
         min=RAYMARCHING_MIN_STEP_SIZE,
         max=RAYMARCHING_MAX_STEP_SIZE,
-        get=NeRFManager.bridge_obj_prop_getter("trainer", "min_step_size", default=RAYMARCHING_MIN_STEP_SIZE),
-        set=NeRFManager.bridge_obj_prop_setter("trainer", "min_step_size"),
+        get=training_prop_getter("min_step_size", default=RAYMARCHING_MIN_STEP_SIZE),
+        set=training_prop_setter("min_step_size"),
         precision=6,
     )
 
@@ -173,7 +226,9 @@ unregister_global_timer = None
 
 def global_update_timer():
     context = bpy.context
-    if nerf_props.needs_panel_update:
+    global_props = context.scene.nerf_training_panel_props.global_props
+    nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(global_props.active_nerf_id)
+    if global_props.needs_panel_update:
         ui_props = context.scene.nerf_training_panel_props
 
         # update training progress
@@ -187,11 +242,11 @@ def global_update_timer():
         
         ui_props.update_id = 1 - ui_props.update_id
 
-        nerf_props.needs_panel_update = False
+        global_props.needs_panel_update = False
     
-    if nerf_props.needs_timer_to_end:
+    if global_props.needs_timer_to_end:
         unregister_global_timer()
-        nerf_props.needs_timer_to_end = False
+        global_props.needs_timer_to_end = False
 
     return TRAINING_TIMER_INTERVAL
 
@@ -216,6 +271,19 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         nerf_obj = get_active_nerf_obj(context)
         return nerf_obj is not None
 
+    @classmethod
+    def depsgraph_update_post_handler(cls, scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph):
+        active_obj = scene.objects.active[0] if len(scene.objects.active) > 0 else None
+        nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
+
+        id = None
+        
+        if nerf_obj is not None:
+            nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+            id = nerf.id
+        
+        scene.nerf_training_panel_props.global_props.active_nerf_id = id
+
 
     @classmethod
     def register(cls):
@@ -225,6 +293,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         bpy.utils.register_class(ResetNeRFTrainingOperator)
         bpy.utils.register_class(TrainNeRFOperator)
         bpy.types.Scene.nerf_training_panel_props = bpy.props.PointerProperty(type=NeRF3DViewTrainingPanelProps)
+        bpy.app.handlers.depsgraph_update_post.append(cls.depsgraph_update_post_handler)
         # cls.add_observers() won't work here, so we do it in draw()
 
 
@@ -237,6 +306,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         bpy.utils.unregister_class(TrainNeRFOperator)
             
         del bpy.types.Scene.nerf_training_panel_props
+        bpy.app.handlers.depsgraph_update_post.remove(cls.depsgraph_update_post_handler)
 
         cls.remove_observers()
         if bpy.app.timers.is_registered(global_update_timer):
@@ -244,7 +314,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
 
 
     @classmethod
-    def add_observers(cls):
+    def add_observers(cls, context: bpy.types.Context):
         # do nothing if the observers have already been added
         if len(cls.observers) > 0:
             return
@@ -260,36 +330,49 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         cls.observers.append(obid)
 
         def on_training_stop(args):
-            nerf_props.needs_panel_update = True
-            nerf_props.needs_timer_to_end = True
+            global_props = context.scene.nerf_training_panel_props.global_props
+            global_props.needs_panel_update = True
+            global_props.needs_timer_to_end = True
 
         obid = bridge.add_observer(BBE.OnTrainingStop, on_training_stop)
         cls.observers.append(obid)   
 
-        def on_training_step(metrics):
-            nerf_props.training_step = metrics["step"]
-            nerf_props.training_loss = metrics["loss"]
-            nerf_props.n_rays_per_batch = metrics["n_rays"]
+        def on_training_step(args):
+            print(args)
+            nerf_props = bpy.context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
+            print(nerf_props)
+            nerf_props.training_step = args["step"]
+            print(nerf_props.training_step)
+            nerf_props.training_loss = args["loss"]
+            nerf_props.n_rays_per_batch = args["n_rays"]
+            
+            global_props = context.scene.nerf_training_panel_props.global_props
+            print(global_props)
 
             # does training need to stop?
             if nerf_props.limit_training and nerf_props.training_step >= nerf_props.n_steps_max:
+                print("Stopping training")
+                print(nerf_props.n_steps_max)
                 NeRFManager.stop_training()
-                nerf_props.needs_timer_to_end = True
+                global_props.needs_timer_to_end = True
             
-            nerf_props.needs_panel_update = True
+            global_props.needs_panel_update = True
 
         obid = bridge.add_observer(BBE.OnTrainingStep, on_training_step)
         cls.observers.append(obid)
 
-        def on_update_occupancy_grid(metrics):
-            nerf_props.grid_percent_occupied = 100.0 * metrics["n_occupied"] / metrics["n_total"]
-            nerf_props.needs_panel_update = True
+        def on_update_occupancy_grid(args):
+            nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
+            nerf_props.grid_percent_occupied = 100.0 * args["n_occupied"] / args["n_total"]
+            
+            global_props = context.scene.nerf_training_panel_props.global_props
+            global_props.needs_panel_update = True
 
         obid = bridge.add_observer(BBE.OnUpdateOccupancyGrid, on_update_occupancy_grid)
         cls.observers.append(obid)
 
         def on_images_load_start(args):
-            
+            nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
             nerf_props.n_images_total = args["n_total"]
             nerf_props.n_images_loaded = 0
             
@@ -299,22 +382,27 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         cls.observers.append(obid)
 
         def on_images_load_complete(args):
-            nerf_props.needs_panel_update = True
-            nerf_props.needs_timer_to_end = True
+            nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
+            global_props = context.scene.nerf_training_panel_props.global_props
+            global_props.needs_panel_update = True
+            global_props.needs_timer_to_end = True
         
         obid = bridge.add_observer(BBE.OnTrainingImagesLoadComplete, on_images_load_complete)
         cls.observers.append(obid)
 
         def on_image_load(args):
+            nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
             nerf_props.n_images_loaded = args["n_loaded"]
             nerf_props.n_images_total = args["n_total"]
             
-            nerf_props.needs_panel_update = True
+            global_props = context.scene.nerf_training_panel_props.global_props
+            global_props.needs_panel_update = True
 
         obid = bridge.add_observer(BBE.OnTrainingImageLoaded, on_image_load)
         cls.observers.append(obid)
 
         def on_images_unload(args):
+            nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
             nerf_props.n_images_loaded = 0
             nerf_props.n_images_total = 0
             nerf_props.training_step = 0
@@ -322,8 +410,10 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
             nerf_props.n_rays_per_batch = 0
             nerf_props.n_steps_max = 10000
             nerf_props.grid_percent_occupied = 100
-            nerf_props.needs_panel_update = True
-            nerf_props.needs_timer_to_end = True
+
+            global_props = context.scene.nerf_training_panel_props.global_props
+            global_props.needs_panel_update = True
+            global_props.needs_timer_to_end = True
 
             if not is_global_timer_registered():
                 register_global_timer()
@@ -332,18 +422,27 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         cls.observers.append(obid)
 
         def on_training_reset(args):
+            nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
             nerf_props.training_step = 0
             nerf_props.training_loss = 0
             nerf_props.n_rays_per_batch = 0
             nerf_props.grid_percent_occupied = 100
-            nerf_props.needs_timer_to_end = True
-            nerf_props.needs_panel_update = True
+
+            global_props = context.scene.nerf_training_panel_props.global_props
+            global_props.needs_timer_to_end = True
+            global_props.needs_panel_update = True
 
             if not is_global_timer_registered():
                 register_global_timer()
                 
 
         obid = bridge.add_observer(BBE.OnTrainingReset, on_training_reset)
+        cls.observers.append(obid)
+
+        def on_destroy_nerf(args):
+            context.scene.nerf_training_panel_props.clear_props_for_nerf_id(args["id"])
+
+        obid = bridge.add_observer(BBE.OnDestroyNeRF, on_destroy_nerf)
         cls.observers.append(obid)
 
 
@@ -362,11 +461,12 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
 
         # kinda messy to call add_observers here but I'm not sure how else to do this.
         # TurboNeRF python lib doesn't load in cls.register()
-        self.__class__.add_observers()
+        self.__class__.add_observers(context)
 
         ui_props = context.scene.nerf_training_panel_props
 
         nerf_obj = get_active_nerf_obj(context)
+        nerf_props = ui_props.props_for_nerf_obj(nerf_obj)
 
         layout = self.layout
         
@@ -385,8 +485,8 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
             row.enabled = not (ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max)
 
 
-        else:
-            # if no images have been loaded yet, we show the Load Images button
+        # if no images have been loaded yet, we show the Load Images button
+        if not NeRFManager.is_image_data_loaded(nerf_obj):
             if nerf_props.n_images_total == 0:
                 row = box.row()
                 row.operator(
@@ -435,7 +535,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         if ui_props.show_training_settings:
             row = box.row()
             row.label(text="Training Pixel Selection")
-            return
+            
             nerf_obj = get_active_nerf_obj(context)
 
             is_trainer_available = NeRFManager.bridge().trainer is not None
