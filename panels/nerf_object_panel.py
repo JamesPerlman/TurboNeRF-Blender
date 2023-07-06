@@ -53,7 +53,7 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
         return nerf_obj[NERF_AABB_SIZE_LOG2_ID]
 
-    def set_aabb_size(self, value):
+    def set_aabb_size(self: bpy.types.PropertyGroup, value):
         active_obj = self.id_data
         nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
         nerf_obj[NERF_AABB_SIZE_LOG2_ID] = value
