@@ -34,6 +34,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         self.latest_camera = None
         self.prev_view_dims = (0, 0)
 
+        self.last_preview_time = 0
         self.bridge = NeRFManager.bridge()
         self.event_observers = []
         self.add_event_observers()
@@ -57,10 +58,14 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             wself = weak_self()
             if wself is None:
                 return
-            step = metrics["step"]
 
             preview_props = bpy.context.scene.nerf_preview_panel_props
-            if preview_props.update_preview and step % preview_props.steps_between_preview_updates == 0:
+            # get current time in seconds
+            current_time = time()
+
+            time_since_last_update = current_time - wself.last_preview_time
+
+            if preview_props.update_preview and time_since_last_update >= preview_props.time_between_preview_updates:
                 wself.rerequest_preview(flags=tn.RenderFlags.Preview)
         
         obid = self.bridge.add_observer(BBE.OnTrainingStep, on_training_step)
@@ -163,6 +168,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
         modifiers = self.get_render_modifiers(bpy.context)
         self.bridge.request_preview(self.latest_camera, NeRFManager.get_all_nerfs(), flags, modifiers)
+        self.last_preview_time = time()
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.

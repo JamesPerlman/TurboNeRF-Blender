@@ -30,12 +30,13 @@ class NeRF3DViewPreviewPanelProps(bpy.types.PropertyGroup):
         default=True,
     )
 
-    steps_between_preview_updates: bpy.props.IntProperty(
-        name="steps_between_preview_updates",
-        description="Number of steps between preview updates.",
-        default=16,
-        min=1,
-        max=256,
+    time_between_preview_updates: bpy.props.FloatProperty(
+        name="time_between_preview_updates",
+        description="Time between preview updates in seconds.",
+        default=1,
+        min=0.1,
+        max=10,
+        precision=1,
     )
 
     def force_redraw(self, context):
@@ -105,7 +106,7 @@ class NeRF3DViewPreviewPanel(bpy.types.Panel):
 
         if ui_props.update_preview:
             row = box.row()
-            row.prop(ui_props, "steps_between_preview_updates", text="Every N Steps:")
+            row.prop(ui_props, "time_between_preview_updates", text="Every (s):")
         
         row = box.row()
         row.prop(ui_props, "show_near_planes", text="Show Near Planes")
