@@ -65,6 +65,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         if nerf_obj is not None:
             nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
             
-            row = box.row()
-            row.label(text=f"{nerf.dataset.file_path}")
+            if nerf.dataset is not None:
+                row = box.row()
+                row.label(text=f"{nerf.dataset.file_path}")
 
