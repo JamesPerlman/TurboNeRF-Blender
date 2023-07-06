@@ -123,6 +123,15 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         obid = self.bridge.add_observer(BBE.OnTrainingReset, on_training_reset)
         self.event_observers.append(obid)
 
+        # OnDestroyNeRF
+        def on_destroy_nerf(args):
+            wself = weak_self()
+            if wself is None:
+                return
+            wself.rerequest_preview(flags=tn.RenderFlags.Final)
+        
+        obid = self.bridge.add_observer(BBE.OnDestroyNeRF, on_destroy_nerf)
+        self.event_observers.append(obid)
 
     # Remove bridge event observers
     def remove_event_observers(self):
