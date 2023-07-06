@@ -85,7 +85,7 @@ class NeRFManager():
     @classmethod
     def can_any_nerf_train(cls):
         return cls.bridge().can_any_nerf_train()
-    
+
     @classmethod
     def is_image_data_loaded(cls, nerf_obj: bpy.types.Object):
         nerf = cls.get_nerf_for_obj(nerf_obj)
@@ -100,7 +100,7 @@ class NeRFManager():
     
     @classmethod
     def load_training_images(cls, nerf_obj: bpy.types.Object):
-        nerf = cls.get_nerf_for_obj(nerf_obj)        
+        nerf = cls.get_nerf_for_obj(nerf_obj)
         cls.bridge().load_training_images(nerf)
     
     @classmethod
