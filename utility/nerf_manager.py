@@ -56,8 +56,8 @@ class NeRFManager():
         return cloned_nerf.id
     
     @classmethod
-    def destroy(cls, nerf_obj: bpy.types.Object):
-        nerf = cls.get_nerf_for_obj(nerf_obj)
+    def destroy(cls, nerf_id: int):
+        nerf = cls.get_nerf_by_id(nerf_id)
         cls.bridge().destroy_nerf(nerf)
 
     @classmethod
