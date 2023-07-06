@@ -55,7 +55,6 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
         scene = context.scene
 
         print(f"Importing NeRF dataset from: {self.filepath}")
-        context.scene.nerf_dataset_panel_props.imported_dataset_path = self.filepath
 
         nerf_id = NeRFManager.import_dataset(self.filepath)
         nerf = NeRFManager.get_nerf_by_id(nerf_id)
@@ -132,8 +131,6 @@ class ImportNeRFDatasetOperator(bpy.types.Operator):
             cam_w, cam_h = cam.resolution
             sensor_width = cam_data.sensor_width
             cam_data.lens = sensor_width / cam_w * fl_x
-
-        context.scene.nerf_dataset_panel_props.imported_dataset_path = self.filepath
 
         return {'FINISHED'}
 
