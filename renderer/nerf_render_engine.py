@@ -126,7 +126,6 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
     # Remove bridge event observers
     def remove_event_observers(self):
-        print("called remove_event_observers")
         if hasattr(self, "event_observers"):
             for obid in self.event_observers:
                 self.bridge.remove_observer(obid)
