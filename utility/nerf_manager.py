@@ -147,6 +147,15 @@ class NeRFManager():
         return cls.get_nerf_by_id(nerf_id)
     
     @classmethod
+    def get_trainer_for_nerf(cls, nerf: tn.NeRF) -> tn.Trainer:
+        return cls.bridge().get_trainer_for_nerf(nerf)
+    
+    @classmethod
+    def get_trainer_for_nerf_obj(cls, nerf_obj: bpy.types.Object) -> tn.Trainer:
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        return cls.get_trainer_for_nerf(nerf)
+    
+    @classmethod
     def set_bridge_object_property(cls, object_name, property_name, value):
         obj = getattr(cls.bridge(), object_name, None)
         if obj is None:
