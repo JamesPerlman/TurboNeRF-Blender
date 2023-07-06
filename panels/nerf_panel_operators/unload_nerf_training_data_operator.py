@@ -13,16 +13,12 @@ class UnloadNeRFTrainingDataOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         nerf_obj = get_active_nerf_obj(context)
-        nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
-        return nerf.is_image_data_loaded()
+        return NeRFManager.is_image_data_loaded(nerf_obj)
 
     def execute(self, context):
         nerf_obj = get_active_nerf_obj(context)
-        nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
 
-        if nerf.is_image_data_loaded():
+        if NeRFManager.is_image_data_loaded(nerf_obj):
             NeRFManager.unload_training_images(nerf_obj)
-
-        context.scene.nerf_dataset_panel_props.imported_dataset_path = ""
 
         return {'FINISHED'}
