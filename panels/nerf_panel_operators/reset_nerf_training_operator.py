@@ -16,5 +16,6 @@ class ResetNeRFTrainingOperator(bpy.types.Operator):
         return nerf.training_step > 0
     
     def execute(self, context):
-        NeRFManager.reset_training()
+        nerf_obj = get_active_nerf_obj(context)
+        NeRFManager.reset_training(nerf_obj)
         return {'FINISHED'}
