@@ -543,7 +543,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
             
             nerf_obj = get_active_nerf_obj(context)
 
-            is_trainer_available = NeRFManager.bridge().trainer is not None
+            is_trainer_available = NeRFManager.can_nerf_obj_train(nerf_obj)
 
             row = box.row()
             row.prop(ui_props, "training_alpha_selection_threshold", text="Alpha Threshold")
