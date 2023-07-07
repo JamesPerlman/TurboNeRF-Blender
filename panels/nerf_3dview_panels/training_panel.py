@@ -116,7 +116,7 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
 
     def training_prop_getter(prop_name, default):
         def get_fn(self: bpy.types.PropertyGroup):
-            nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
+            nerf_obj = get_active_nerf_obj(bpy.context)
 
             if nerf_obj is None:
                 return default
@@ -128,7 +128,7 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
 
     def training_prop_setter(prop_name):
         def set_fn(self: bpy.types.PropertyGroup, value):
-            nerf_obj = get_closest_parent_of_type(self.id_data, OBJ_TYPE_NERF)
+            nerf_obj = get_active_nerf_obj(bpy.context)
 
             if nerf_obj is None:
                 return
