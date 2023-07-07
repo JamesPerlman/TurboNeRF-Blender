@@ -102,10 +102,8 @@ class NeRFManager():
 
     @classmethod
     def can_load_images(cls, nerf_obj: bpy.types.Object):
-        # TODO: need a better way to check if a dataset is loadable
-        # return cls.bridge().can_load_images()
-
-        return not cls.is_image_data_loaded(nerf_obj)
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        return cls.bridge().can_load_training_images(nerf)
     
     @classmethod
     def load_training_images(cls, nerf_obj: bpy.types.Object):

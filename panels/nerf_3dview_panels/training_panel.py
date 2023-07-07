@@ -56,17 +56,18 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
 
     def update_ui(self, context):
         return None
+
+    def nerf_prop_getter(prop_name, default):
+        def get_fn(self):
+            nerf_props = self.props_for_active_nerf(bpy.context)
+            return getattr(nerf_props, prop_name, default)
+        return get_fn
     
-    def update_nerf_props(prop_name):
-        def update_fn(self, context):
-            nerf_props = self.props_for_active_nerf(context)
-            setattr(nerf_props, prop_name, getattr(self, prop_name))
-        return update_fn
-    
-    def update_n_steps_max(self, context):
-        nerf_props = self.props_for_active_nerf(context)
-        nerf_props.n_steps_max = self.n_steps_max
-        self.training_progress = 100.0 * min(1.0, nerf_props.training_step / self.n_steps_max)
+    def nerf_prop_setter(prop_name):
+        def set_fn(self, value):
+            nerf_props = self.props_for_active_nerf(bpy.context)
+            setattr(nerf_props, prop_name, value)
+        return set_fn
 
     update_id: bpy.props.IntProperty(
         name="update_id",
@@ -77,7 +78,14 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         update=update_ui,
     )
 
-    # TODO: dynamic min/max based on the number of images
+    def get_image_load_progress(self):
+        nerf_props = self.props_for_active_nerf(bpy.context)
+        # update image load progress
+        if nerf_props.n_images_total == 0:
+            return 0
+        else:
+            return 100 * nerf_props.n_images_loaded / nerf_props.n_images_total
+    
     image_load_progress: bpy.props.FloatProperty(
         name="image_load_progress",
         description="Progress of the dataset's image loading.",
@@ -85,13 +93,15 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         min=0.0,
         max=100.0,
         precision=1,
+        get=get_image_load_progress,
     )
 
     limit_training: bpy.props.BoolProperty(
         name="limit_training",
         description="Limit the number of steps to train.",
         default=DEFAULT_NERF_PROPS.limit_training,
-        update=update_nerf_props("limit_training"),
+        get=nerf_prop_getter("limit_training", DEFAULT_NERF_PROPS.limit_training),
+        set=nerf_prop_setter("limit_training"),
     )
 
     n_steps_max: bpy.props.IntProperty(
@@ -100,9 +110,14 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         default=DEFAULT_NERF_PROPS.n_steps_max,
         min=1,
         max=100000,
-        update=update_n_steps_max
+        get=nerf_prop_getter("n_steps_max", DEFAULT_NERF_PROPS.n_steps_max),
+        set=nerf_prop_setter("n_steps_max"),
     )
     
+    def get_training_progress(self):
+        nerf_props = self.props_for_active_nerf(bpy.context)
+        return 100.0 * min(1.0, nerf_props.training_step / self.n_steps_max)
+
     training_progress: bpy.props.FloatProperty(
         name="training_progress",
         description="Progress of the training.",
@@ -110,6 +125,7 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         min=0.0,
         max=100.0,
         precision=1,
+        get=get_training_progress,
     )
 
     def get_training_enabled(self):
@@ -258,15 +274,6 @@ def global_update_timer():
 
     if global_props.needs_panel_update:
         ui_props = context.scene.nerf_training_panel_props
-
-        # update training progress
-        ui_props.training_progress = 100 * min(1, nerf_props.training_step / ui_props.n_steps_max)
-
-        # update image load progress
-        if nerf_props.n_images_total == 0:
-            ui_props.image_load_progress = 0
-        else:
-            ui_props.image_load_progress = 100 * nerf_props.n_images_loaded / nerf_props.n_images_total
         
         ui_props.update_id = 1 - ui_props.update_id
 
