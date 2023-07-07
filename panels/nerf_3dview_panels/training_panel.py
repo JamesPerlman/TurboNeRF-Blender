@@ -235,6 +235,7 @@ def global_update_timer():
     nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(global_props.active_nerf_id)
 
     if global_props.needs_panel_update:
+        print("UPDATE")
         ui_props = context.scene.nerf_training_panel_props
 
         # update training progress
@@ -334,7 +335,11 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         
         def on_training_start(args):
             # When training starts, we register a timer to update the UI
-            register_global_timer()
+            global_props = context.scene.nerf_training_panel_props.global_props
+            if global_props.needs_timer_to_end:
+                global_props.needs_timer_to_end = False
+            else:
+                register_global_timer()
 
         obid = bridge.add_observer(BBE.OnTrainingStart, on_training_start)
         cls.observers.append(obid)
