@@ -476,6 +476,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
 
         nerf_obj = get_active_nerf_obj(context)
         nerf_props = ui_props.props_for_nerf_obj(nerf_obj)
+        is_trainer_available = NeRFManager.can_nerf_obj_train(nerf_obj)
 
         layout = self.layout
         
@@ -492,7 +493,6 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
 
             # we want to disable the Start Training button if we've already trained the scene up to the max number of steps
             row.enabled = not (ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max)
-
 
         # if no images have been loaded yet, we show the Load Images button
         if not NeRFManager.is_image_data_loaded(nerf_obj):
@@ -512,6 +512,10 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
                 row = box.row()
                 row.prop(ui_props, "image_load_progress", slider=True, text=f"% Done:")
                 row.enabled = False
+        
+        # everything past this point is disabled if the trainer is not available
+        if not is_trainer_available:
+            return
 
         # limit training checkbox
         row = box.row()
@@ -544,25 +548,18 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         if ui_props.show_training_settings:
             row = box.row()
             row.label(text="Training Pixel Selection")
-            
-            nerf_obj = get_active_nerf_obj(context)
-
-            is_trainer_available = NeRFManager.can_nerf_obj_train(nerf_obj)
 
             row = box.row()
             row.prop(ui_props, "training_alpha_selection_threshold", text="Alpha Threshold")
-            row.enabled = is_trainer_available
 
             row = box.row()
             row.prop(ui_props, "training_alpha_selection_probability", text="Selection Probability")
-            row.enabled = is_trainer_available
 
             row = box.row()
             row.label(text="Raymarching")
 
             row = box.row()
             row.prop(ui_props, "training_min_step_size", text="Min Step Size")
-            row.enabled = is_trainer_available
         
         # Training metrics
 
