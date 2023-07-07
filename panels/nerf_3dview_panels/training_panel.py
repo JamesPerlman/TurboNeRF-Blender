@@ -112,6 +112,28 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         precision=1,
     )
 
+    def get_training_enabled(self):
+        nerf_obj = get_active_nerf_obj(bpy.context)
+        return NeRFManager.is_training_enabled(nerf_obj)
+            
+    def set_training_enabled(self, value):
+        nerf_obj = get_active_nerf_obj(bpy.context)
+
+        if nerf_obj is None:
+            return
+        
+        if value:
+            NeRFManager.enable_training(nerf_obj)
+        else:
+            NeRFManager.disable_training(nerf_obj)
+
+    enable_training: bpy.props.BoolProperty(
+        name="enable_training",
+        description="Enable training.",
+        get=get_training_enabled,
+        set=set_training_enabled,
+    )
+
     # Trainer Settings
 
     def training_prop_getter(prop_name, default):
@@ -483,17 +505,6 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         box = layout.box()
         box.label(text="Train")
 
-        if NeRFManager.can_any_nerf_train():
-
-            row = box.row()
-            row.operator(
-                TrainNeRFOperator.bl_idname,
-                text="Start Training" if not NeRFManager.is_training() else "Stop Training"
-            )
-
-            # we want to disable the Start Training button if we've already trained the scene up to the max number of steps
-            row.enabled = not (ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max)
-
         # if no images have been loaded yet, we show the Load Images button
         if not NeRFManager.is_image_data_loaded(nerf_obj):
             if nerf_props.n_images_total == 0:
@@ -512,10 +523,24 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
                 row = box.row()
                 row.prop(ui_props, "image_load_progress", slider=True, text=f"% Done:")
                 row.enabled = False
-        
+
+        # Start/Stop Training button
+        row = box.row()
+        row.operator(
+            TrainNeRFOperator.bl_idname,
+            text="Start Training" if not NeRFManager.is_training() else "Stop Training"
+        )
+        # we want to disable the Start Training button if we've already trained the scene up to the max number of steps
+        max_training_step_reached = ui_props.limit_training and nerf_props.training_step >= ui_props.n_steps_max
+        row.enabled = NeRFManager.can_any_nerf_train() and not max_training_step_reached
+
         # everything past this point is disabled if the trainer is not available
         if not is_trainer_available:
             return
+        
+        # enable training checkbox
+        row = box.row()
+        row.prop(ui_props, "enable_training", text="Train this NeRF")
 
         # limit training checkbox
         row = box.row()
@@ -543,7 +568,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         
         # Training Settings
         row = box.row()
-        row.prop(ui_props, "show_training_settings", text="Settings")
+        row.prop(ui_props, "show_training_settings", text="Trainer Settings")
 
         if ui_props.show_training_settings:
             row = box.row()

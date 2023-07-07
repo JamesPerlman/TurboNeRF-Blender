@@ -92,7 +92,7 @@ class NeRFManager():
             return False
         
         nerf = cls.get_nerf_for_obj(nerf_obj)
-        
+
         return nerf.can_train()
 
     @classmethod
@@ -124,6 +124,11 @@ class NeRFManager():
     def unload_training_images(cls, nerf_obj: bpy.types.Object):
         nerf = cls.get_nerf_for_obj(nerf_obj)
         cls.bridge().unload_training_images(nerf)
+
+    @classmethod
+    def is_training_enabled(cls, nerf_obj: bpy.types.Object):
+        nerf = cls.get_nerf_for_obj(nerf_obj)
+        return cls.bridge().is_training_enabled(nerf)
 
     @classmethod
     def enable_training(cls, nerf_obj: bpy.types.Object):
