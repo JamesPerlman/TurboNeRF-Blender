@@ -235,7 +235,6 @@ def global_update_timer():
     nerf_props = context.scene.nerf_training_panel_props.props_for_nerf_id(global_props.active_nerf_id)
 
     if global_props.needs_panel_update:
-        print("UPDATE")
         ui_props = context.scene.nerf_training_panel_props
 
         # update training progress
