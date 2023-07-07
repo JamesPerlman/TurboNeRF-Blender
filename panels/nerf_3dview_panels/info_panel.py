@@ -12,8 +12,6 @@ class NeRF3DViewInfoPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "TurboNeRF"
 
-    observers = []
-
     @classmethod
     def poll(cls, context):
         """Return the availability status of the panel."""

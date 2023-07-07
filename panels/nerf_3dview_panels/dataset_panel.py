@@ -24,7 +24,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         """Return the availability status of the panel."""
-        return True
+        return NeRFManager.is_pylib_compatible()
 
 
     @classmethod

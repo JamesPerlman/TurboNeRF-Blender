@@ -304,7 +304,7 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
     def poll(cls, context):
         """Return the availability status of the panel."""
         nerf_obj = get_active_nerf_obj(context)
-        return nerf_obj is not None
+        return nerf_obj is not None and NeRFManager.is_pylib_compatible()
 
     @classmethod
     @bpy.app.handlers.persistent
