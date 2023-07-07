@@ -1,5 +1,5 @@
 import bpy
-from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj, get_closest_parent_of_type, is_nerf_obj_type
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj, get_closest_parent_of_type, get_nerf_obj_by_id, is_nerf_obj_type
 from turbo_nerf.constants import OBJ_TYPE_NERF
 from turbo_nerf.constants.raymarching import RAYMARCHING_MAX_STEP_SIZE, RAYMARCHING_MIN_STEP_SIZE
 from turbo_nerf.panels.nerf_panel_operators.load_nerf_images_operator import LoadNeRFImagesOperator
@@ -381,7 +381,8 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         cls.observers.append(obid)   
 
         def on_training_step(args):
-            nerf_props = bpy.context.scene.nerf_training_panel_props.props_for_nerf_id(args["id"])
+            nerf_id = args["id"]
+            nerf_props = bpy.context.scene.nerf_training_panel_props.props_for_nerf_id(nerf_id)
             nerf_props.training_step = args["step"]
             nerf_props.training_loss = args["loss"]
             nerf_props.n_rays_per_batch = args["n_rays"]
@@ -390,8 +391,8 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
 
             # does training need to stop?
             if nerf_props.limit_training and nerf_props.training_step >= nerf_props.n_steps_max:
-                NeRFManager.stop_training()
-                global_props.needs_timer_to_end = True
+                nerf_obj = get_nerf_obj_by_id(bpy.context, nerf_id)
+                NeRFManager.disable_training(nerf_obj)
             
             global_props.needs_panel_update = True
 

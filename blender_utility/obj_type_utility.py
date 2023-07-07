@@ -2,6 +2,7 @@ __reload_order_index__ = -1
 
 import bpy
 from turbo_nerf.constants import (
+    NERF_ITEM_IDENTIFIER_ID,
     OBJ_TYPE_CAMERAS_CONTAINER,
     OBJ_TYPE_ID,
     OBJ_TYPE_NERF,
@@ -55,6 +56,12 @@ def get_active_nerf_obj(context) -> bpy.types.Object | None:
     active_obj = context.active_object
     nerf_obj = get_closest_parent_of_type(active_obj, OBJ_TYPE_NERF)
     return nerf_obj
+
+def get_nerf_obj_by_id(context, id: int) -> bpy.types.Object | None:
+    for obj in context.scene.objects:
+        if is_nerf_obj_type(obj, OBJ_TYPE_NERF) and obj[NERF_ITEM_IDENTIFIER_ID] == id:
+            return obj
+    return None
 
 def get_nerf_training_cams(nerf_obj, context) -> list[bpy.types.Object]:
     cam_objs = [o for o in context.selected_objects if is_nerf_obj_type(o, OBJ_TYPE_TRAIN_CAMERA)]
