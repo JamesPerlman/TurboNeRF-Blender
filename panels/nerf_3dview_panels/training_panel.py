@@ -182,6 +182,14 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         default=False,
     )
 
+    training_use_distortion_loss: bpy.props.BoolProperty(
+        name="training_use_distortion_loss",
+        description="Use distortion loss.",
+        default=False,
+        get=training_prop_getter("use_distortion_loss", default=False),
+        set=training_prop_setter("use_distortion_loss"),
+    )
+
     training_alpha_selection_threshold: bpy.props.FloatProperty(
         name="training_alpha_selection_threshold",
         description="Alpha threshold for selecting training pixels.",
@@ -231,25 +239,6 @@ class NeRF3DViewTrainingPanelProps(bpy.types.PropertyGroup):
         default=16,
         min=1,
         max=256,
-    )
-
-    def force_redraw(self, context):
-        # TODO: we don't need to do this for all items
-        for nerf in NeRFManager.get_all_nerfs():
-            nerf.is_dataset_dirty = True
-
-    show_near_planes: bpy.props.BoolProperty(
-        name="show_near_planes",
-        description="Show the near planes in the preview.",
-        default=False,
-        update=force_redraw,
-    )
-
-    show_far_planes: bpy.props.BoolProperty(
-        name="show_far_planes",
-        description="Show the far planes in the preview.",
-        default=False,
-        update=force_redraw,
     )
 
     # Danger Zone
@@ -579,6 +568,12 @@ class NeRF3DViewTrainingPanel(bpy.types.Panel):
         row.prop(ui_props, "show_training_settings", text="Trainer Settings")
 
         if ui_props.show_training_settings:
+            row = box.row()
+            row.label(text="Losses")
+
+            row = box.row()
+            row.prop(ui_props, "training_use_distortion_loss", text="Distortion Loss")
+
             row = box.row()
             row.label(text="Training Pixel Selection")
 
