@@ -1,9 +1,11 @@
 import bpy
+import os
 from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.unload_nerf_training_data_operator import UnloadNeRFTrainingDataOperator
 from turbo_nerf.utility.nerf_manager import NeRFManager
+from turbo_nerf.panels.nerf_panel_operators.delete_nerf_dataset_operator import DeleteNeRFDatasetOperator
 
 
 class NeRF3DViewDatasetPanelProps(bpy.types.PropertyGroup):
@@ -33,6 +35,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         bpy.utils.register_class(ImportNeRFDatasetOperator)
         bpy.utils.register_class(ExportNeRFDatasetOperator)
         bpy.utils.register_class(UnloadNeRFTrainingDataOperator)
+        bpy.utils.register_class(DeleteNeRFDatasetOperator)
         bpy.utils.register_class(NeRF3DViewDatasetPanelProps)
         bpy.types.Scene.nerf_dataset_panel_props = bpy.props.PointerProperty(type=NeRF3DViewDatasetPanelProps)
     
@@ -43,6 +46,7 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
         bpy.utils.unregister_class(ImportNeRFDatasetOperator)
         bpy.utils.unregister_class(ExportNeRFDatasetOperator)
         bpy.utils.unregister_class(UnloadNeRFTrainingDataOperator)
+        bpy.utils.unregister_class(DeleteNeRFDatasetOperator)
         bpy.utils.unregister_class(NeRF3DViewDatasetPanelProps)
         del bpy.types.Scene.nerf_dataset_panel_props
 
@@ -66,6 +70,12 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
             nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
             
             if nerf.dataset is not None:
+                dataset_path = nerf.dataset.file_path
+                parent_folder = os.path.basename(os.path.dirname(dataset_path))
+                file_name = os.path.basename(dataset_path)
+
                 row = box.row()
-                row.label(text=f"{nerf.dataset.file_path}")
+                row.label(text=f"{parent_folder}\{file_name}")
+
+                row.operator(DeleteNeRFDatasetOperator.bl_idname, icon='X', text="")
 
