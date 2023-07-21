@@ -71,8 +71,8 @@ class NeRF3DViewDatasetPanel(bpy.types.Panel):
             
             if nerf.dataset is not None:
                 dataset_path = nerf.dataset.file_path
-                parent_folder = os.path.basename(os.path.dirname(dataset_path))
-                file_name = os.path.basename(dataset_path)
+                parent_folder = Path(dataset_path).parent.name
+                file_name = dataset_path.name
 
                 row = box.row()
                 row.label(text=f"{parent_folder}\{file_name}")
