@@ -1,5 +1,5 @@
 import bpy
-import os
+from pathlib import Path
 from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
 from turbo_nerf.panels.nerf_panel_operators.export_dataset_operator import ExportNeRFDatasetOperator
 from turbo_nerf.panels.nerf_panel_operators.import_dataset_operator import ImportNeRFDatasetOperator
