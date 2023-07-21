@@ -24,10 +24,6 @@ class DeleteNeRFDatasetOperator(bpy.types.Operator):
         
         if NeRFManager.is_image_data_loaded(nerf_obj):
             NeRFManager.unload_training_images(nerf_obj)
-            print("Unloaded Images")
-            
-        else: 
-            print("No Images to Unload.")
 
         delete_object(nerf_obj)
 
