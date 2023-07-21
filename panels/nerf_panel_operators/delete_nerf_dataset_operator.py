@@ -39,6 +39,3 @@ class DeleteNeRFDatasetOperator(bpy.types.Operator):
     def draw(self, context):
         self.layout.label(text="Are you sure you want to delete? This can't be undone.")
 
-
-        
-
