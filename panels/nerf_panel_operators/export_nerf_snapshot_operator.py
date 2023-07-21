@@ -1,6 +1,7 @@
 import bpy
-from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
+from pathlib import Path
 
+from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
 class ExportNetworkSnapshotOperator(bpy.types.Operator):
@@ -16,15 +17,24 @@ class ExportNetworkSnapshotOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return get_active_nerf_obj(context) is not None
+        nerf_obj = get_active_nerf_obj(context)
+
+        if nerf_obj is None:
+            return False
+        
+        nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+
+        return nerf.training_step > 0
 
     def execute(self, context):
+        nerf_obj = get_active_nerf_obj(context)
         
-        active_nerf_obj = get_active_nerf_obj(context)
-        nerf = NeRFManager.get_nerf_for_obj(active_nerf_obj)
-        NeRFManager
-
-        self.save_network_snapshot(context)
+        # enforce that file_path ends with .turbo
+        snapshot_path = Path(self.filepath)
+        if snapshot_path.suffix != ".turbo":
+            snapshot_path = snapshot_path.with_suffix(".turbo")
+        
+        NeRFManager.save_nerf(nerf_obj, snapshot_path)
         
         return {'FINISHED'}
 
@@ -34,9 +44,7 @@ class ExportNetworkSnapshotOperator(bpy.types.Operator):
         nerf = NeRFManager.get_nerf_for_obj(active_nerf_obj)
     
         self.filepath = f"snapshot-step-{nerf.training_step}.turbo"
-        # Open browser, take reference to 'self' read the path to selected
-        # file, put path in predetermined self fields.
-        # See: https://docs.blender.org/api/current/bpy.types.WindowManager.html#bpy.types.WindowManager.fileselect_add
+        
         context.window_manager.fileselect_add(self)
-        # Tells Blender to hang on for the slow user input
+
         return {'RUNNING_MODAL'}

@@ -39,36 +39,14 @@ class NeRF3DViewSnapshotPanel(bpy.types.Panel):
 
 
     @classmethod
-    def add_observers(cls):
-        # do nothing if the observers have already been added
-        if len(cls.observers) > 0:
-            return
-
-        bridge = NeRFManager.bridge()
-        BBE = tn.BlenderBridgeEvent
-        
-        # OnImportSnapshot
-        # OnExportSnapshot
-
-
-    @classmethod
     def remove_observers(cls):
         bridge = NeRFManager.bridge()
         for obid in cls.observers:
             bridge.remove_observer(obid)
         cls.observers.clear()
 
-
     def draw(self, context):
         """Draw the panel with corresponding properties and operators."""
-
-        NeRFManager.check_runtime()
-
-        # kinda messy to call add_observers here but I'm not sure how else to do this.
-        # TurboNeRF python lib doesn't load in cls.register()
-        self.__class__.add_observers()
-
-        ui_props = context.scene.nerf_training_panel_props
 
         layout = self.layout
 
@@ -76,9 +54,9 @@ class NeRF3DViewSnapshotPanel(bpy.types.Panel):
         box.label(text="Snapshots")
 
         row = box.row()
-        row.operator(ImportNetworkSnapshotOperator.bl_idname, text="Import Snapshot")
+        row.operator(ImportNetworkSnapshotOperator.bl_idname, text="Load Snapshot")
 
         row = box.row()
-        row.operator(ExportNetworkSnapshotOperator.bl_idname, text="Export Snapshot")
+        row.operator(ExportNetworkSnapshotOperator.bl_idname, text="Save Snapshot")
 
 

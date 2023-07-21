@@ -45,9 +45,7 @@ class NeRFManager():
         dataset = tn.Dataset(file_path=dataset_path)
         dataset.load_transforms()
 
-        nerf = cls.bridge().create_nerf(dataset)
-
-        return nerf.id
+        return cls.bridge().create_nerf(dataset)
 
     @classmethod
     def clone(cls, nerf_obj: bpy.types.Object):
@@ -61,14 +59,13 @@ class NeRFManager():
         cls.bridge().destroy_nerf(nerf)
 
     @classmethod
-    def load_snapshot(cls, path: Path):
-        nerf = cls.mgr.load(str(path.absolute()))
-        return cls.add_nerf(nerf)
+    def load_nerf(cls, path: Path):
+        return cls.bridge().load_nerf(str(path.absolute()))
 
     @classmethod
-    def save_snapshot(cls, nerf_obj: bpy.types.Object, path: Path):
+    def save_nerf(cls, nerf_obj: bpy.types.Object, path: Path):
         nerf = cls.get_nerf_for_obj(nerf_obj)
-        cls.mgr().save(nerf, str(path.absolute()))
+        cls.bridge().save_nerf(nerf, str(path.absolute()))
 
     @classmethod
     def get_all_nerfs(cls):
@@ -149,6 +146,7 @@ class NeRFManager():
             cls.stop_training()
         else:
             cls.start_training()
+    
     @classmethod
     def get_nerf_by_id(cls, nerf_id: int) -> tn.NeRF:
         return cls.bridge().get_nerf(nerf_id)

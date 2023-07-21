@@ -9,10 +9,10 @@ from .training_panel import NeRF3DViewTrainingPanel
 
 PANELS = [
     NeRF3DViewInfoPanel,
-    # NeRF3DViewSnapshotPanel,
     NeRF3DViewDatasetPanel,
     NeRF3DViewTrainingPanel,
     NeRF3DViewPreviewPanel,
+    NeRF3DViewSnapshotPanel,
 ]
 
 

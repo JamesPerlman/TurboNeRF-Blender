@@ -1,5 +1,6 @@
 import bpy
-from turbo_nerf.blender_utility.obj_type_utility import get_active_nerf_obj
+from pathlib import Path
+from turbo_nerf.blender_utility.nerf_obj_utils import create_obj_for_nerf
 
 from turbo_nerf.utility.nerf_manager import NeRFManager
 
@@ -17,18 +18,11 @@ class ImportNetworkSnapshotOperator(bpy.types.Operator):
     def execute(self, context):
         print(f"Importing snapshot from {self.filepath}")
 
-        self.save_network_snapshot(context)
-        
+        nerf = NeRFManager.load_nerf(Path(self.filepath))
+        create_obj_for_nerf(context, nerf)
+
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        
-        active_nerf_obj = get_active_nerf_obj(context)
-        nerf = NeRFManager.get_nerf_for_obj(active_nerf_obj)
-    
-        # Open browser, take reference to 'self' read the path to selected
-        # file, put path in predetermined self fields.
-        # See: https://docs.blender.org/api/current/bpy.types.WindowManager.html#bpy.types.WindowManager.fileselect_add
         context.window_manager.fileselect_add(self)
-        # Tells Blender to hang on for the slow user input
         return {'RUNNING_MODAL'}
