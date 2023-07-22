@@ -4,7 +4,6 @@ import math
 from turbo_nerf.blender_utility.driver_utility import force_update_drivers
 
 from turbo_nerf.blender_utility.obj_type_utility import (
-    get_active_nerf_obj,
     get_all_training_cam_objs,
     get_closest_parent_of_type,
     get_nerf_training_cams,
@@ -96,7 +95,6 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_NEAR_ID] = value
-            force_update_drivers(o)
         
         set_props_for_cams(nerf_obj, NeRFManager.get_nerf_for_obj(nerf_obj))
 
@@ -122,7 +120,6 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_FAR_ID] = value
-            force_update_drivers(o)
 
         set_props_for_cams(nerf_obj, NeRFManager.get_nerf_for_obj(nerf_obj))
 
@@ -150,7 +147,6 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
         cams = get_nerf_training_cams(nerf_obj, bpy.context)
         for o in cams:
             o[CAMERA_SHOW_IMAGE_PLANES_ID] = value
-            force_update_drivers(o)
         
         set_props_for_cams(nerf_obj, NeRFManager.get_nerf_for_obj(nerf_obj))
 
@@ -196,16 +192,14 @@ class NeRFObjectProperties(bpy.types.PropertyGroup):
 
             new_min = clamp(value[0], tbbox_min, rbbox_max)
             new_max = clamp(value[1], rbbox_min, tbbox_max)
-            
+
             new_bbox = nerf.render_bbox
             setattr(new_bbox, f"min_{dim}", new_min)
             setattr(new_bbox, f"max_{dim}", new_max)
-            
+
             # this sets the props on the CUDA side and sets is_dirty to True so the new updates get rendered
             nerf.render_bbox = new_bbox
 
-            force_update_drivers(nerf_obj)
-        
         return crop_setter
     
     # we need to switch the axes here from xyz to zxy
