@@ -27,8 +27,9 @@ class NeRF3DViewInfoPanel(bpy.types.Panel):
         if not is_runtime_ready:
             add_multiline_label(
                 context=context,
+                parent=layout,
                 text="The PyTurboNeRF runtime could not be loaded.  Please go to Window > Toggle System Console to check for any errors.",
-                parent=layout
+                icon="ERROR"
             )
 
             return
@@ -36,8 +37,9 @@ class NeRF3DViewInfoPanel(bpy.types.Panel):
         if not NeRFManager.is_pylib_compatible():
             add_multiline_label(
                 context=context,
+                parent=layout,
                 text=f"You have PyTurboNeRF version {NeRFManager.pylib_version()}, which is not compatible with this version of the TurboNeRF addon.  Please upgrade PyTurboNeRF to version {NeRFManager.required_pylib_version()}.",
-                parent=layout
+                icon="ERROR"
             )
             
             return
