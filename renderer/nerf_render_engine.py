@@ -140,6 +140,11 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
                 self.bridge.remove_observer(obid)
             self.event_observers = []
     
+    def get_renderables(self, context: bpy.types.Context):
+        nerfs = NeRFManager.get_all_nerfs()
+        renderables = [tn.Renderable(nerf) for nerf in nerfs]
+        return renderables
+
     def update_renderables(self, depsgraph: bpy.types.Depsgraph, force_update=False):
         objects: list[bpy.types.Object]
         if force_update:
@@ -176,20 +181,22 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         if self.latest_camera is None:
             return
         
-        if len(NeRFManager.get_all_nerfs()) == 0:
+        renderables = self.get_renderables(bpy.context)
+
+        if len(renderables) == 0:
             return
 
         modifiers = self.get_render_modifiers(bpy.context)
-        self.bridge.request_preview(self.latest_camera, NeRFManager.get_all_nerfs(), flags, modifiers)
+        self.bridge.request_preview(self.latest_camera, renderables, flags, modifiers)
         self.last_preview_time = time()
 
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph: bpy.types.Depsgraph):
 
-        all_nerfs = NeRFManager.get_all_nerfs()
+        renderables = self.get_renderables(bpy.context)
 
-        if len(all_nerfs) == 0:
+        if len(renderables) == 0:
             return
 
         # get properties
@@ -219,7 +226,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         camera = camera_with_flipped_y(camera)
 
         # launch render request
-        self.bridge.request_render(camera, all_nerfs)
+        self.bridge.request_render(camera, renderables)
         
         # begin render result
         result = self.begin_result(0, 0, size_x, size_y)
@@ -299,9 +306,9 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # Blender will draw overlays for selection and editing on top of the
     # rendered image automatically.
     def view_draw(self, context, depsgraph):
-        all_nerfs = NeRFManager.get_all_nerfs()
+        renderables = self.get_renderables(bpy.context)
 
-        if len(all_nerfs) == 0:
+        if len(renderables) == 0:
             return
         
         # # Get viewport dimensions
@@ -329,7 +336,7 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
         
         has_new_camera = True if self.latest_camera is None else camera != self.latest_camera
         has_new_dims = dimensions != self.prev_view_dims
-        is_any_nerf_dirty =  np.any([nerf.is_dirty() and nerf.can_render for nerf in all_nerfs])
+        is_any_nerf_dirty =  np.any([r.nerf.is_dirty() and r.nerf.can_render for r in renderables])
 
         user_initiated = has_new_camera or has_new_dims or is_any_nerf_dirty
 
@@ -340,7 +347,8 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
 
             modifiers = self.get_render_modifiers(context)
 
-            self.bridge.request_preview(camera, all_nerfs, flags, modifiers)
+            # launch preview request
+            self.bridge.request_preview(camera, renderables, flags, modifiers)
 
         scene = depsgraph.scene
 
