@@ -199,24 +199,18 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
     # small preview for materials, world and lights.
     def render(self, depsgraph: bpy.types.Depsgraph):
 
-        renderables = self.get_renderables(bpy.context)
-
-        if len(renderables) == 0:
-            return
-
         # get properties
         scene = depsgraph.scene_eval
-
-        scale = scene.render.resolution_percentage / 100.0
-        size_x = int(scene.render.resolution_x * scale)
-        size_y = int(scene.render.resolution_y * scale)
-
-        dims = (size_x, size_y)
 
         # according to povray, this needs to be called
         scene.frame_set(scene.frame_current)
 
         self.update_renderables(depsgraph)
+
+        renderables = self.get_renderables(bpy.context)
+
+        if len(renderables) == 0:
+            return
 
         # get camera
         active_cam = scene.camera
@@ -225,6 +219,12 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
             # TODO: error?
             print("ERROR: No active camera during render!")
             return
+
+        scale = scene.render.resolution_percentage / 100.0
+        size_x = int(scene.render.resolution_x * scale)
+        size_y = int(scene.render.resolution_y * scale)
+
+        dims = (size_x, size_y)
 
         # convert to TurboNeRF camera
         camera = bl2nerf_cam(active_cam, dims)
