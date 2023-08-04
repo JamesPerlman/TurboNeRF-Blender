@@ -4,9 +4,10 @@ import weakref
 import bpy
 import bgl
 import numpy as np
-from turbo_nerf.blender_utility.obj_type_utility import get_closest_parent_of_type, get_nerf_obj_type
+from turbo_nerf.blender_utility.obj_type_utility import get_closest_parent_of_type, get_nerf_obj_type, is_nerf_obj_type
 from turbo_nerf.constants import NERF_ITEM_IDENTIFIER_ID, OBJ_TYPE_NERF
 from turbo_nerf.constants.math import NERF_ADJUSTMENT_MATRIX
+from turbo_nerf.effects.utils.serialization import get_spatial_effects_for_nerf_obj
 from turbo_nerf.renderer.panels.render_engine_raymarching_panel import TurboNeRFRenderEngineRaymarchingPanel
 
 from turbo_nerf.utility.render_camera_utils import bl2nerf_cam, bl2nerf_cam_train, camera_with_flipped_y
@@ -140,9 +141,13 @@ class TurboNeRFRenderEngine(bpy.types.RenderEngine):
                 self.bridge.remove_observer(obid)
             self.event_observers = []
     
+    def get_renderable(self, nerf_obj: bpy.types.Object) -> tn.Renderable:
+        nerf = NeRFManager.get_nerf_for_obj(nerf_obj)
+        spatial_effects = get_spatial_effects_for_nerf_obj(nerf_obj)
+        return tn.Renderable(nerf, spatial_effects)        
+        
     def get_renderables(self, context: bpy.types.Context):
-        nerfs = NeRFManager.get_all_nerfs()
-        renderables = [tn.Renderable(nerf) for nerf in nerfs]
+        renderables = [self.get_renderable(obj) for obj in context.scene.objects if is_nerf_obj_type(obj, OBJ_TYPE_NERF)]
         return renderables
 
     def update_renderables(self, depsgraph: bpy.types.Depsgraph, force_update=False):

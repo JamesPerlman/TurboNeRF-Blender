@@ -18,6 +18,7 @@ bl_info = {
 
 import bpy
 import importlib
+from turbo_nerf.effects.panels.spatial_effects_panel import NeRFSpatialEffectsPanel
 
 from turbo_nerf.panels.nerf_object_panel import NeRFObjectPanel
 
@@ -50,6 +51,7 @@ def register():
     Registration.register_importers()
     Registration.register_exporters()
     bpy.utils.register_class(NeRFObjectPanel)
+    bpy.utils.register_class(NeRFSpatialEffectsPanel)
     register_nerf_3dview_panels()
 
     bpy.app.handlers.load_post.append(load_handler)
@@ -67,11 +69,9 @@ def unregister():
     Registration.unregister_importers()
     Registration.unregister_exporters()
     unregister_nerf_3dview_panels()
-
-    # bpy.utils.unregister_class(NeRFTrainingPanel)
-    # bpy.utils.unregister_class(NeRFRenderPanel)
     
     bpy.utils.unregister_class(NeRFObjectPanel)
+    bpy.utils.unregister_class(NeRFSpatialEffectsPanel)
 
     bpy.app.handlers.load_post.remove(load_handler)
     Registration.unregister_misc_components()

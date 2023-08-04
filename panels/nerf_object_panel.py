@@ -257,7 +257,6 @@ class NeRFObjectPanel(bpy.types.Panel):
         
 
     def draw(self, context):
-        layout = self.layout
         obj = context.object
         ui_props = obj.tn_nerf_props
 

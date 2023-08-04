@@ -1,6 +1,7 @@
 import importlib
 import bpy
 from turbo_nerf.blender_utility.nerf_scene_update_handler import register_depsgraph_updates, unregister_depsgraph_updates
+from turbo_nerf.effects.utils.drivers import get_spatial_effect_item_props
 
 # Thank you https://github.com/SBCV/Blender-Addon-Photogrammetry-Importer
 
@@ -144,12 +145,14 @@ class Registration:
         bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location'] = get_spherical_quadrilateral_camera_node_location
         bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation'] = get_spherical_quadrilateral_camera_node_quaternion_rotation
         bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation'] = get_quadrilateral_hexahedron_camera_node_quaternion_rotation
+        bpy.app.driver_namespace["get_spatial_effect_item_props"] = get_spatial_effect_item_props
 
     @classmethod
     def unregister_drivers(cls):
         del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_location']
         del bpy.app.driver_namespace['get_spherical_quadrilateral_camera_node_quaternion_rotation']
         del bpy.app.driver_namespace['get_quadrilateral_hexahedron_camera_node_quaternion_rotation']
+        del bpy.app.driver_namespace["get_spatial_effect_item_props"]
 
     @classmethod
     def register_misc_components(cls):
