@@ -72,7 +72,6 @@ def add_render_bbox(context, nerf_obj):
     locs = [fc.driver for fc in bbox_obj.driver_add('location')]
     scales = [fc.driver for fc in bbox_obj.driver_add('scale')]
 
-    # cycle axes xyz -> zxy - (i - 1) % 3
     for i, dim in enumerate(['x', 'y', 'z']):
         loc = locs[i]
         scale = scales[i]

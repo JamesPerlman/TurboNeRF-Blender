@@ -94,14 +94,16 @@ class RepeaterEffect(SpatialEffect):
     def get_tn_constructor_kwargs(cls, props: bpy.types.PropertyGroup, nerf_obj: bpy.types.Object) -> Dict[str, any]:
         source_bbox = tn.BoundingBox()
 
-        source_bbox.min_x = props.repeater.source_x[0]
-        source_bbox.max_x = props.repeater.source_x[1]
-        
-        source_bbox.min_y = props.repeater.source_y[0]
-        source_bbox.max_y = props.repeater.source_y[1]
+        # cycle axes xyz -> zxy
 
-        source_bbox.min_z = props.repeater.source_z[0]
-        source_bbox.max_z = props.repeater.source_z[1]
+        source_bbox.min_x = props.repeater.source_y[0]
+        source_bbox.max_x = props.repeater.source_y[1]
+        
+        source_bbox.min_y = props.repeater.source_z[0]
+        source_bbox.max_y = props.repeater.source_z[1]
+
+        source_bbox.min_z = props.repeater.source_x[0]
+        source_bbox.max_z = props.repeater.source_x[1]
 
         extend_bbox = tn.BoundingBox()
 
