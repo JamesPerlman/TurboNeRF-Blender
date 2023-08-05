@@ -107,14 +107,14 @@ class RepeaterEffect(SpatialEffect):
 
         extend_bbox = tn.BoundingBox()
 
-        extend_bbox.min_x = props.repeater.extend_x[0]
-        extend_bbox.max_x = props.repeater.extend_x[1]
+        extend_bbox.min_x = props.repeater.extend_y[0]
+        extend_bbox.max_x = props.repeater.extend_y[1]
 
-        extend_bbox.min_y = props.repeater.extend_y[0]
-        extend_bbox.max_y = props.repeater.extend_y[1]
+        extend_bbox.min_y = props.repeater.extend_z[0]
+        extend_bbox.max_y = props.repeater.extend_z[1]
 
-        extend_bbox.min_z = props.repeater.extend_z[0]
-        extend_bbox.max_z = props.repeater.extend_z[1]
+        extend_bbox.min_z = props.repeater.extend_x[0]
+        extend_bbox.max_z = props.repeater.extend_x[1]
 
         transform = tn.Transform4f(np.eye(4))
 
